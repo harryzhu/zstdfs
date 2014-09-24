@@ -6,11 +6,19 @@
 Welcome to W3's documentation!
 ==============================
 
-Contents:
+* :ref:`codingforweb`
+
+.. _codingforweb:
+
+Coding For Web
+--------------
 
 .. toctree::
    :maxdepth: 2
 
+    codingforweb/getting_started
+    codingforweb/serverside_be
+    codingforweb/browserside_fe
 
 
 Indices and tables
