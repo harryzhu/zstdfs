@@ -17,9 +17,9 @@ Coding For Web
    :maxdepth: 2
 
    codingforweb/getting_started
-   codingforweb/serverside_be
    codingforweb/browserside_fe
-
+   codingforweb/serverside_be
+   codingforweb/homework
 
 
 
