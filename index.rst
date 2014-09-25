@@ -6,7 +6,7 @@
 Welcome to W3's documentation!
 ==============================
 
-* :ref:`codingforweb`
+.. * :ref:`codingforweb`
 
 .. _codingforweb:
 
