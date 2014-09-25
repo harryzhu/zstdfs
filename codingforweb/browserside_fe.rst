@@ -3,8 +3,8 @@ Front End: Client/Browser Side
 
 HTML
 ----------
-    * How to validate your code?
-    * YSlow your code
+    * How to `validate`_ your code?
+    * `YSlow`_ your code
 
 
 CSS
@@ -17,3 +17,8 @@ JavaScript
 ----------
     * jQuery
     * AngularJS
+
+
+
+.. _validate: http://validator.w3.org/
+.. _YSlow: http://yslow.org/

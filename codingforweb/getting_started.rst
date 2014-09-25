@@ -10,13 +10,20 @@ Web development is easy:
 
 Keep me sync with the world TREND of tech (Of course, you need to dive into the TREND first!) :
     * Mem Computing
-    * Distribution (HDFS, MapR)
+    * Distribution (HDFS, DFS, MapR)
     * NoSQL (`HBase`_, `Cassandra`_, `Riak`_, `Redis`_, `Mongodb`_)
 
 
 No Pressure, Coding For Fun
 ---------------------------
-    * `Full Stack`_ ? WOW, interesting discussion in `Zhihu`_, FYI.
+    * `Full Stack`_ ? WOW, one interesting discussion in `Zhihu`_, FYI.
+    * Be Versatile or Be Professional, up to you, Choose what you want.
+    * For Fun: the most important taste, if you can enjoy what you are doing, ALL will be easy.
+
+
+Our Target
+----------
+    * 
 
 
 
