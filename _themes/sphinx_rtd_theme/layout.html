@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 {# TEMPLATE VAR SETTINGS #}
 {%- set url_root = pathto('', 1) %}
 {%- if url_root == '#' %}{% set url_root = '' %}{% endif %}
@@ -6,8 +7,6 @@
 {%- else %}
 {%- set titlesuffix = "" %}
 {%- endif %}
-
-<!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
@@ -16,7 +15,9 @@
   {% block htmltitle %}
   <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
   {% endblock %}
-
+  <link rel="dns-prefetch" href="//media.readthedocs.org" />
+  <link rel="dns-prefetch" href="//readthedocs.org" />
+  <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
   {# FAVICON #}
   {% if favicon %}
   <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>

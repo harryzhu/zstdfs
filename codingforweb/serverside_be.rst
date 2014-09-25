@@ -22,7 +22,7 @@ Save Your Data into Database
 
 
 
-Cache Hot Data
+Cache
 --------------
     * disk/file cache
     * memcached

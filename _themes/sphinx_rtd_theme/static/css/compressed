@@ -1,0 +1,23 @@
+/*
+Errno::ENOENT: No such file or directory - compressed
+
+Backtrace:
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin/compiler.rb:481:in `read'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin/compiler.rb:481:in `update_stylesheet'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin/compiler.rb:215:in `block in update_stylesheets'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin/compiler.rb:209:in `each'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin/compiler.rb:209:in `update_stylesheets'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin/compiler.rb:293:in `watch'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/plugin.rb:108:in `method_missing'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/exec/sass_scss.rb:349:in `watch_or_update'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/exec/sass_scss.rb:50:in `process_result'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/exec/base.rb:40:in `parse'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/lib/sass/exec/base.rb:19:in `parse!'
+C:/Vendor/Ruby200/lib/ruby/gems/2.0.0/gems/sass-3.4.4/bin/scss:13:in `<top (required)>'
+C:/Vendor/Ruby200/bin/scss:23:in `load'
+C:/Vendor/Ruby200/bin/scss:23:in `<main>'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Errno::ENOENT: No such file or directory - compressed"; }
