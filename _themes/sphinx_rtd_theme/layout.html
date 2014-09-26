@@ -115,7 +115,8 @@
           <div role="main">
             {% block body %}{% endblock %}
             <br />
-            <!--comment-->
+           
+            {% if READTHEDOCS %}
             <div id="disqus_thread"></div>
             <script type="text/javascript">
               /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
@@ -128,7 +129,8 @@
           (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
         })();
       </script>
-      <!--comment-->
+      {% endif %}
+     
 
 
     </div>
