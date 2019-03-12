@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package volume_pb;
+
+service VolumeService {
+	rpc StreamSendFile(stream File) returns (stream File){}
+	rpc ReadFile(File) returns (File){}
+	rpc Ping(Pong) returns (Pong){}
+}
+
+message Empty{
+	
+}
+
+message Pong{
+	string Factor = 1;
+	string Message = 2;
+}
+
+message File{
+	string Key = 1;
+	bytes Meta = 2;
+	bytes Data = 3;
+}

@@ -1,0 +1,46 @@
+welcome = "Thanks to use hazhufs!"
+[global]
+mq_address = "172.16.32.49:4150"
+
+[http]
+ip = "172.16.32.45"
+port = "9547"
+beip = "172.16.32.45"
+beport = "9537"
+dir_http = "/home/ops/data/hazhufs"
+expire_seconds = "3600"
+
+[master]
+ip = "172.16.32.45"
+port = "9537"
+dir_meta = "/home/ops/data/hazhufs"
+
+[volume]
+dc = "sho"
+rack = "rack01"
+ip = "172.16.32.45"
+port = "9537"
+vdir = "data"
+vgroup = "g01"
+vmode = "1"
+vmax = "1024"
+master = "172.16.32.45:9527"
+dir_meta = "/home/ops/data/hazhufs"
+dirs_data = [
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+"/home/ops/data/hazhufs",
+]

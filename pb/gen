@@ -1,0 +1,3 @@
+#!/bin/sh
+protoc --go_out=plugins=grpc:./master_pb master.proto
+protoc --go_out=plugins=grpc:./volume_pb volume.proto
