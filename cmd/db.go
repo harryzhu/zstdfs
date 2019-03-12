@@ -121,10 +121,13 @@ func PrepareMasterDatabase() error {
 		}
 
 		sql_table_data := `
+		PRAGMA default_cache_size = 8000;
 		CREATE TABLE IF NOT EXISTS "data"(
-		"key" CHARACTER(64) NOT NULL primary key,
+		"key" CHARACTER(32) NOT NULL primary key,
 		"size" integer NOT NULL,
-		"name" text NOT NULL default "",
+		"dbid" CHARACTER(2) NOT NULL default "-",
+		"node" CHARACTER(64) NOT NULL default "-",
+		"synced" integer NOT NULL default 0,
 		"enabled" integer NOT NULL default 1,
 		"deleted" integer NOT NULL default 0,
 		"created" integer NOT NULL default 0

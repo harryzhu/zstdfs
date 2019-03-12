@@ -171,7 +171,8 @@ func (e *Entity) Save() error {
 		return err_meta_update
 	}
 
-	if err_commit := tx.Commit(); err_commit != nil {
+	err_commit := tx.Commit()
+	if err_commit != nil {
 		Logger.Error("SaveFile: cannot commit transaction.")
 		return err_commit
 	} else {
