@@ -55,14 +55,10 @@ func PrepareVolumeDatabases() error {
 	} else {
 		metadbpath := strings.Join([]string{dir_dbmeta, "/meta", ".db"}, "")
 		Logger.Info("preparing META database : open ", metadbpath)
-		// DBMETA, err := sql.Open("sqlite3", metadbpath)
-		// defer DBMETA.Close()
-		// if err != nil {
-		// 	Logger.Fatal("cannot open META database:", err)
-		// }
 
 		DBMETA = GetSqlite3(metadbpath)
 		sql_table_data := `
+		PRAGMA default_cache_size = 8000;
 		CREATE TABLE IF NOT EXISTS "data"(
 		"key" CHARACTER(32) NOT NULL primary key,
 		"size" integer NOT NULL,

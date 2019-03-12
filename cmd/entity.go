@@ -18,18 +18,18 @@ type Entity struct {
 }
 
 func (e *Entity) BeforeSave() error {
-	Logger.Info("BeforeSave")
+	Logger.Debug("BeforeSave")
 	return nil
 }
 
 func (e *Entity) AfterSave() error {
-	Logger.Info("AfterSave")
+	Logger.Debug("AfterSave")
 	e.MetaUpdate()
 	return nil
 }
 
 func (e *Entity) MetaExists() bool {
-	Logger.Info("MetaExists")
+	Logger.Debug("MetaExists")
 	var b_return bool = false
 	var k string
 	stmt, err := DBMETA.Prepare("SELECT key FROM data WHERE key = ? LIMIT 1")
@@ -49,7 +49,7 @@ func (e *Entity) MetaExists() bool {
 }
 
 func (e *Entity) DataExists() bool {
-	Logger.Info("DataExists")
+	Logger.Debug("DataExists")
 	var b_return bool = false
 	db := e.Db
 	db.View(func(tx *bolt.Tx) error {
@@ -68,7 +68,7 @@ func (e *Entity) DataExists() bool {
 }
 
 func (e *Entity) MetaUpdate() error {
-	Logger.Info("MetaUpdate")
+	Logger.Debug("MetaUpdate")
 	var isExisting bool = false
 	isExisting = e.MetaExists()
 	if isExisting == true {
@@ -91,7 +91,7 @@ func (e *Entity) MetaUpdate() error {
 }
 
 func (e *Entity) Get() *Entity {
-	Logger.Info("Get--Get--Get-")
+	Logger.Debug("Get")
 	var r_meta []byte
 	var r_data []byte
 	var r_entity = &Entity{}
@@ -134,9 +134,9 @@ func (e *Entity) Get() *Entity {
 }
 
 func (e *Entity) Save() error {
-	Logger.Info("Save")
+	Logger.Debug("Save")
 	if e.DataExists() == true {
-		Logger.Info("Existed, will ignore.")
+		Logger.Debug("Existed, will ignore.")
 		return nil
 	}
 	db := e.Db
@@ -176,7 +176,7 @@ func (e *Entity) Save() error {
 		Logger.Error("SaveFile: cannot commit transaction.")
 		return err_commit
 	} else {
-		Logger.Info("SaveFile, Commit OK: ", e.Key)
+		Logger.Debug("SaveFile, Commit OK: ", e.Key)
 	}
 
 	return nil

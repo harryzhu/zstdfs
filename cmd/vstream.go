@@ -42,6 +42,7 @@ func (vs *volumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileS
 			return nil
 		}
 		if err != nil {
+			Logger.Error("StreamSendFile:", err)
 			return err
 		}
 
@@ -49,7 +50,7 @@ func (vs *volumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileS
 		Logger.Info("Received File: KEY:", k)
 		if len(k) == 32 {
 			did := k[0:1]
-			Logger.Info("StreamSendFile: DBID:", did)
+			Logger.Debug("StreamSendFile: DBID:", did)
 			err_save := SaveFile(DBDATA[did], k, in.Meta, in.Data)
 			if err_save != nil {
 				Logger.Error(err_save)
