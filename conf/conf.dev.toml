@@ -1,0 +1,47 @@
+welcome = "Thanks to use hazhufs!"
+[global]
+mq_address = "172.16.32.49:4150"
+
+[http]
+ip = "127.0.0.1"
+port = "9547"
+beip = "127.0.0.1"
+beport = "9537"
+dir_http = "/Users/harry/dev/data/hazhufs"
+expire_seconds = "3600"
+
+[master]
+ip = "172.16.32.45"
+port = "9537"
+dir_meta = "/home/ops/data/hazhufs"
+
+[volume]
+dc = "sho"
+rack = "rack01"
+ip = "127.0.0.1"
+port = "9537"
+vdir = "data"
+vgroup = "g01"
+vmode = "1"
+vmax = "1024"
+master = "127.0.0.1:9527"
+peers = "127.0.0.1:9537;127.0.0.1:9538;127.0.0.1:9539;127.0.0.1:9540"
+dir_meta = "/Users/harry/dev/data/hazhufs"
+dirs_data = [
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+"/Users/harry/dev/data/hazhufs",
+]

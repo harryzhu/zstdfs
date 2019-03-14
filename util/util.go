@@ -14,12 +14,13 @@ import (
 )
 
 var (
-	HAZHUFS_LOGLEVEL string
+	HAZHUFS_LOGLEVEL   string
+	HAZHUFS_CONFIGFILE string
 )
 
 func init() {
 	HAZHUFS_LOGLEVEL = os.Getenv("HAZHUFS_LOGLEVEL")
-
+	HAZHUFS_CONFIGFILE = os.Getenv("HAZHUFS_CONFIGFILE")
 }
 
 func GetLogLevel() log.Level {
@@ -34,6 +35,15 @@ func GetLogLevel() log.Level {
 	default:
 		return log.ErrorLevel
 	}
+}
+
+func GetConfigFile() (configpath string, err error) {
+	configpath = os.Getenv("HAZHUFS_CONFIGFILE")
+	_, err = os.Stat(HAZHUFS_CONFIGFILE)
+	if err != nil {
+		return "", err
+	}
+	return configpath, nil
 }
 
 func ByteCRC32(fdata []byte) uint32 {

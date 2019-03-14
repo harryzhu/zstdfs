@@ -28,6 +28,7 @@ type volumeConfig struct {
 	Vmode            string
 	Vmax             string
 	Master           string
+	Peers            string
 	Dir_data_default string
 	Dir_meta         string
 	Dirs_data        []string

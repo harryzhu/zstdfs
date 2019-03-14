@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"errors"
-	//"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -11,21 +11,20 @@ import (
 )
 
 type Entity struct {
-	Db   *bolt.DB
-	Key  string
-	Meta []byte
-	Data []byte
+	Db                 *bolt.DB
+	Key                string
+	Meta               []byte
+	Data               []byte
+	beforeSaveHandlers []func()
+	afterSaveHandlers  []func()
 }
 
-func (e *Entity) BeforeSave() error {
-	Logger.Debug("BeforeSave")
-	return nil
+func (e *Entity) BeforeSave(fn func()) {
+	e.beforeSaveHandlers = append(e.beforeSaveHandlers, fn)
 }
 
-func (e *Entity) AfterSave() error {
-	Logger.Debug("AfterSave")
-	e.MetaUpdate()
-	return nil
+func (e *Entity) AfterSave(fn func()) {
+	e.afterSaveHandlers = append(e.afterSaveHandlers, fn)
 }
 
 func (e *Entity) MetaExists() bool {
@@ -134,11 +133,15 @@ func (e *Entity) Get() *Entity {
 }
 
 func (e *Entity) Save() error {
-	Logger.Debug("Save")
 	if e.DataExists() == true {
 		Logger.Debug("Existed, will ignore.")
 		return nil
 	}
+	for _, fn_before := range e.beforeSaveHandlers {
+		fn_before()
+	}
+	Logger.Debug("Save")
+
 	db := e.Db
 
 	tx, err := db.Begin(true)
@@ -179,6 +182,10 @@ func (e *Entity) Save() error {
 		Logger.Debug("SaveFile, Commit OK: ", e.Key)
 	}
 
+	for _, fn_after := range e.afterSaveHandlers {
+		fn_after()
+	}
+
 	return nil
 }
 
@@ -188,9 +195,9 @@ func SaveFile(db *bolt.DB, key string, meta []byte, data []byte) error {
 	}
 
 	entity := &Entity{Db: db, Key: strings.ToLower(key), Meta: meta, Data: data}
-	entity.BeforeSave()
+	//entity.BeforeSave()
 	entity.Save()
-	entity.AfterSave()
+	//entity.AfterSave()
 
 	return nil
 }
@@ -209,5 +216,46 @@ func GetFile(db *bolt.DB, key string) *Entity {
 		return e
 	}
 	Logger.Error("entity.Get.ERROR.")
+	return nil
+}
+
+func GenerateSyncNeededListFromMeta() error {
+	var arr_keys []string
+	var key string
+	var rowsCount int = 0
+	var str_keys string = ""
+	var file_synclist string = strings.Join([]string{"data/synclist_", CFG.Volume.Ip, "_", CFG.Volume.Port, ".txt"}, "")
+
+	Logger.Debug("GenerateSyncNeededListFromMeta...")
+
+	rows, err := DBMETA.Query("SELECT key FROM data where synced = ? limit 100", "0")
+
+	if err != nil {
+		Logger.Debug("Error: ", err)
+		return err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&key)
+		if err != nil {
+			Logger.Error("Error: ", key)
+		} else {
+			rowsCount++
+			arr_keys = append(arr_keys, key)
+		}
+	}
+
+	if rowsCount > 0 {
+		str_keys = strings.Join(arr_keys, ";")
+		Logger.Debug("OK: ", str_keys)
+	}
+
+	f, err := os.OpenFile(file_synclist, os.O_RDWR|os.O_CREATE, 0766)
+	if err != nil {
+		Logger.Fatal(err)
+	}
+	f.Write([]byte(str_keys))
+	f.Close()
+
 	return nil
 }

@@ -25,6 +25,7 @@ vgroup = "g01"
 vmode = "1"
 vmax = "1024"
 master = "172.16.32.45:9527"
+peers = "172.16.32.45:9537;172.16.32.45:9538;172.16.32.45:9539;172.16.32.45:9540"
 dir_meta = "/home/ops/data/hazhufs"
 dirs_data = [
 "/home/ops/data/hazhufs",

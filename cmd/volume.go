@@ -19,6 +19,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -31,6 +32,12 @@ var volumeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		//fmt.Println("fff")
 		PrepareVolumeDatabases()
+
+		go func() {
+			cronVolume := cron.New()
+			cronVolume.AddFunc("*/3 * * * * *", func() { runSync() })
+			cronVolume.Start()
+		}()
 
 		addressVolume := strings.Join([]string{CFG.Volume.Ip, CFG.Volume.Port}, ":")
 		listening, err := net.Listen("tcp", addressVolume)

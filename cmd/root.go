@@ -45,14 +45,19 @@ func Execute() {
 }
 
 func init() {
-	fmt.Println("Log Level:", Logger.Level)
+	fmt.Println("Log Level: ", Logger.Level)
 	Logger.SetLevel(util.GetLogLevel())
 
-	if _, err := toml.DecodeFile("conf/conf.toml", &CFG); err != nil {
+	cf, err := util.GetConfigFile()
+	if err != nil {
+		Logger.Fatal("cannot load the config file.")
+	}
+
+	if _, err := toml.DecodeFile(cf, &CFG); err != nil {
 		Logger.Fatal(err)
 		return
 	} else {
-		Logger.Info("conf/conf.toml was loaded.")
+		Logger.Info(cf, " was loaded.")
 		Logger.Info(CFG.Welcome)
 	}
 	//fmt.Println(CFG)
