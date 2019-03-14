@@ -39,8 +39,9 @@ func GetLogLevel() log.Level {
 
 func GetConfigFile() (configpath string, err error) {
 	configpath = os.Getenv("HAZHUFS_CONFIGFILE")
-	_, err = os.Stat(HAZHUFS_CONFIGFILE)
+	_, err = os.Stat(configpath)
 	if err != nil {
+		fmt.Println("cannot find:", configpath)
 		return "", err
 	}
 	return configpath, nil
