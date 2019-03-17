@@ -36,12 +36,14 @@ func (vs *volumeService) ReadFile(ctx context.Context, FileIn *pbv.File) (*pbv.F
 }
 
 func (vs *volumeService) TransactionStart(ctx context.Context, FileIn *pbv.Empty) (*pbv.Empty, error) {
+	DBDATABULKMODEL = true
 	TransBegin()
 	return &pbv.Empty{}, nil
 }
 
 func (vs *volumeService) TransactionEnd(ctx context.Context, FileIn *pbv.Empty) (*pbv.Empty, error) {
 	TransCommit()
+	DBDATABULKMODEL = false
 	return &pbv.Empty{}, nil
 }
 

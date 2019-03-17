@@ -132,54 +132,70 @@ func (e *Entity) Get() *Entity {
 
 }
 
-var DBDATATX map[string]*bolt.Tx
-
 func TransBegin() {
-	Logger.Debug("TransBegin TransBegin TransBegin")
-	DBDATATX = make(map[string]*bolt.Tx)
-	DBDATATX["0"], _ = DBDATA["0"].Begin(true)
-	DBDATATX["1"], _ = DBDATA["1"].Begin(true)
-	DBDATATX["2"], _ = DBDATA["2"].Begin(true)
-	DBDATATX["3"], _ = DBDATA["3"].Begin(true)
-	DBDATATX["4"], _ = DBDATA["4"].Begin(true)
-	DBDATATX["5"], _ = DBDATA["5"].Begin(true)
-	DBDATATX["6"], _ = DBDATA["6"].Begin(true)
-	DBDATATX["7"], _ = DBDATA["7"].Begin(true)
-	DBDATATX["8"], _ = DBDATA["8"].Begin(true)
-	DBDATATX["9"], _ = DBDATA["9"].Begin(true)
-	DBDATATX["a"], _ = DBDATA["a"].Begin(true)
-	DBDATATX["b"], _ = DBDATA["b"].Begin(true)
-	DBDATATX["c"], _ = DBDATA["c"].Begin(true)
-	DBDATATX["d"], _ = DBDATA["d"].Begin(true)
-	DBDATATX["e"], _ = DBDATA["e"].Begin(true)
-	var err error
-	DBDATATX["f"], err = DBDATA["f"].Begin(true)
-	if err != nil {
-		Logger.Error("TransBegin:", err)
+	if DBDATABULKMODEL == true {
+		Logger.Debug("TransBegin")
+		DBDATATX = make(map[string]*bolt.Tx)
+		DBDATATX["0"], _ = DBDATA["0"].Begin(true)
+		DBDATATX["1"], _ = DBDATA["1"].Begin(true)
+		DBDATATX["2"], _ = DBDATA["2"].Begin(true)
+		DBDATATX["3"], _ = DBDATA["3"].Begin(true)
+		DBDATATX["4"], _ = DBDATA["4"].Begin(true)
+		DBDATATX["5"], _ = DBDATA["5"].Begin(true)
+		DBDATATX["6"], _ = DBDATA["6"].Begin(true)
+		DBDATATX["7"], _ = DBDATA["7"].Begin(true)
+		DBDATATX["8"], _ = DBDATA["8"].Begin(true)
+		DBDATATX["9"], _ = DBDATA["9"].Begin(true)
+		DBDATATX["a"], _ = DBDATA["a"].Begin(true)
+		DBDATATX["b"], _ = DBDATA["b"].Begin(true)
+		DBDATATX["c"], _ = DBDATA["c"].Begin(true)
+		DBDATATX["d"], _ = DBDATA["d"].Begin(true)
+		DBDATATX["e"], _ = DBDATA["e"].Begin(true)
+		DBDATATX["f"], _ = DBDATA["f"].Begin(true)
+	} else {
+		Logger.Error("DBDATABULKMODEL should be set as True first.")
 	}
+
 }
 
 func TransCommit() {
-	Logger.Debug("TransCommit TransCommit TransCommit")
-	DBDATATX["0"].Commit()
-	DBDATATX["1"].Commit()
-	DBDATATX["2"].Commit()
-	DBDATATX["3"].Commit()
-	DBDATATX["4"].Commit()
-	DBDATATX["5"].Commit()
-	DBDATATX["6"].Commit()
-	DBDATATX["7"].Commit()
-	DBDATATX["8"].Commit()
-	DBDATATX["9"].Commit()
-	DBDATATX["a"].Commit()
-	DBDATATX["b"].Commit()
-	DBDATATX["c"].Commit()
-	DBDATATX["d"].Commit()
-	DBDATATX["e"].Commit()
-	err := DBDATATX["f"].Commit()
-	if err != nil {
-		Logger.Error("TransCommit:", err)
+	if DBDATABULKMODEL == true {
+		Logger.Debug("TransCommit.")
+		DBDATATX["0"].Commit()
+		DBDATATX["1"].Commit()
+		DBDATATX["2"].Commit()
+		DBDATATX["3"].Commit()
+		DBDATATX["4"].Commit()
+		DBDATATX["5"].Commit()
+		DBDATATX["6"].Commit()
+		DBDATATX["7"].Commit()
+		DBDATATX["8"].Commit()
+		DBDATATX["9"].Commit()
+		DBDATATX["a"].Commit()
+		DBDATATX["b"].Commit()
+		DBDATATX["c"].Commit()
+		DBDATATX["d"].Commit()
+		DBDATATX["e"].Commit()
+		DBDATATX["f"].Commit()
+	} else {
+		Logger.Error("DBDATABULKMODEL should be set as True first.")
 	}
+	DBDATATX["0"] = nil
+	DBDATATX["1"] = nil
+	DBDATATX["2"] = nil
+	DBDATATX["3"] = nil
+	DBDATATX["4"] = nil
+	DBDATATX["5"] = nil
+	DBDATATX["6"] = nil
+	DBDATATX["7"] = nil
+	DBDATATX["8"] = nil
+	DBDATATX["9"] = nil
+	DBDATATX["a"] = nil
+	DBDATATX["b"] = nil
+	DBDATATX["c"] = nil
+	DBDATATX["d"] = nil
+	DBDATATX["e"] = nil
+	DBDATATX["f"] = nil
 }
 
 func (e *Entity) Save() error {
@@ -193,20 +209,19 @@ func (e *Entity) Save() error {
 	Logger.Debug("Save")
 	k := e.Key
 	dbid := k[0:1]
-	tx := DBDATATX[dbid]
-	// var tx *bolt.Tx
-	// var err error
-	// if DBDATATX[dbid] != nil {
-	// 	tx = DBDATATX[dbid]
-	// } else {
-	// 	db := e.Db
-	// 	tx, err = db.Begin(true)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	var tx *bolt.Tx
+	var err error
 
-	//defer tx.Rollback()
+	if DBDATABULKMODEL == true {
+		tx = DBDATATX[dbid]
+	} else {
+		db := e.Db
+		tx, err = db.Begin(true)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+	}
 
 	bkt_meta, err_meta := tx.CreateBucketIfNotExists([]byte("meta"))
 	if err_meta != nil {
@@ -232,7 +247,7 @@ func (e *Entity) Save() error {
 		return err_meta_update
 	}
 
-	/*
+	if DBDATABULKMODEL == false {
 		err_commit := tx.Commit()
 		if err_commit != nil {
 			Logger.Error("SaveFile: cannot commit transaction.")
@@ -240,7 +255,7 @@ func (e *Entity) Save() error {
 		} else {
 			Logger.Debug("SaveFile, Commit OK: ", e.Key)
 		}
-	*/
+	}
 	for _, fn_after := range e.afterSaveHandlers {
 		fn_after()
 	}
