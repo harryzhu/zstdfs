@@ -135,6 +135,7 @@ func (e *Entity) Get() *Entity {
 var DBDATATX map[string]*bolt.Tx
 
 func TransBegin() {
+	Logger.Debug("TransBegin TransBegin TransBegin")
 	DBDATATX = make(map[string]*bolt.Tx)
 	DBDATATX["0"], _ = DBDATA["0"].Begin(true)
 	DBDATATX["1"], _ = DBDATA["1"].Begin(true)
@@ -151,26 +152,34 @@ func TransBegin() {
 	DBDATATX["c"], _ = DBDATA["c"].Begin(true)
 	DBDATATX["d"], _ = DBDATA["d"].Begin(true)
 	DBDATATX["e"], _ = DBDATA["e"].Begin(true)
-	DBDATATX["f"], _ = DBDATA["f"].Begin(true)
+	var err error
+	DBDATATX["f"], err = DBDATA["f"].Begin(true)
+	if err != nil {
+		Logger.Error("TransBegin:", err)
+	}
 }
 
 func TransCommit() {
-	_ = DBDATATX["0"].Commit()
-	_ = DBDATATX["1"].Commit()
-	_ = DBDATATX["2"].Commit()
-	_ = DBDATATX["3"].Commit()
-	_ = DBDATATX["4"].Commit()
-	_ = DBDATATX["5"].Commit()
-	_ = DBDATATX["6"].Commit()
-	_ = DBDATATX["7"].Commit()
-	_ = DBDATATX["8"].Commit()
-	_ = DBDATATX["9"].Commit()
-	_ = DBDATATX["a"].Commit()
-	_ = DBDATATX["b"].Commit()
-	_ = DBDATATX["c"].Commit()
-	_ = DBDATATX["d"].Commit()
-	_ = DBDATATX["e"].Commit()
-	_ = DBDATATX["f"].Commit()
+	Logger.Debug("TransCommit TransCommit TransCommit")
+	DBDATATX["0"].Commit()
+	DBDATATX["1"].Commit()
+	DBDATATX["2"].Commit()
+	DBDATATX["3"].Commit()
+	DBDATATX["4"].Commit()
+	DBDATATX["5"].Commit()
+	DBDATATX["6"].Commit()
+	DBDATATX["7"].Commit()
+	DBDATATX["8"].Commit()
+	DBDATATX["9"].Commit()
+	DBDATATX["a"].Commit()
+	DBDATATX["b"].Commit()
+	DBDATATX["c"].Commit()
+	DBDATATX["d"].Commit()
+	DBDATATX["e"].Commit()
+	err := DBDATATX["f"].Commit()
+	if err != nil {
+		Logger.Error("TransCommit:", err)
+	}
 }
 
 func (e *Entity) Save() error {
@@ -184,19 +193,20 @@ func (e *Entity) Save() error {
 	Logger.Debug("Save")
 	k := e.Key
 	dbid := k[0:1]
-	var tx *bolt.Tx
-	var err error
-	if DBDATATX[dbid] != nil {
-		tx = DBDATATX[dbid]
-	} else {
-		db := e.Db
-		tx, err = db.Begin(true)
-		if err != nil {
-			return err
-		}
-	}
+	tx := DBDATATX[dbid]
+	// var tx *bolt.Tx
+	// var err error
+	// if DBDATATX[dbid] != nil {
+	// 	tx = DBDATATX[dbid]
+	// } else {
+	// 	db := e.Db
+	// 	tx, err = db.Begin(true)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	defer tx.Rollback()
+	//defer tx.Rollback()
 
 	bkt_meta, err_meta := tx.CreateBucketIfNotExists([]byte("meta"))
 	if err_meta != nil {
