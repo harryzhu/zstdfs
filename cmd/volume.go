@@ -35,7 +35,9 @@ var volumeCmd = &cobra.Command{
 
 		go func() {
 			cronVolume := cron.New()
-			cronVolume.AddFunc("*/3 * * * * *", func() { runSync() })
+			//cronVolume.AddFunc("*/3 * * * * *", func() { runSync() })
+			cronVolume.AddFunc("*/180 * * * * *", func() { runHeartbeat() })
+
 			cronVolume.Start()
 		}()
 

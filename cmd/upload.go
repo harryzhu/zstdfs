@@ -108,6 +108,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 24*3600*time.Second)
 	defer cancel()
+	client.TransactionStart(ctx, &pbv.Empty{})
 	stream, err := client.StreamSendFile(ctx)
 	if err != nil {
 		Logger.Warn("%v.StreamSendFile(_) = _, %v", client, err)
@@ -134,4 +135,6 @@ func runStreamSendFile(client pbv.VolumeServiceClient) {
 	}
 	stream.CloseSend()
 	<-waitc
+
+	client.TransactionEnd(ctx, &pbv.Empty{})
 }

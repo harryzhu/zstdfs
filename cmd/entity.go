@@ -132,6 +132,47 @@ func (e *Entity) Get() *Entity {
 
 }
 
+var DBDATATX map[string]*bolt.Tx
+
+func TransBegin() {
+	DBDATATX = make(map[string]*bolt.Tx)
+	DBDATATX["0"], _ = DBDATA["0"].Begin(true)
+	DBDATATX["1"], _ = DBDATA["1"].Begin(true)
+	DBDATATX["2"], _ = DBDATA["2"].Begin(true)
+	DBDATATX["3"], _ = DBDATA["3"].Begin(true)
+	DBDATATX["4"], _ = DBDATA["4"].Begin(true)
+	DBDATATX["5"], _ = DBDATA["5"].Begin(true)
+	DBDATATX["6"], _ = DBDATA["6"].Begin(true)
+	DBDATATX["7"], _ = DBDATA["7"].Begin(true)
+	DBDATATX["8"], _ = DBDATA["8"].Begin(true)
+	DBDATATX["9"], _ = DBDATA["9"].Begin(true)
+	DBDATATX["a"], _ = DBDATA["a"].Begin(true)
+	DBDATATX["b"], _ = DBDATA["b"].Begin(true)
+	DBDATATX["c"], _ = DBDATA["c"].Begin(true)
+	DBDATATX["d"], _ = DBDATA["d"].Begin(true)
+	DBDATATX["e"], _ = DBDATA["e"].Begin(true)
+	DBDATATX["f"], _ = DBDATA["f"].Begin(true)
+}
+
+func TransCommit() {
+	_ = DBDATATX["0"].Commit()
+	_ = DBDATATX["1"].Commit()
+	_ = DBDATATX["2"].Commit()
+	_ = DBDATATX["3"].Commit()
+	_ = DBDATATX["4"].Commit()
+	_ = DBDATATX["5"].Commit()
+	_ = DBDATATX["6"].Commit()
+	_ = DBDATATX["7"].Commit()
+	_ = DBDATATX["8"].Commit()
+	_ = DBDATATX["9"].Commit()
+	_ = DBDATATX["a"].Commit()
+	_ = DBDATATX["b"].Commit()
+	_ = DBDATATX["c"].Commit()
+	_ = DBDATATX["d"].Commit()
+	_ = DBDATATX["e"].Commit()
+	_ = DBDATATX["f"].Commit()
+}
+
 func (e *Entity) Save() error {
 	if e.DataExists() == true {
 		Logger.Debug("Existed, will ignore.")
@@ -141,13 +182,20 @@ func (e *Entity) Save() error {
 		fn_before()
 	}
 	Logger.Debug("Save")
-
-	db := e.Db
-
-	tx, err := db.Begin(true)
-	if err != nil {
-		return err
+	k := e.Key
+	dbid := k[0:1]
+	var tx *bolt.Tx
+	var err error
+	if DBDATATX[dbid] != nil {
+		tx = DBDATATX[dbid]
+	} else {
+		db := e.Db
+		tx, err = db.Begin(true)
+		if err != nil {
+			return err
+		}
 	}
+
 	defer tx.Rollback()
 
 	bkt_meta, err_meta := tx.CreateBucketIfNotExists([]byte("meta"))
@@ -174,14 +222,15 @@ func (e *Entity) Save() error {
 		return err_meta_update
 	}
 
-	err_commit := tx.Commit()
-	if err_commit != nil {
-		Logger.Error("SaveFile: cannot commit transaction.")
-		return err_commit
-	} else {
-		Logger.Debug("SaveFile, Commit OK: ", e.Key)
-	}
-
+	/*
+		err_commit := tx.Commit()
+		if err_commit != nil {
+			Logger.Error("SaveFile: cannot commit transaction.")
+			return err_commit
+		} else {
+			Logger.Debug("SaveFile, Commit OK: ", e.Key)
+		}
+	*/
 	for _, fn_after := range e.afterSaveHandlers {
 		fn_after()
 	}

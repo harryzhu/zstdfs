@@ -12,9 +12,9 @@ import (
 type volumeService struct {
 }
 
-func (vs *volumeService) Ping(ctx context.Context, PingIn *pbv.Pong) (*pbv.Pong, error) {
+func (vs *volumeService) Ping(ctx context.Context, PingIn *pbv.Info) (*pbv.Info, error) {
 	Logger.Debug("Ping Test...")
-	return &pbv.Pong{Factor: PingIn.Factor, Message: "OK"}, nil
+	return &pbv.Info{Action: PingIn.Action, ErrorCode: "200", ErrorMessage: "OK"}, nil
 }
 
 func (vs *volumeService) ReadFile(ctx context.Context, FileIn *pbv.File) (*pbv.File, error) {
@@ -33,6 +33,16 @@ func (vs *volumeService) ReadFile(ctx context.Context, FileIn *pbv.File) (*pbv.F
 	Logger.Info("GetFile, Key: ", file.Key)
 	return &pbv.File{Key: file.Key, Meta: file.Meta, Data: file.Data}, nil
 
+}
+
+func (vs *volumeService) TransactionStart(ctx context.Context, FileIn *pbv.Empty) (*pbv.Empty, error) {
+	TransBegin()
+	return &pbv.Empty{}, nil
+}
+
+func (vs *volumeService) TransactionEnd(ctx context.Context, FileIn *pbv.Empty) (*pbv.Empty, error) {
+	TransCommit()
+	return &pbv.Empty{}, nil
 }
 
 func (vs *volumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileServer) error {

@@ -31,3 +31,7 @@ var (
 	NSQP *nsq.Producer
 	NSQC *nsq.Consumer
 )
+
+var (
+	VOLUMEPEERSONLINE []string
+)
