@@ -15,12 +15,13 @@ var (
 )
 
 var (
-	DBMASTER        *sql.DB
-	DBMETA          *sql.DB
-	DBDATA          map[string]*bolt.DB
-	DBDATATX        map[string]*bolt.Tx
-	DBDATABULKMODEL bool
-	DBHTTP          *bolt.DB
+	DBMASTER          *sql.DB
+	DBMETA            *sql.DB
+	DBDATA            map[string]*bolt.DB
+	DBDATATX          map[string]*bolt.Tx
+	DBDATABULKMODEL   bool
+	DBDATABULKCOUNTER int
+	DBHTTP            *bolt.DB
 )
 
 //grpc

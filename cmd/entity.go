@@ -48,7 +48,6 @@ func (e *Entity) MetaExists() bool {
 }
 
 func (e *Entity) DataExists() bool {
-	Logger.Debug("DataExists")
 	var b_return bool = false
 	db := e.Db
 	db.View(func(tx *bolt.Tx) error {
@@ -247,6 +246,15 @@ func (e *Entity) Save() error {
 	err_meta_update := e.MetaUpdate()
 	if err_meta_update != nil {
 		return err_meta_update
+	}
+
+	if DBDATABULKMODEL == true {
+		DBDATABULKCOUNTER++
+		if DBDATABULKCOUNTER%100 == 0 {
+			TransCommit()
+			TransBegin()
+			Logger.Debug("TransCommit:", DBDATABULKCOUNTER)
+		}
 	}
 
 	if DBDATABULKMODEL == false {

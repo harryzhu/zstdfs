@@ -37,6 +37,7 @@ func (vs *volumeService) ReadFile(ctx context.Context, FileIn *pbv.File) (*pbv.F
 
 func (vs *volumeService) TransactionStart(ctx context.Context, FileIn *pbv.Empty) (*pbv.Empty, error) {
 	DBDATABULKMODEL = true
+	DBDATABULKCOUNTER = 0
 	TransBegin()
 	return &pbv.Empty{}, nil
 }
@@ -44,6 +45,7 @@ func (vs *volumeService) TransactionStart(ctx context.Context, FileIn *pbv.Empty
 func (vs *volumeService) TransactionEnd(ctx context.Context, FileIn *pbv.Empty) (*pbv.Empty, error) {
 	TransCommit()
 	DBDATABULKMODEL = false
+	DBDATABULKCOUNTER = 0
 	return &pbv.Empty{}, nil
 }
 
