@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -250,10 +251,11 @@ func (e *Entity) Save() error {
 
 	if DBDATABULKMODEL == true {
 		DBDATABULKCOUNTER++
-		if DBDATABULKCOUNTER%100 == 0 {
+		if DBDATABULKCOUNTER%50 == 0 {
+			Logger.Debug("TransCommitting: ", strconv.Itoa(DBDATABULKCOUNTER))
 			TransCommit()
 			TransBegin()
-			Logger.Debug("TransCommit:", DBDATABULKCOUNTER)
+
 		}
 	}
 
