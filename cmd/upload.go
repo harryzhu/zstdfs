@@ -104,6 +104,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient) {
 			fileRequests = append(fileRequests, &pbv.File{Key: util.ByteMD5(fileData), Meta: []byte(fmeta), Data: fileData})
 		}
 	}
+	int_length_fileRequests := len(fileRequests)
 	Logger.Info("will upload files totally(streaming): ", len(fileRequests))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 24*3600*time.Second)
@@ -114,6 +115,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient) {
 		Logger.Warn("%v.StreamSendFile(_) = _, %v", client, err)
 	}
 	waitc := make(chan struct{})
+	int_response := 0
 	go func() {
 		for {
 			in, err := stream.Recv()
@@ -125,7 +127,8 @@ func runStreamSendFile(client pbv.VolumeServiceClient) {
 			if err != nil {
 				Logger.Warn("Failed to receive a filerequest : %v", err)
 			}
-			Logger.Info("Got message response key: ", in.Key)
+			int_response++
+			Logger.Info("Got message response key: ", int_response, "/", int_length_fileRequests, ": ", in.Key)
 		}
 	}()
 	for _, filerequest := range fileRequests {

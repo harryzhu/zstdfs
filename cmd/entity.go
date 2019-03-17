@@ -251,7 +251,7 @@ func (e *Entity) Save() error {
 
 	if DBDATABULKMODEL == true {
 		DBDATABULKCOUNTER++
-		if DBDATABULKCOUNTER%50 == 0 {
+		if DBDATABULKCOUNTER%160 == 0 {
 			Logger.Debug("TransCommitting: ", strconv.Itoa(DBDATABULKCOUNTER))
 			TransCommit()
 			TransBegin()
