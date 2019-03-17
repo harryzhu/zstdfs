@@ -177,25 +177,27 @@ func TransCommit() {
 		DBDATATX["d"].Commit()
 		DBDATATX["e"].Commit()
 		DBDATATX["f"].Commit()
+
+		DBDATATX["0"] = nil
+		DBDATATX["1"] = nil
+		DBDATATX["2"] = nil
+		DBDATATX["3"] = nil
+		DBDATATX["4"] = nil
+		DBDATATX["5"] = nil
+		DBDATATX["6"] = nil
+		DBDATATX["7"] = nil
+		DBDATATX["8"] = nil
+		DBDATATX["9"] = nil
+		DBDATATX["a"] = nil
+		DBDATATX["b"] = nil
+		DBDATATX["c"] = nil
+		DBDATATX["d"] = nil
+		DBDATATX["e"] = nil
+		DBDATATX["f"] = nil
 	} else {
 		Logger.Error("DBDATABULKMODEL should be set as True first.")
 	}
-	DBDATATX["0"] = nil
-	DBDATATX["1"] = nil
-	DBDATATX["2"] = nil
-	DBDATATX["3"] = nil
-	DBDATATX["4"] = nil
-	DBDATATX["5"] = nil
-	DBDATATX["6"] = nil
-	DBDATATX["7"] = nil
-	DBDATATX["8"] = nil
-	DBDATATX["9"] = nil
-	DBDATATX["a"] = nil
-	DBDATATX["b"] = nil
-	DBDATATX["c"] = nil
-	DBDATATX["d"] = nil
-	DBDATATX["e"] = nil
-	DBDATATX["f"] = nil
+
 }
 
 func (e *Entity) Save() error {
