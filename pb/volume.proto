@@ -5,6 +5,7 @@ package volume_pb;
 service VolumeService {
 	rpc StreamSendFile(stream File) returns (stream File){}
 	rpc ReadFile(File) returns (File){}
+	rpc GetSyncFileList(SyncFileList) returns (SyncFileList){}
 	rpc TransactionStart(Empty) returns (Empty){}
 	rpc TransactionEnd(Empty) returns (Empty){}
 	rpc Ping(Info) returns (Info){}
@@ -12,6 +13,11 @@ service VolumeService {
 
 message Empty{
 	
+}
+
+message SyncFileList{
+	string Timestamp = 1;
+	repeated File FileList  = 2;
 }
 
 message Info{

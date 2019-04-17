@@ -53,317 +53,95 @@ func (m *Empty) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
-type Heartbeat struct {
-	LeaderIp             string   `protobuf:"bytes,1,opt,name=LeaderIp,proto3" json:"LeaderIp,omitempty"`
-	LeaderPort           string   `protobuf:"bytes,2,opt,name=LeaderPort,proto3" json:"LeaderPort,omitempty"`
-	VolumeGroup          string   `protobuf:"bytes,3,opt,name=VolumeGroup,proto3" json:"VolumeGroup,omitempty"`
-	VolumeDc             string   `protobuf:"bytes,4,opt,name=VolumeDc,proto3" json:"VolumeDc,omitempty"`
-	VolumeRack           string   `protobuf:"bytes,5,opt,name=VolumeRack,proto3" json:"VolumeRack,omitempty"`
-	VolumeIp             string   `protobuf:"bytes,6,opt,name=VolumeIp,proto3" json:"VolumeIp,omitempty"`
-	VolumePort           string   `protobuf:"bytes,7,opt,name=VolumePort,proto3" json:"VolumePort,omitempty"`
-	VolumeMaxMB          uint32   `protobuf:"varint,8,opt,name=VolumeMaxMB,proto3" json:"VolumeMaxMB,omitempty"`
-	VolumeSizeMB         uint32   `protobuf:"varint,9,opt,name=VolumeSizeMB,proto3" json:"VolumeSizeMB,omitempty"`
-	VolumeTimeUnix       int64    `protobuf:"varint,10,opt,name=VolumeTimeUnix,proto3" json:"VolumeTimeUnix,omitempty"`
-	VolumeMode           uint32   `protobuf:"varint,11,opt,name=VolumeMode,proto3" json:"VolumeMode,omitempty"`
-	FromRole             string   `protobuf:"bytes,12,opt,name=FromRole,proto3" json:"FromRole,omitempty"`
-	ToRole               string   `protobuf:"bytes,13,opt,name=ToRole,proto3" json:"ToRole,omitempty"`
-	CheckSum             string   `protobuf:"bytes,14,opt,name=CheckSum,proto3" json:"CheckSum,omitempty"`
+type File struct {
+	Key                  string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
+	Action               string   `protobuf:"bytes,2,opt,name=Action,proto3" json:"Action,omitempty"`
+	ErrorCode            uint32   `protobuf:"varint,3,opt,name=ErrorCode,proto3" json:"ErrorCode,omitempty"`
+	Node                 string   `protobuf:"bytes,4,opt,name=Node,proto3" json:"Node,omitempty"`
+	Size                 uint32   `protobuf:"varint,5,opt,name=Size,proto3" json:"Size,omitempty"`
+	Created              uint32   `protobuf:"varint,6,opt,name=Created,proto3" json:"Created,omitempty"`
+	Meta                 []byte   `protobuf:"bytes,7,opt,name=Meta,proto3" json:"Meta,omitempty"`
+	Data                 []byte   `protobuf:"bytes,8,opt,name=Data,proto3" json:"Data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Heartbeat) Reset()         { *m = Heartbeat{} }
-func (m *Heartbeat) String() string { return proto.CompactTextString(m) }
-func (*Heartbeat) ProtoMessage()    {}
-func (*Heartbeat) Descriptor() ([]byte, []int) {
+func (m *File) Reset()         { *m = File{} }
+func (m *File) String() string { return proto.CompactTextString(m) }
+func (*File) ProtoMessage()    {}
+func (*File) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f9c348dec43a6705, []int{1}
 }
 
-func (m *Heartbeat) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Heartbeat.Unmarshal(m, b)
+func (m *File) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_File.Unmarshal(m, b)
 }
-func (m *Heartbeat) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Heartbeat.Marshal(b, m, deterministic)
+func (m *File) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_File.Marshal(b, m, deterministic)
 }
-func (m *Heartbeat) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Heartbeat.Merge(m, src)
+func (m *File) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_File.Merge(m, src)
 }
-func (m *Heartbeat) XXX_Size() int {
-	return xxx_messageInfo_Heartbeat.Size(m)
+func (m *File) XXX_Size() int {
+	return xxx_messageInfo_File.Size(m)
 }
-func (m *Heartbeat) XXX_DiscardUnknown() {
-	xxx_messageInfo_Heartbeat.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Heartbeat proto.InternalMessageInfo
-
-func (m *Heartbeat) GetLeaderIp() string {
-	if m != nil {
-		return m.LeaderIp
-	}
-	return ""
+func (m *File) XXX_DiscardUnknown() {
+	xxx_messageInfo_File.DiscardUnknown(m)
 }
 
-func (m *Heartbeat) GetLeaderPort() string {
-	if m != nil {
-		return m.LeaderPort
-	}
-	return ""
-}
+var xxx_messageInfo_File proto.InternalMessageInfo
 
-func (m *Heartbeat) GetVolumeGroup() string {
-	if m != nil {
-		return m.VolumeGroup
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetVolumeDc() string {
-	if m != nil {
-		return m.VolumeDc
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetVolumeRack() string {
-	if m != nil {
-		return m.VolumeRack
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetVolumeIp() string {
-	if m != nil {
-		return m.VolumeIp
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetVolumePort() string {
-	if m != nil {
-		return m.VolumePort
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetVolumeMaxMB() uint32 {
-	if m != nil {
-		return m.VolumeMaxMB
-	}
-	return 0
-}
-
-func (m *Heartbeat) GetVolumeSizeMB() uint32 {
-	if m != nil {
-		return m.VolumeSizeMB
-	}
-	return 0
-}
-
-func (m *Heartbeat) GetVolumeTimeUnix() int64 {
-	if m != nil {
-		return m.VolumeTimeUnix
-	}
-	return 0
-}
-
-func (m *Heartbeat) GetVolumeMode() uint32 {
-	if m != nil {
-		return m.VolumeMode
-	}
-	return 0
-}
-
-func (m *Heartbeat) GetFromRole() string {
-	if m != nil {
-		return m.FromRole
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetToRole() string {
-	if m != nil {
-		return m.ToRole
-	}
-	return ""
-}
-
-func (m *Heartbeat) GetCheckSum() string {
-	if m != nil {
-		return m.CheckSum
-	}
-	return ""
-}
-
-type ReplicaList struct {
-	Replicas             []*Replica `protobuf:"bytes,1,rep,name=replicas,proto3" json:"replicas,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
-	XXX_unrecognized     []byte     `json:"-"`
-	XXX_sizecache        int32      `json:"-"`
-}
-
-func (m *ReplicaList) Reset()         { *m = ReplicaList{} }
-func (m *ReplicaList) String() string { return proto.CompactTextString(m) }
-func (*ReplicaList) ProtoMessage()    {}
-func (*ReplicaList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f9c348dec43a6705, []int{2}
-}
-
-func (m *ReplicaList) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ReplicaList.Unmarshal(m, b)
-}
-func (m *ReplicaList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ReplicaList.Marshal(b, m, deterministic)
-}
-func (m *ReplicaList) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ReplicaList.Merge(m, src)
-}
-func (m *ReplicaList) XXX_Size() int {
-	return xxx_messageInfo_ReplicaList.Size(m)
-}
-func (m *ReplicaList) XXX_DiscardUnknown() {
-	xxx_messageInfo_ReplicaList.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ReplicaList proto.InternalMessageInfo
-
-func (m *ReplicaList) GetReplicas() []*Replica {
-	if m != nil {
-		return m.Replicas
-	}
-	return nil
-}
-
-type Replica struct {
-	Key                  string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
-	FromDc               string   `protobuf:"bytes,2,opt,name=FromDc,proto3" json:"FromDc,omitempty"`
-	FromRack             string   `protobuf:"bytes,3,opt,name=FromRack,proto3" json:"FromRack,omitempty"`
-	FromIp               string   `protobuf:"bytes,4,opt,name=FromIp,proto3" json:"FromIp,omitempty"`
-	FromPort             string   `protobuf:"bytes,5,opt,name=FromPort,proto3" json:"FromPort,omitempty"`
-	ToDc                 string   `protobuf:"bytes,6,opt,name=ToDc,proto3" json:"ToDc,omitempty"`
-	ToRack               string   `protobuf:"bytes,7,opt,name=ToRack,proto3" json:"ToRack,omitempty"`
-	ToIp                 string   `protobuf:"bytes,8,opt,name=ToIp,proto3" json:"ToIp,omitempty"`
-	ToPort               string   `protobuf:"bytes,9,opt,name=ToPort,proto3" json:"ToPort,omitempty"`
-	Created              string   `protobuf:"bytes,10,opt,name=Created,proto3" json:"Created,omitempty"`
-	Action               string   `protobuf:"bytes,11,opt,name=Action,proto3" json:"Action,omitempty"`
-	Status               string   `protobuf:"bytes,12,opt,name=Status,proto3" json:"Status,omitempty"`
-	Data                 []byte   `protobuf:"bytes,13,opt,name=Data,proto3" json:"Data,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Replica) Reset()         { *m = Replica{} }
-func (m *Replica) String() string { return proto.CompactTextString(m) }
-func (*Replica) ProtoMessage()    {}
-func (*Replica) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f9c348dec43a6705, []int{3}
-}
-
-func (m *Replica) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Replica.Unmarshal(m, b)
-}
-func (m *Replica) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Replica.Marshal(b, m, deterministic)
-}
-func (m *Replica) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Replica.Merge(m, src)
-}
-func (m *Replica) XXX_Size() int {
-	return xxx_messageInfo_Replica.Size(m)
-}
-func (m *Replica) XXX_DiscardUnknown() {
-	xxx_messageInfo_Replica.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Replica proto.InternalMessageInfo
-
-func (m *Replica) GetKey() string {
+func (m *File) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
 	return ""
 }
 
-func (m *Replica) GetFromDc() string {
-	if m != nil {
-		return m.FromDc
-	}
-	return ""
-}
-
-func (m *Replica) GetFromRack() string {
-	if m != nil {
-		return m.FromRack
-	}
-	return ""
-}
-
-func (m *Replica) GetFromIp() string {
-	if m != nil {
-		return m.FromIp
-	}
-	return ""
-}
-
-func (m *Replica) GetFromPort() string {
-	if m != nil {
-		return m.FromPort
-	}
-	return ""
-}
-
-func (m *Replica) GetToDc() string {
-	if m != nil {
-		return m.ToDc
-	}
-	return ""
-}
-
-func (m *Replica) GetToRack() string {
-	if m != nil {
-		return m.ToRack
-	}
-	return ""
-}
-
-func (m *Replica) GetToIp() string {
-	if m != nil {
-		return m.ToIp
-	}
-	return ""
-}
-
-func (m *Replica) GetToPort() string {
-	if m != nil {
-		return m.ToPort
-	}
-	return ""
-}
-
-func (m *Replica) GetCreated() string {
-	if m != nil {
-		return m.Created
-	}
-	return ""
-}
-
-func (m *Replica) GetAction() string {
+func (m *File) GetAction() string {
 	if m != nil {
 		return m.Action
 	}
 	return ""
 }
 
-func (m *Replica) GetStatus() string {
+func (m *File) GetErrorCode() uint32 {
 	if m != nil {
-		return m.Status
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *File) GetNode() string {
+	if m != nil {
+		return m.Node
 	}
 	return ""
 }
 
-func (m *Replica) GetData() []byte {
+func (m *File) GetSize() uint32 {
+	if m != nil {
+		return m.Size
+	}
+	return 0
+}
+
+func (m *File) GetCreated() uint32 {
+	if m != nil {
+		return m.Created
+	}
+	return 0
+}
+
+func (m *File) GetMeta() []byte {
+	if m != nil {
+		return m.Meta
+	}
+	return nil
+}
+
+func (m *File) GetData() []byte {
 	if m != nil {
 		return m.Data
 	}
@@ -372,47 +150,28 @@ func (m *Replica) GetData() []byte {
 
 func init() {
 	proto.RegisterType((*Empty)(nil), "master_pb.Empty")
-	proto.RegisterType((*Heartbeat)(nil), "master_pb.Heartbeat")
-	proto.RegisterType((*ReplicaList)(nil), "master_pb.ReplicaList")
-	proto.RegisterType((*Replica)(nil), "master_pb.Replica")
+	proto.RegisterType((*File)(nil), "master_pb.File")
 }
 
 func init() { proto.RegisterFile("master.proto", fileDescriptor_f9c348dec43a6705) }
 
 var fileDescriptor_f9c348dec43a6705 = []byte{
-	// 510 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x54, 0x4f, 0x6f, 0x13, 0x3f,
-	0x10, 0xcd, 0x76, 0x9b, 0x3f, 0x3b, 0xf9, 0xf3, 0xfb, 0xc9, 0x42, 0x95, 0x95, 0x03, 0x8a, 0xf6,
-	0x80, 0x72, 0x8a, 0x50, 0x39, 0x17, 0x44, 0x1b, 0x28, 0x11, 0x8d, 0x84, 0xbc, 0x81, 0x2b, 0x72,
-	0x36, 0x23, 0xb1, 0x6a, 0x36, 0xb6, 0x1c, 0x07, 0xb5, 0x7c, 0x33, 0x4e, 0x7c, 0x04, 0xbe, 0x12,
-	0xf2, 0xd8, 0xbb, 0xd9, 0x42, 0x6e, 0xf3, 0x9e, 0xdf, 0x1b, 0x8f, 0xe7, 0x25, 0x0b, 0x83, 0x52,
-	0xee, 0x2d, 0x9a, 0x99, 0x36, 0xca, 0x2a, 0x96, 0x78, 0xf4, 0x55, 0xaf, 0xd3, 0x2e, 0xb4, 0xdf,
-	0x95, 0xda, 0x3e, 0xa6, 0xbf, 0x62, 0x48, 0x3e, 0xa0, 0x34, 0x76, 0x8d, 0xd2, 0xb2, 0x31, 0xf4,
-	0xee, 0x50, 0x6e, 0xd0, 0x2c, 0x34, 0x8f, 0x26, 0xd1, 0x34, 0x11, 0x35, 0x66, 0xcf, 0x01, 0x7c,
-	0xfd, 0x49, 0x19, 0xcb, 0xcf, 0xe8, 0xb4, 0xc1, 0xb0, 0x09, 0xf4, 0xbf, 0xa8, 0xed, 0xa1, 0xc4,
-	0x5b, 0xa3, 0x0e, 0x9a, 0xc7, 0x24, 0x68, 0x52, 0xae, 0xbb, 0x87, 0xf3, 0x9c, 0x9f, 0xfb, 0xee,
-	0x15, 0x76, 0xdd, 0x7d, 0x2d, 0x64, 0x7e, 0xcf, 0xdb, 0xbe, 0xfb, 0x91, 0x39, 0x7a, 0x17, 0x9a,
-	0x77, 0x9a, 0x5e, 0x3f, 0x99, 0xaf, 0x69, 0xb2, 0x6e, 0xd3, 0xfb, 0x74, 0xb2, 0xa5, 0x7c, 0x58,
-	0x5e, 0xf3, 0xde, 0x24, 0x9a, 0x0e, 0x45, 0x93, 0x62, 0x29, 0x0c, 0x3c, 0xcc, 0x8a, 0x1f, 0xb8,
-	0xbc, 0xe6, 0x09, 0x49, 0x9e, 0x70, 0xec, 0x05, 0x8c, 0x3c, 0x5e, 0x15, 0x25, 0x7e, 0xde, 0x15,
-	0x0f, 0x1c, 0x26, 0xd1, 0x34, 0x16, 0x7f, 0xb1, 0xc7, 0x69, 0x96, 0x6a, 0x83, 0xbc, 0x4f, 0x9d,
-	0x1a, 0x8c, 0x7b, 0xc9, 0x7b, 0xa3, 0x4a, 0xa1, 0xb6, 0xc8, 0x07, 0xfe, 0x25, 0x15, 0x66, 0x17,
-	0xd0, 0x59, 0x29, 0x3a, 0x19, 0xd2, 0x49, 0x40, 0xce, 0x73, 0xf3, 0x0d, 0xf3, 0xfb, 0xec, 0x50,
-	0xf2, 0x91, 0xf7, 0x54, 0x38, 0xbd, 0x82, 0xbe, 0x40, 0xbd, 0x2d, 0x72, 0x79, 0x57, 0xec, 0x2d,
-	0x9b, 0x41, 0xcf, 0x78, 0xb8, 0xe7, 0xd1, 0x24, 0x9e, 0xf6, 0x2f, 0xd9, 0xac, 0xce, 0x7d, 0x16,
-	0x94, 0xa2, 0xd6, 0xa4, 0x3f, 0xcf, 0xa0, 0x1b, 0x58, 0xf6, 0x3f, 0xc4, 0x1f, 0xf1, 0x31, 0x24,
-	0xef, 0x4a, 0x37, 0x90, 0x1b, 0x6e, 0x9e, 0x87, 0xc0, 0x03, 0xaa, 0x1f, 0xe1, 0xc2, 0x8a, 0x1b,
-	0x8f, 0x70, 0x51, 0x05, 0xcf, 0x42, 0x87, 0x90, 0x03, 0xaa, 0x3c, 0x14, 0x52, 0xfb, 0xe8, 0xa1,
-	0x88, 0x18, 0x9c, 0xaf, 0xd4, 0x3c, 0x0f, 0xd1, 0x52, 0x1d, 0x96, 0xe1, 0x6e, 0xe8, 0xd6, 0xcb,
-	0x70, 0xfd, 0x49, 0xbb, 0xd0, 0x94, 0x23, 0x69, 0x17, 0xda, 0x6b, 0xa9, 0x73, 0x52, 0x69, 0xa9,
-	0x2f, 0x87, 0xee, 0x8d, 0x41, 0x69, 0x71, 0x43, 0x69, 0x25, 0xa2, 0x82, 0xce, 0xf1, 0x36, 0xb7,
-	0x85, 0xda, 0x51, 0x44, 0x89, 0x08, 0xc8, 0xf1, 0x99, 0x95, 0xf6, 0xb0, 0x0f, 0xe1, 0x04, 0xe4,
-	0x6e, 0x9d, 0x4b, 0x2b, 0x29, 0x98, 0x81, 0xa0, 0xfa, 0xf2, 0x77, 0x04, 0x43, 0xbf, 0xdb, 0x0c,
-	0xcd, 0xf7, 0x22, 0x47, 0x76, 0x05, 0xc3, 0x0c, 0x77, 0x9b, 0xe3, 0x3f, 0xea, 0x59, 0x63, 0xf9,
-	0x35, 0x3b, 0x3e, 0xc9, 0xa6, 0x2d, 0xf6, 0x06, 0xfe, 0xcb, 0xac, 0x41, 0x59, 0x86, 0x44, 0x2c,
-	0xb2, 0x13, 0xe9, 0x8d, 0x4f, 0x70, 0x69, 0x6b, 0x1a, 0xbd, 0x8c, 0xd8, 0x6b, 0x18, 0xdd, 0xa2,
-	0x6d, 0xfe, 0x1e, 0x4e, 0xf9, 0x2f, 0xfe, 0xe5, 0x9c, 0x36, 0x6d, 0xad, 0x3b, 0xf4, 0xa5, 0x78,
-	0xf5, 0x27, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x91, 0x26, 0x7c, 0x39, 0x04, 0x00, 0x00,
+	// 229 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0xbf, 0x4a, 0xc4, 0x40,
+	0x10, 0xc6, 0x5d, 0x2f, 0x97, 0x98, 0xe1, 0x4e, 0x65, 0x0a, 0x19, 0xc4, 0x22, 0xa4, 0x4a, 0x15,
+	0x44, 0x1b, 0x5b, 0x39, 0x4f, 0x10, 0xd1, 0x22, 0x79, 0x00, 0xd9, 0xbb, 0x4c, 0x11, 0x30, 0xb7,
+	0x61, 0x1c, 0x84, 0xf3, 0xc9, 0x7c, 0x3c, 0xd9, 0x89, 0x7f, 0xc0, 0xee, 0xf7, 0xfd, 0xf6, 0xdb,
+	0xe2, 0x1b, 0x58, 0x0c, 0xfe, 0x4d, 0x59, 0xea, 0x51, 0x82, 0x06, 0xcc, 0xa7, 0xf4, 0x32, 0x6e,
+	0xca, 0x0c, 0xe6, 0xeb, 0x61, 0xd4, 0x7d, 0xf9, 0xe9, 0x20, 0xb9, 0xef, 0x5f, 0x19, 0x4f, 0x61,
+	0xf6, 0xc8, 0x7b, 0x72, 0x85, 0xab, 0xf2, 0x26, 0x22, 0x9e, 0x41, 0x7a, 0xbb, 0xd5, 0x3e, 0xec,
+	0xe8, 0xd0, 0xe4, 0x77, 0xc2, 0x0b, 0xc8, 0xd7, 0x22, 0x41, 0x56, 0xa1, 0x63, 0x9a, 0x15, 0xae,
+	0x5a, 0x36, 0x7f, 0x02, 0x11, 0x92, 0xe7, 0xf8, 0x90, 0xd8, 0x1f, 0xe3, 0xe8, 0xda, 0xfe, 0x83,
+	0x69, 0x6e, 0x65, 0x63, 0x24, 0xc8, 0x56, 0xc2, 0x5e, 0xb9, 0xa3, 0xd4, 0xf4, 0x4f, 0x8c, 0xed,
+	0x27, 0x56, 0x4f, 0x59, 0xe1, 0xaa, 0x45, 0x63, 0x1c, 0xdd, 0x9d, 0x57, 0x4f, 0x47, 0x93, 0x8b,
+	0x7c, 0xf5, 0x00, 0xcb, 0x69, 0x50, 0xcb, 0xf2, 0xde, 0x6f, 0x19, 0x6f, 0xe0, 0xb8, 0x55, 0x61,
+	0x3f, 0xb4, 0xbc, 0xeb, 0x6c, 0xd4, 0x49, 0xfd, 0x3b, 0xb9, 0x8e, 0xe2, 0xfc, 0xbf, 0x28, 0x0f,
+	0x2a, 0x77, 0xe9, 0x36, 0xa9, 0x1d, 0xe8, 0xfa, 0x2b, 0x00, 0x00, 0xff, 0xff, 0xf8, 0x3f, 0x70,
+	0x17, 0x30, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -427,9 +186,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MasterServiceClient interface {
-	SendHeartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Heartbeat, error)
-	StreamReplicate(ctx context.Context, opts ...grpc.CallOption) (MasterService_StreamReplicateClient, error)
-	GetReplicaList(ctx context.Context, in *Replica, opts ...grpc.CallOption) (*ReplicaList, error)
+	StreamSendFile(ctx context.Context, opts ...grpc.CallOption) (MasterService_StreamSendFileClient, error)
 }
 
 type masterServiceClient struct {
@@ -440,145 +197,80 @@ func NewMasterServiceClient(cc *grpc.ClientConn) MasterServiceClient {
 	return &masterServiceClient{cc}
 }
 
-func (c *masterServiceClient) SendHeartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Heartbeat, error) {
-	out := new(Heartbeat)
-	err := c.cc.Invoke(ctx, "/master_pb.masterService/SendHeartbeat", in, out, opts...)
+func (c *masterServiceClient) StreamSendFile(ctx context.Context, opts ...grpc.CallOption) (MasterService_StreamSendFileClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_MasterService_serviceDesc.Streams[0], "/master_pb.masterService/StreamSendFile", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
-}
-
-func (c *masterServiceClient) StreamReplicate(ctx context.Context, opts ...grpc.CallOption) (MasterService_StreamReplicateClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_MasterService_serviceDesc.Streams[0], "/master_pb.masterService/StreamReplicate", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &masterServiceStreamReplicateClient{stream}
+	x := &masterServiceStreamSendFileClient{stream}
 	return x, nil
 }
 
-type MasterService_StreamReplicateClient interface {
-	Send(*Replica) error
-	Recv() (*Replica, error)
+type MasterService_StreamSendFileClient interface {
+	Send(*File) error
+	Recv() (*File, error)
 	grpc.ClientStream
 }
 
-type masterServiceStreamReplicateClient struct {
+type masterServiceStreamSendFileClient struct {
 	grpc.ClientStream
 }
 
-func (x *masterServiceStreamReplicateClient) Send(m *Replica) error {
+func (x *masterServiceStreamSendFileClient) Send(m *File) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *masterServiceStreamReplicateClient) Recv() (*Replica, error) {
-	m := new(Replica)
+func (x *masterServiceStreamSendFileClient) Recv() (*File, error) {
+	m := new(File)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *masterServiceClient) GetReplicaList(ctx context.Context, in *Replica, opts ...grpc.CallOption) (*ReplicaList, error) {
-	out := new(ReplicaList)
-	err := c.cc.Invoke(ctx, "/master_pb.masterService/GetReplicaList", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MasterServiceServer is the server API for MasterService service.
 type MasterServiceServer interface {
-	SendHeartbeat(context.Context, *Heartbeat) (*Heartbeat, error)
-	StreamReplicate(MasterService_StreamReplicateServer) error
-	GetReplicaList(context.Context, *Replica) (*ReplicaList, error)
+	StreamSendFile(MasterService_StreamSendFileServer) error
 }
 
 func RegisterMasterServiceServer(s *grpc.Server, srv MasterServiceServer) {
 	s.RegisterService(&_MasterService_serviceDesc, srv)
 }
 
-func _MasterService_SendHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Heartbeat)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MasterServiceServer).SendHeartbeat(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/master_pb.masterService/SendHeartbeat",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MasterServiceServer).SendHeartbeat(ctx, req.(*Heartbeat))
-	}
-	return interceptor(ctx, in, info, handler)
+func _MasterService_StreamSendFile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MasterServiceServer).StreamSendFile(&masterServiceStreamSendFileServer{stream})
 }
 
-func _MasterService_StreamReplicate_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(MasterServiceServer).StreamReplicate(&masterServiceStreamReplicateServer{stream})
-}
-
-type MasterService_StreamReplicateServer interface {
-	Send(*Replica) error
-	Recv() (*Replica, error)
+type MasterService_StreamSendFileServer interface {
+	Send(*File) error
+	Recv() (*File, error)
 	grpc.ServerStream
 }
 
-type masterServiceStreamReplicateServer struct {
+type masterServiceStreamSendFileServer struct {
 	grpc.ServerStream
 }
 
-func (x *masterServiceStreamReplicateServer) Send(m *Replica) error {
+func (x *masterServiceStreamSendFileServer) Send(m *File) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *masterServiceStreamReplicateServer) Recv() (*Replica, error) {
-	m := new(Replica)
+func (x *masterServiceStreamSendFileServer) Recv() (*File, error) {
+	m := new(File)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _MasterService_GetReplicaList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Replica)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MasterServiceServer).GetReplicaList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/master_pb.masterService/GetReplicaList",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MasterServiceServer).GetReplicaList(ctx, req.(*Replica))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _MasterService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "master_pb.masterService",
 	HandlerType: (*MasterServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "SendHeartbeat",
-			Handler:    _MasterService_SendHeartbeat_Handler,
-		},
-		{
-			MethodName: "GetReplicaList",
-			Handler:    _MasterService_GetReplicaList_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "StreamReplicate",
-			Handler:       _MasterService_StreamReplicate_Handler,
+			StreamName:    "StreamSendFile",
+			Handler:       _MasterService_StreamSendFile_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

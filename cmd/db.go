@@ -29,6 +29,7 @@ import (
 func PrepareVolumeDatabases() error {
 	arr_dbindex := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"}
 	arr_dbdata := CFG.Volume.Dirs_data
+
 	if len(arr_dbdata) != 16 {
 		Logger.Fatal("CFG.Volume.Dirs_data should be 16.")
 	} else {
@@ -37,7 +38,7 @@ func PrepareVolumeDatabases() error {
 		DBDATA = make(map[string]*bolt.DB)
 		var errIsDBOpened error
 		for i, _ := range arr_dbdata {
-			dbpath := strings.Join([]string{arr_dbdata[i], "/data", arr_dbindex[i], ".db"}, "")
+			dbpath := strings.Join([]string{arr_dbdata[i], "/", CFG.Volume.Port, "/data", arr_dbindex[i], ".db"}, "")
 			Logger.Debug(dbpath)
 			DBDATA[arr_dbindex[i]], errIsDBOpened = bolt.Open(dbpath, 0600, &bolt.Options{Timeout: 3 * time.Second})
 			if errIsDBOpened != nil {
@@ -48,7 +49,7 @@ func PrepareVolumeDatabases() error {
 
 	}
 
-	dir_dbmeta := CFG.Volume.Dir_meta
+	dir_dbmeta := strings.Join([]string{CFG.Volume.Dir_meta, "/", CFG.Volume.Port}, "")
 	_, err := os.Stat(dir_dbmeta)
 	if err != nil {
 		Logger.Fatal("ERROR while opening META database:", dir_dbmeta)
@@ -104,7 +105,7 @@ func PrepareVolumeDatabases() error {
 }
 
 func PrepareMasterDatabase() error {
-	dir_dbmeta := CFG.Master.Dir_meta
+	dir_dbmeta := strings.Join([]string{CFG.Master.Dir_meta, "/", CFG.Master.Port}, "")
 	_, err := os.Stat(dir_dbmeta)
 	if err != nil {
 		Logger.Fatal("ERROR while opening Master database:", dir_dbmeta)
@@ -128,7 +129,16 @@ func PrepareMasterDatabase() error {
 		"deleted" integer NOT NULL default 0,
 		"created" integer NOT NULL default 0
 		);
+		
+		CREATE TABLE IF NOT EXISTS "nodefiles"(
+		"key" CHARACTER(32) NOT NULL primary key,
+		"node" CHARACTER(64) NOT NULL default "-",
+		"size" integer NOT NULL,
+		"created" integer NOT NULL default 0
+		);
+		
 		create index if not exists idxkey on data(key);
+		create index if not exists idxkeynode on nodefiles(key,node);
 		`
 
 		//Logger.Info(sql_table_data)
@@ -141,11 +151,11 @@ func PrepareMasterDatabase() error {
 		if size > 0 {
 			Logger.Info("key: ", key, ", size: ", size)
 		} else {
-			stmt, err := DBMASTER.Prepare("INSERT INTO data(key,size,name) values(?,?,?)")
+			stmt, err := DBMASTER.Prepare("INSERT INTO data(key,size) values(?,?)")
 			if err != nil {
 				Logger.Fatal(err)
 			}
-			result, err := stmt.Exec("db-master-is-ok", 1024, "db-master-is-ok")
+			result, err := stmt.Exec("db-master-is-ok", 1024)
 			if err != nil {
 				Logger.Fatal(err)
 			} else {

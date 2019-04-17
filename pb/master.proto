@@ -3,50 +3,20 @@ syntax = "proto3";
 package master_pb;
 
 service masterService {
-	rpc SendHeartbeat (Heartbeat) returns (Heartbeat){}
-	rpc StreamReplicate(stream Replica) returns (stream Replica){}
-	rpc GetReplicaList(Replica) returns (ReplicaList){}
-
+	rpc StreamSendFile(stream File) returns (stream File){}
 }
 
 message Empty{
 	
 }
 
-message Heartbeat {
-	string LeaderIp = 1;
-	string LeaderPort = 2;
-	string VolumeGroup = 3;
-	string VolumeDc = 4;
-	string VolumeRack = 5;
-	string VolumeIp = 6;
-	string VolumePort = 7;
-	uint32 VolumeMaxMB = 8;
-	uint32 VolumeSizeMB = 9;
-	int64 VolumeTimeUnix = 10;
-	uint32 VolumeMode = 11;
-	string FromRole = 12;
-	string ToRole = 13;
-	string CheckSum = 14;
-	
-}
-
-message ReplicaList{
-	repeated Replica replicas = 1;
-	}
-
-message Replica{
+message File{
 	string Key = 1;
-	string FromDc = 2;
-	string FromRack = 3;
-	string FromIp = 4;
-	string FromPort = 5;
-	string ToDc = 6;
-	string ToRack = 7;
-	string ToIp = 8;
-	string ToPort = 9;
-	string Created = 10;
-	string Action = 11;
-	string Status =12;
-	bytes Data = 13;
+	string Action = 2;
+	uint32 ErrorCode = 3;
+	string Node = 4;
+	uint32 Size = 5;
+	uint32 Created = 6;
+	bytes Meta = 7;
+	bytes Data = 8;
 }

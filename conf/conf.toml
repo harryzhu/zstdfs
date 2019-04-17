@@ -12,7 +12,7 @@ expire_seconds = "3600"
 
 [master]
 ip = "172.16.32.45"
-port = "9537"
+port = "9527"
 dir_meta = "/home/ops/data/hazhufs"
 
 [volume]
