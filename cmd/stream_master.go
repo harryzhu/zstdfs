@@ -25,23 +25,27 @@ func (ms *masterService) StreamSendFile(stream pbm.MasterService_StreamSendFileS
 		key := in.Key
 		node := in.Node
 		size := in.Size
+		synced := in.Synced
+		inmaster := in.InMaster
 		created := in.Created
 		Logger.Debug("masterService: Received File: KEY:", key)
 		if len(key) == 32 {
-			err_save := MasterSaveNodeFiles(key, node, size, created)
+			err_save := MasterCreateNodeFiles(key, node, size, synced, inmaster, created)
 			if err_save != nil {
+				inmaster = 0
 				Logger.Error(err_save)
 			} else {
+				inmaster = 1
 				Logger.Debug("masterService SaveFile OK")
 			}
-			note := &pbm.File{Key: key}
-			if err := stream.Send(note); err != nil {
+			response_out := &pbm.File{ErrorCode: 0, Key: key, Node: node, Synced: synced, InMaster: inmaster}
+			if err := stream.Send(response_out); err != nil {
 				return err
 			}
 
 		} else {
 			Logger.Error("StreamSendFile: ByteMD5 Error:")
-			note := &pbm.File{Key: ""}
+			note := &pbm.File{ErrorCode: 500, Key: ""}
 			if err := stream.Send(note); err != nil {
 				return err
 			}

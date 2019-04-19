@@ -16,7 +16,9 @@ message File{
 	uint32 ErrorCode = 3;
 	string Node = 4;
 	uint32 Size = 5;
-	uint32 Created = 6;
-	bytes Meta = 7;
-	bytes Data = 8;
+	uint32 Synced = 6;
+	uint32 InMaster = 7;
+	uint32 Created = 8;
+	bytes Meta = 9;
+	bytes Data = 10;
 }

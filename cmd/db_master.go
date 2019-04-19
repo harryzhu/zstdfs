@@ -11,15 +11,17 @@ import (
 )
 
 type NodeFiles struct {
-	Key     string
-	Node    string
-	Size    uint32
-	Created uint32
+	Key      string
+	Node     string
+	Size     uint32
+	Synced   uint32
+	InMaster uint32
+	Created  uint32
 }
 
 func MasterNodeFileExists(key string, node string) bool {
-	Logger.Debug("MasterNodeFileExists")
-	if len(key) != 32 || len(node) != 32 {
+	//Logger.Debug("MasterNodeFileExists")
+	if len(key) != 32 || len(node) < 1 {
 		return false
 	}
 	var b_return bool = false
@@ -40,18 +42,18 @@ func MasterNodeFileExists(key string, node string) bool {
 	return b_return
 }
 
-func MasterSaveNodeFiles(key string, node string, size uint32, created uint32) error {
-	if len(key) != 32 || len(node) != 32 || size < 1 || created < 1 {
+func MasterCreateNodeFiles(key string, node string, size uint32, synced uint32, inmaster uint32, created uint32) error {
+	if len(key) != 32 || len(node) < 1 || size < 1 || created < 1 {
 		return errors.New("nodefile field value is invalid.")
 	}
 	if MasterNodeFileExists(key, node) == false {
-		stmt, err := DBMASTER.Prepare("INSERT INTO nodefiles(key,node,size,created) values(?,?,?,?)")
+		stmt, err := DBMASTER.Prepare("INSERT INTO nodefiles(key,node,size,synced,inmaster,created) values(?,?,?,?,?,?)")
 		if err != nil {
 			Logger.Error(err)
 			return errors.New("DBMASTER Prepare failed.")
 		}
 
-		_, err = stmt.Exec(key, node, size, created)
+		_, err = stmt.Exec(key, node, size, synced, inmaster, created)
 		if err != nil {
 			Logger.Error(err)
 			return errors.New("DBMASTER INSERT failed.")

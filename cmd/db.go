@@ -66,11 +66,12 @@ func PrepareVolumeDatabases() error {
 		"dbid" CHARACTER(2) NOT NULL default "-",
 		"node" CHARACTER(64) NOT NULL default "-",
 		"synced" integer NOT NULL default 0,
+		"inmaster" integer NOT NULL default 0,
 		"enabled" integer NOT NULL default 1,
 		"deleted" integer NOT NULL default 0,
 		"created" integer NOT NULL default 0
 		);
-		create index if not exists idxkey on data(key);
+		create UNIQUE index if not exists idxkey on data(key);
 		`
 
 		Logger.Info(sql_table_data)
@@ -133,14 +134,16 @@ func PrepareMasterDatabase() error {
 		CREATE TABLE IF NOT EXISTS "nodefiles"(
 		"key" CHARACTER(32) NOT NULL primary key,
 		"node" CHARACTER(64) NOT NULL default "-",
-		"size" integer NOT NULL,
+		"size" integer NOT NULL default 0,
+		"synced" integer NOT NULL default 0,
+		"inmaster" integer NOT NULL default 0,
 		"created" integer NOT NULL default 0
 		);
 		
-		create index if not exists idxkey on data(key);
-		create index if not exists idxkeynode on nodefiles(key,node);
+		
+		create UNIQUE index if not exists "idxkeynode" on nodefiles("key","node");
 		`
-
+		//create UNIQUE index if not exists "idxkey" on data("key");
 		//Logger.Info(sql_table_data)
 		DBMASTER.Exec(sql_table_data)
 
