@@ -1,0 +1,16 @@
+syntax = "proto3";
+package volume;
+
+service VolumeService {
+  rpc StreamSendFile(stream File) returns (stream File){}
+}
+
+message Empty{
+	
+}
+
+message File{
+	string Key = 1;
+	bytes Data = 2;
+}
+

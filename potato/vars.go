@@ -8,14 +8,23 @@ import (
 )
 
 const (
-	GRPCMAXMSGSIZE int = 1024 * 1024 * 16
+	GRPCMAXMSGSIZE int = 1024 * 1024 * 64
 )
 
 var (
-	CFG    Config
-	Logger = log.New()
-	DB     *badger.DB
-	COLL   moss.Collection
+	CFG                  Config
+	Logger               = log.New()
+	DB                   *badger.DB
+	IsDBValueLogGCNeeded bool
+	CWRITER              moss.Collection
+	CREADER              moss.Collection
+	HTTP_TEMP_DIR        string
+	HTTP_SITE_URL        string
+)
+
+var (
+	batchWriter moss.Batch
+	batchReader moss.Batch
 )
 
 func init() {
@@ -23,4 +32,6 @@ func init() {
 	openDatabase()
 	openCacheCollection()
 	smokeTest()
+	IsDBValueLogGCNeeded = true
+
 }

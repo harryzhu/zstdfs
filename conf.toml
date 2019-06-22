@@ -6,11 +6,11 @@ log_level = "DEBUG"
 [volume]
 ip = "127.0.0.1"
 port = "8864"
-vmode = "1"
-vmax = "1024"
-master = "172.16.32.45:9527"
-peers = "172.16.32.45:9537;172.16.32.45:9538;172.16.32.45:9539;172.16.32.45:9540"
 db_data_dir = "/Volumes/HDD2/4/d"
 db_value_dir = "/Volumes/HDD2/4/v"
 
-
+[http]
+ip = "127.0.0.1"
+port = "9981"
+site_url = "//127.0.0.1:9981"
+temp_dir = "/Volumes/HDD2/4/temp"

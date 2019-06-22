@@ -72,31 +72,62 @@ func openDatabase() error {
 
 func openCacheCollection() error {
 	var err error
-	COLL, err = moss.NewCollection(moss.CollectionOptions{})
+	CWRITER, err = moss.NewCollection(moss.CollectionOptions{})
 	if err != nil {
 		Logger.Fatal("Cache collection cannot open: ", err)
+		return err
 	}
-	COLL.Start()
+	CWRITER.Start()
+
+	CREADER, err = moss.NewCollection(moss.CollectionOptions{})
+	if err != nil {
+		Logger.Fatal("Cache collection cannot open: ", err)
+		return err
+	}
+	CREADER.Start()
+
+	batchWriter, err = CWRITER.NewBatch(0, 0)
+	if err != nil {
+		Logger.Fatal("Cache CWRITER cannot NewBatch: ", err)
+	}
+
+	batchReader, err = CREADER.NewBatch(0, 0)
+	if err != nil {
+		Logger.Fatal("Cache CREADER cannot NewBatch: ", err)
+	}
 	return nil
 }
 
 func smokeTest() error {
-	// cache:
-	batch, err := COLL.NewBatch(0, 0)
-	defer batch.Close()
+	const TOTAL_STEPS string = "5"
+	// cache writer:
+	batchWriter.Set([]byte("smokeTest-CacheWriter"), []byte("OK"))
+	CWRITER.ExecuteBatch(batchWriter, moss.WriteOptions{})
 
-	batch.Set([]byte("smokeTest-Cache"), []byte("OK"))
-	err = COLL.ExecuteBatch(batch, moss.WriteOptions{})
+	ssWriter, err := CWRITER.Snapshot()
+	defer ssWriter.Close()
 
-	ss, err := COLL.Snapshot()
-	defer ss.Close()
-
-	ropts := moss.ReadOptions{}
-	valstc, err := ss.Get([]byte("smokeTest-Cache"), ropts)
+	ropts_writer := moss.ReadOptions{}
+	valstc_writer, err := ssWriter.Get([]byte("smokeTest-CacheWriter"), ropts_writer)
 	if err != nil {
-		Logger.Fatal("smokeTest-Cache: ", err)
+		Logger.Fatal("smokeTest-CacheWriter: ", err)
 	} else {
-		Logger.Info("smokeTest(1/2)-Cache: ", string(valstc))
+		Logger.Info("1/", TOTAL_STEPS, ", smokeTest-CacheWriter: ", string(valstc_writer))
+	}
+
+	// cache reader:
+	batchReader.Set([]byte("smokeTest-CacheReader"), []byte("OK"))
+	CREADER.ExecuteBatch(batchReader, moss.WriteOptions{})
+
+	ssReader, err := CREADER.Snapshot()
+	defer ssReader.Close()
+
+	ropts_reader := moss.ReadOptions{}
+	valstc_reader, err := ssReader.Get([]byte("smokeTest-CacheReader"), ropts_reader)
+	if err != nil {
+		Logger.Fatal("smokeTest-CacheReader: ", err)
+	} else {
+		Logger.Info("2/", TOTAL_STEPS, ", smokeTest-CacheReader: ", string(valstc_reader))
 	}
 
 	// DB
@@ -130,7 +161,22 @@ func smokeTest() error {
 		Logger.Fatal("smokeTest-Database: Get: ", err)
 	}
 
-	Logger.Info("smokeTest(2/2)-Database: ", string(valCopy))
+	Logger.Info("3/", TOTAL_STEPS, ", smokeTest-Database: ", string(valCopy))
+
+	_, err = os.Stat(CFG.Http.Temp_dir)
+	if os.IsNotExist(err) {
+		Logger.Fatal("4/", TOTAL_STEPS, ", smokeTest-HTTP TEMP DIR is not writeable: CFG.Http.Temp_dir")
+	} else {
+		HTTP_TEMP_DIR = CFG.Http.Temp_dir
+		Logger.Info("4/", TOTAL_STEPS, ", smokeTest-HTTP_TEMP_DIR: ", HTTP_TEMP_DIR)
+	}
+
+	if len(CFG.Http.Site_url) > 0 {
+		HTTP_SITE_URL = CFG.Http.Site_url
+		Logger.Info("5/", TOTAL_STEPS, ", smokeTest-HTTP_SITE_URL: ", HTTP_SITE_URL)
+	} else {
+		Logger.Fatal("5/", TOTAL_STEPS, ", smokeTest-HTTP_SITE_URL: CFG.Http.Site_url ")
+	}
 
 	return nil
 }
