@@ -70,15 +70,29 @@ func openDatabase() error {
 	return nil
 }
 
-func openCacheCollection() error {
+func openMetaCollection() error {
 	var err error
-	CWRITER, err = moss.NewCollection(moss.CollectionOptions{})
-	if err != nil {
+	var meta_dir string
+	_, err = os.Stat(CFG.Volume.Meta_dir)
+	if os.IsNotExist(err) {
+		Logger.Fatal("META DIR is not writeable: CFG.Volume.Meta_dir")
+	} else {
+		meta_dir = CFG.Volume.Meta_dir
+	}
+	var store *moss.Store
+	store, CMETA, err = moss.OpenStoreCollection(meta_dir,
+		moss.StoreOptions{}, moss.StorePersistOptions{})
+	//CMETA, err = moss.NewCollection(moss.CollectionOptions{})
+	if err != nil || store == nil || CMETA == nil {
 		Logger.Fatal("Cache collection cannot open: ", err)
 		return err
 	}
-	CWRITER.Start()
+	CMETA.Start()
+	return nil
+}
 
+func openCacheCollection() error {
+	var err error
 	CREADER, err = moss.NewCollection(moss.CollectionOptions{})
 	if err != nil {
 		Logger.Fatal("Cache collection cannot open: ", err)
@@ -86,9 +100,9 @@ func openCacheCollection() error {
 	}
 	CREADER.Start()
 
-	batchWriter, err = CWRITER.NewBatch(0, 0)
+	batchWriter, err = CMETA.NewBatch(0, 0)
 	if err != nil {
-		Logger.Fatal("Cache CWRITER cannot NewBatch: ", err)
+		Logger.Fatal("Cache CMETA cannot NewBatch: ", err)
 	}
 
 	batchReader, err = CREADER.NewBatch(0, 0)
@@ -101,18 +115,18 @@ func openCacheCollection() error {
 func smokeTest() error {
 	const TOTAL_STEPS string = "5"
 	// cache writer:
-	batchWriter.Set([]byte("smokeTest-CacheWriter"), []byte("OK"))
-	CWRITER.ExecuteBatch(batchWriter, moss.WriteOptions{})
+	batchWriter.Set([]byte("smokeTest-CacheMETA"), []byte("OK"))
+	CMETA.ExecuteBatch(batchWriter, moss.WriteOptions{})
 
-	ssWriter, err := CWRITER.Snapshot()
+	ssWriter, err := CMETA.Snapshot()
 	defer ssWriter.Close()
 
 	ropts_writer := moss.ReadOptions{}
-	valstc_writer, err := ssWriter.Get([]byte("smokeTest-CacheWriter"), ropts_writer)
+	valstc_writer, err := ssWriter.Get([]byte("smokeTest-CacheMETA"), ropts_writer)
 	if err != nil {
 		Logger.Fatal("smokeTest-CacheWriter: ", err)
 	} else {
-		Logger.Info("1/", TOTAL_STEPS, ", smokeTest-CacheWriter: ", string(valstc_writer))
+		Logger.Info("1/", TOTAL_STEPS, ", smokeTest-CacheMETA: ", string(valstc_writer))
 	}
 
 	// cache reader:
@@ -132,7 +146,7 @@ func smokeTest() error {
 
 	// DB
 	err = DB.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte("smokeTest-Database"), []byte("OK"))
+		err := txn.Set([]byte("smokeTest-Database"), Zip([]byte("OK")))
 		return err
 	})
 
@@ -161,7 +175,7 @@ func smokeTest() error {
 		Logger.Fatal("smokeTest-Database: Get: ", err)
 	}
 
-	Logger.Info("3/", TOTAL_STEPS, ", smokeTest-Database: ", string(valCopy))
+	Logger.Info("3/", TOTAL_STEPS, ", smokeTest-Database: ", string(Unzip(valCopy)))
 
 	_, err = os.Stat(CFG.Http.Temp_dir)
 	if os.IsNotExist(err) {

@@ -13,7 +13,7 @@ func db_set(key string, data []byte) error {
 			return txn.Set([]byte(key), data_zipped)
 		})
 		if err != nil {
-			Logger.Error("failed to set key: ", key, ", Error: ", err)
+			Logger.Debug("failed to set key: ", key, ", Error: ", err)
 			return err
 		}
 		return nil
@@ -37,7 +37,7 @@ func db_get(key string) ([]byte, error) {
 		return nil
 	})
 	if err != nil {
-		Logger.Warn("failed to get key or the key does not exist: ", key, " ,Error: ", err)
+		Logger.Debug("failed to get key or the key does not exist: ", key, " ,Error: ", err)
 		return nil, err
 	}
 	return Unzip(valCopy), nil
@@ -49,7 +49,7 @@ func db_delete(key string) error {
 			return txn.Delete([]byte(key))
 		})
 		if err != nil {
-			Logger.Error("failed to delete key: ", key, " ,Error: ", err)
+			Logger.Debug("failed to delete key: ", key, " ,Error: ", err)
 			return err
 		}
 		return nil

@@ -16,7 +16,7 @@ var (
 	Logger               = log.New()
 	DB                   *badger.DB
 	IsDBValueLogGCNeeded bool
-	CWRITER              moss.Collection
+	CMETA                moss.Collection
 	CREADER              moss.Collection
 	HTTP_TEMP_DIR        string
 	HTTP_SITE_URL        string
@@ -30,6 +30,7 @@ var (
 func init() {
 	loadConfigFromFile()
 	openDatabase()
+	openMetaCollection()
 	openCacheCollection()
 	smokeTest()
 	IsDBValueLogGCNeeded = true

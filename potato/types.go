@@ -15,10 +15,11 @@ type EntityResponse struct {
 }
 
 type Config struct {
-	Welcome string
-	Global  globalConfig `toml:"global"`
-	Volume  volumeConfig `toml:"volume"`
-	Http    httpConfig   `toml:"http"`
+	Welcome     string
+	Global      globalConfig      `toml:"global"`
+	Volume      volumeConfig      `toml:"volume"`
+	Http        httpConfig        `toml:"http"`
+	Replication replicationConfig `toml:"replication"`
 }
 type globalConfig struct {
 	Log_level string
@@ -29,6 +30,7 @@ type volumeConfig struct {
 	Port         string
 	Db_data_dir  string
 	Db_value_dir string
+	Meta_dir     string
 }
 
 type httpConfig struct {
@@ -36,4 +38,10 @@ type httpConfig struct {
 	Port     string
 	Site_url string
 	Temp_dir string
+}
+
+type replicationConfig struct {
+	Is_master  bool
+	Slave_ip   string
+	Slave_port string
 }

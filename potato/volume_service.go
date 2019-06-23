@@ -27,10 +27,14 @@ func (vs *VolumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileS
 
 		key := strings.ToLower(in.Key)
 		if len(key) > 0 {
-			err := EntitySet(key, in.Data)
 			resp := &pbv.File{Key: ""}
-			if err == nil {
+			if EntityExists(key) == true {
 				resp.Key = key
+			} else {
+				err := EntitySet(key, in.Data)
+				if err == nil {
+					resp.Key = key
+				}
 			}
 
 			if err := stream.Send(resp); err != nil {

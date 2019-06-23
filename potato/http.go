@@ -111,25 +111,32 @@ func HttpUpload(c *gin.Context) {
 				Mime: "",
 			}
 
-			byteEntityObject, err := json.Marshal(sb)
+			sb_key := ByteMD5(fileData)
+			if EntityExists(sb_key) == true {
+				ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "s", sb_key}, "/")
+				ett.Name = sb_key
+				ett.Size = fsize
+				ett.Mime = fmime
 
-			if err == nil {
-				sb_key := ByteMD5(fileData)
-				sb_data := byteEntityObject
+				resp = append(resp, ett)
+			} else {
+				byteEntityObject, err := json.Marshal(sb)
 
-				err := EntitySet(sb_key, sb_data)
-				if err != nil {
-					Logger.Debug("Error while EntitySet: ", sb_key)
-				} else {
-					Logger.Debug("OK while EntitySet: ", sb_key)
-					ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "s", sb_key}, "/")
-					ett.Name = sb_key
-					ett.Size = fsize
-					ett.Mime = fmime
+				if err == nil {
+					err := EntitySet(sb_key, byteEntityObject)
+					if err != nil {
+						Logger.Debug("Error while EntitySet: ", sb_key)
+					} else {
+						Logger.Debug("OK while EntitySet: ", sb_key)
+						ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "s", sb_key}, "/")
+						ett.Name = sb_key
+						ett.Size = fsize
+						ett.Mime = fmime
 
-					resp = append(resp, ett)
+						resp = append(resp, ett)
+					}
+
 				}
-
 			}
 
 		}
@@ -147,8 +154,8 @@ func HttpFormFiles(c *gin.Context) {
 	f1 := `<form class="form-files" method="POST" action="`
 	f2 := strings.Join([]string{HTTP_SITE_URL, "v1", "uploads"}, "/")
 	f3 := `" enctype="multipart/form-data">
-		<input type="file" name="uploads[]" multiple />
-		<input type="submit" value="Upload">
+		<input type="file" class="frm-file" name="uploads[]" multiple />
+		<input type="submit" class="frm-submit" value="Upload">
 </form>
 	`
 	f := strings.Join([]string{f1, f2, f3}, "")

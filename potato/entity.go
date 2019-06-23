@@ -1,5 +1,11 @@
 package potato
 
+// import (
+// 	"context"
+
+// 	pb "github.com/dgraph-io/badger/pb"
+// )
+
 type Entity struct {
 	Key  string
 	Data []byte
@@ -10,6 +16,7 @@ func EntitySet(key string, data []byte) error {
 	if err != nil {
 		return err
 	}
+	MetaSet("sync", key, []byte("0"))
 	return nil
 }
 
@@ -27,6 +34,14 @@ func EntityDelete(key string) error {
 		return err
 	}
 	return nil
+}
+
+func EntityExists(key string) bool {
+	_, err := db_get(key)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func EntityCompaction() error {
