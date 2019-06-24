@@ -16,7 +16,13 @@ import (
 
 func StartHttpServer() {
 	addressHttp := strings.Join([]string{CFG.Http.Ip, CFG.Http.Port}, ":")
+	if MODE == "PRODUCTION" {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
 	r := gin.Default()
+	r.Use(gin.Recovery())
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/ping", HttpPing)

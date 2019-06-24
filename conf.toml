@@ -1,6 +1,7 @@
 welcome = "Thanks for using potato file system."
 
 [global]
+is_debug = true
 log_level = "DEBUG"
 
 [volume]
@@ -12,11 +13,10 @@ meta_dir = "/Volumes/HDD2/4/meta"
 
 [http]
 ip = "127.0.0.1"
-port = "9981"
-site_url = "http://127.0.0.1:9981"
+port = "8874"
+site_url = "http://127.0.0.1:8874"
 temp_dir = "/Volumes/HDD2/4/temp"
 
 [replication]
 is_master = true
-slave_ip = "127.0.0.1"
-slave_port = "7749"
+slaves = ["127.0.0.1:7749","127.0.0.1:6636"]

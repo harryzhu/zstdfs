@@ -1,10 +1,10 @@
 package potato
 
-// import (
-// 	"context"
-
-// 	pb "github.com/dgraph-io/badger/pb"
-// )
+import (
+	//"context"
+	"strings"
+	//pb "github.com/dgraph-io/badger/pb"
+)
 
 type Entity struct {
 	Key  string
@@ -16,7 +16,13 @@ func EntitySet(key string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	MetaSet("sync", key, []byte("0"))
+	if SLAVES_LENGTH > 0 {
+		for _, slave := range SLAVES {
+			prefix := strings.Join([]string{"sync", slave}, ":")
+			MetaSet(prefix, key, []byte("0"))
+		}
+	}
+
 	return nil
 }
 

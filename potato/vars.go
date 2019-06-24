@@ -16,23 +16,20 @@ var (
 	Logger               = log.New()
 	DB                   *badger.DB
 	IsDBValueLogGCNeeded bool
+	IsReplicationNeeded  bool = true
 	CMETA                moss.Collection
 	CREADER              moss.Collection
 	HTTP_TEMP_DIR        string
 	HTTP_SITE_URL        string
+	SLAVES               []string
+	SLAVES_LENGTH        int
+)
+
+var (
+	MODE string = "PRODUCTION"
 )
 
 var (
 	batchWriter moss.Batch
 	batchReader moss.Batch
 )
-
-func init() {
-	loadConfigFromFile()
-	openDatabase()
-	openMetaCollection()
-	openCacheCollection()
-	smokeTest()
-	IsDBValueLogGCNeeded = true
-
-}

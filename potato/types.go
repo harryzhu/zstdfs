@@ -22,6 +22,7 @@ type Config struct {
 	Replication replicationConfig `toml:"replication"`
 }
 type globalConfig struct {
+	Is_debug  bool
 	Log_level string
 }
 
@@ -41,7 +42,6 @@ type httpConfig struct {
 }
 
 type replicationConfig struct {
-	Is_master  bool
-	Slave_ip   string
-	Slave_port string
+	Is_master bool
+	Slaves    []string
 }
