@@ -8,5 +8,7 @@ func init() {
 	smokeTest()
 	getSlavesLength()
 	IsDBValueLogGCNeeded = true
-
+	setEntityMaxSize()
+	setCacheMaxSize()
+	setIsMaster()
 }

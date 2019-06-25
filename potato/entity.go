@@ -16,7 +16,7 @@ func EntitySet(key string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	if SLAVES_LENGTH > 0 {
+	if IsMaster == true && SLAVES_LENGTH > 0 {
 		for _, slave := range SLAVES {
 			prefix := strings.Join([]string{"sync", slave}, ":")
 			MetaSet(prefix, key, []byte("0"))

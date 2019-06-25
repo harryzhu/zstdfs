@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	GRPCMAXMSGSIZE int = 1024 * 1024 * 64
+	GRPCMAXMSGSIZE int = 256 << 20
 )
 
 var (
@@ -21,12 +21,15 @@ var (
 	CREADER              moss.Collection
 	HTTP_TEMP_DIR        string
 	HTTP_SITE_URL        string
+	IsMaster             bool
 	SLAVES               []string
 	SLAVES_LENGTH        int
 )
 
 var (
-	MODE string = "PRODUCTION"
+	MODE            string = "PRODUCTION"
+	ENTITY_MAX_SIZE int    = 32 << 20
+	CACHE_MAX_SIZE  int    = 1 << 20
 )
 
 var (

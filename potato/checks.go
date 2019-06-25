@@ -74,6 +74,27 @@ func getSlavesLength() {
 	}
 }
 
+func setEntityMaxSize() {
+	if CFG.Volume.Max_size > 0 {
+		ENTITY_MAX_SIZE = CFG.Volume.Max_size
+	}
+}
+
+func setCacheMaxSize() {
+	if CFG.Volume.Max_cache_size > 0 {
+		CACHE_MAX_SIZE = CFG.Volume.Max_cache_size
+	}
+}
+
+func setIsMaster() {
+	if CFG.Replication.Is_master == true {
+		IsMaster = true
+	} else {
+		IsMaster = false
+	}
+
+}
+
 func openDatabase() error {
 
 	if _, err := os.Stat(CFG.Volume.Db_data_dir); err != nil {
@@ -110,7 +131,7 @@ func openMetaCollection() error {
 	}
 	var store *moss.Store
 	store, CMETA, err = moss.OpenStoreCollection(meta_dir,
-		moss.StoreOptions{}, moss.StorePersistOptions{})
+		moss.StoreOptions{}, moss.StorePersistOptions{CompactionConcern: moss.CompactionForce})
 	//CMETA, err = moss.NewCollection(moss.CollectionOptions{})
 	if err != nil || store == nil || CMETA == nil {
 		Logger.Fatal("Cache collection cannot open: ", err)

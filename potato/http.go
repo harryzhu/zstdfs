@@ -53,12 +53,16 @@ func HttpGet(c *gin.Context) {
 	data, err = CacheGet(key)
 	if err != nil {
 		Logger.Debug("cache miss.")
+		c.Header("X-Potatofs-Cache", "MISS")
 	} else {
 		Logger.Debug("cache hit.")
+		c.Header("X-Potatofs-Cache", "HIT")
 		data, err = EntityGet(key)
 		if err != nil {
 			Logger.Debug("db miss.")
-			CacheSet(key, data)
+			if len(data) <= CACHE_MAX_SIZE {
+				CacheSet(key, data)
+			}
 		}
 	}
 

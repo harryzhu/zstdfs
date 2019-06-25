@@ -7,6 +7,10 @@ import (
 )
 
 func db_set(key string, data []byte) error {
+	if len(data) > ENTITY_MAX_SIZE {
+		return errors.New("set: entity is too large.")
+	}
+
 	if len(key) > 0 {
 		data_zipped := Zip(data)
 		err := DB.Update(func(txn *badger.Txn) error {
@@ -37,7 +41,7 @@ func db_get(key string) ([]byte, error) {
 		return nil
 	})
 	if err != nil {
-		Logger.Debug("failed to get key or the key does not exist: ", key, " ,Error: ", err)
+		//Logger.Debug("failed to get key or the key does not exist: ", key, " ,Error: ", err)
 		return nil, err
 	}
 	return Unzip(valCopy), nil
