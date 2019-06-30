@@ -3,6 +3,7 @@ package potato
 import (
 	"io"
 	//"strconv"
+	//"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -28,24 +29,45 @@ func RunReplicateParallel() error {
 		return nil
 	}
 
+	msc := MetaSyncCount()
+	if msc <= 0 {
+		Logger.Debug("====no replication needed====:", msc)
+		return nil
+	}
+
 	slaves := CFG.Replication.Slaves
 	if len(slaves) > 0 {
+		//Logger.Debug("Begin: IsReplicationNeeded: ", IsReplicationNeeded)
 		IsReplicationNeeded = false
 		wg := sync.WaitGroup{}
-		wg.Add(len(slaves))
-		for _, slave := range slaves {
-			Logger.Debug("slave: ", slave)
-			go func() {
-				//Logger.Debug("Start: replicate to: ", slave)
-				replicate(slave)
-				//Logger.Debug("End: replicate to: ", slave)
-				time.Sleep(1 * time.Second)
-				wg.Done()
 
-			}()
-			time.Sleep(1 * time.Second)
+		for _, slave := range slaves {
+			conn, err := grpc.Dial(slave, grpc.WithInsecure(),
+				grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(GRPCMAXMSGSIZE)))
+			if err != nil {
+				Logger.Error("Slave Conn Error:", err)
+				return nil
+			}
+			defer conn.Close()
+
+			Logger.Debug("Slave Connection State: ", slave, " : ", conn.GetState().String())
+			if conn.GetState().String() == "IDLE" || conn.GetState().String() == "CONNECTING" || conn.GetState().String() == "READY" {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					Logger.Debug("Thread Start: replicate to: ", slave)
+					replicate(slave)
+					Logger.Debug("Thread End: ", slave)
+					time.Sleep(1 * time.Second)
+
+				}()
+				time.Sleep(1 * time.Second)
+			}
+
 		}
+
 		wg.Wait()
+		//Logger.Debug("Complete: IsReplicationNeeded: ", IsReplicationNeeded)
 		IsReplicationNeeded = true
 	}
 	return nil
@@ -53,7 +75,7 @@ func RunReplicateParallel() error {
 
 func replicate(ip_port string) error {
 
-	fileRequests := []*pbv.File{}
+	fileKeys := []string{}
 
 	ssm, err := CMETA.Snapshot()
 	if err != nil {
@@ -61,26 +83,21 @@ func replicate(ip_port string) error {
 	}
 	prefix := strings.Join([]string{"sync:", ip_port, ":"}, "")
 	prefix_length := len(prefix)
-	Logger.Debug("sync prefix: ", prefix_length, ", ", prefix)
+	Logger.Debug("sync: prefix_length: ", prefix_length, ", prefix: ", prefix)
 	iter, err := ssm.StartIterator([]byte(prefix), nil, moss.IteratorOptions{})
 	if err != nil || iter == nil {
 		Logger.Error("expected iter")
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 		k, v, err := iter.Current()
 		if err != nil {
 			continue
 		}
 		if k != nil && v != nil {
 			k_raw := string(k)[prefix_length:]
-			Logger.Debug("will replicate:", k_raw)
-			data, err := EntityGet(k_raw)
-			if err != nil {
-				Logger.Debug("will sync:", k_raw)
-				continue
-			}
-			fileRequests = append(fileRequests, &pbv.File{Key: k_raw, Data: data})
+			Logger.Debug("add to sync list:", k_raw)
+			fileKeys = append(fileKeys, k_raw)
 		}
 
 		err = iter.Next()
@@ -91,8 +108,9 @@ func replicate(ip_port string) error {
 
 	ssm.Close()
 
-	fileRequests_len := len(fileRequests)
-	if fileRequests_len == 0 {
+	fileKeys_len := len(fileKeys)
+	if fileKeys_len == 0 {
+		Logger.Debug("No Entities Replication Needed.")
 		return nil
 	}
 
@@ -104,54 +122,83 @@ func replicate(ip_port string) error {
 	}
 	defer conn.Close()
 
-	c := pbv.NewVolumeServiceClient(conn)
+	Logger.Debug("Client Connection State: ", conn.GetState().String())
+	if conn.GetState().String() == "IDLE" || conn.GetState().String() == "CONNECTING" || conn.GetState().String() == "READY" {
+		c := pbv.NewVolumeServiceClient(conn)
 
-	runStreamSendFile(c, ip_port, prefix, fileRequests)
+		runStreamSendFile(c, ip_port, prefix, fileKeys)
+	}
 
 	return nil
 }
 
-func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix string, fileRequests []*pbv.File) error {
-	Logger.Info("Start Replication..........")
-	fileRequests_len := len(fileRequests)
-	if fileRequests_len == 0 {
+func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix string, fileKeys []string) error {
+	Logger.Debug("Start Replication..........")
+	fileKeys_len := len(fileKeys)
+	if fileKeys_len == 0 {
 		return nil
 	}
-	Logger.Info("fileRequests length: ", fileRequests_len)
+	Logger.Debug("fileKeys length: ", fileKeys_len)
 
-	for i := 0; i < fileRequests_len; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 24*3600*time.Second)
-		defer cancel()
+	//for i := 0; i < fileKeys_len; i++ {
+	//ctx, cancel := context.WithTimeout(context.Background(), 24*3600*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 24*3600*time.Second)
+	//defer cancel()
 
-		stream, err := client.StreamSendFile(ctx)
-		if err != nil {
-			Logger.Warn("Client StreamSendFile ERROR: %v", err)
-		}
-		waitc := make(chan struct{})
-		go func() {
-			prefix_without_colon := prefix[0 : len(prefix)-1]
-			for {
-				in, err := stream.Recv()
-				if err == io.EOF {
-					// read done.
-					close(waitc)
-					return
-				}
-				if err != nil {
-					Logger.Warn("Failed to receive a filerequest: ", err)
-				}
-				MetaDelete(prefix_without_colon, in.Key)
-				Logger.Debug("Got message response key: ", "/", ": ", in.Key)
-			}
-		}()
-		for _, filerequest := range fileRequests {
-			if err := stream.Send(filerequest); err != nil {
-				Logger.Warn("Failed to send a filerequest: ", err)
-			}
-		}
-		stream.CloseSend()
-		<-waitc
-
+	stream, err := client.StreamSendFile(ctx)
+	if err != nil {
+		Logger.Warn("Stream_01 StreamSendFile ERROR: ", err)
+		return err
 	}
+	var lock sync.Mutex
+	waitc := make(chan struct{})
+	go func() {
+		var deleteKeys []string
+		lock.Lock()
+		for {
+			in, err := stream.Recv()
+			if err == io.EOF {
+				// read done.
+				close(waitc)
+				Logger.Debug("break loop: stream.Recv, close waitc: ", err)
+				break
+			}
+			if err != nil {
+				Logger.Warn("Stream_01: Failed to receive a filerequest: ", err)
+			}
+			if len(in.Key) > 0 {
+				pk := strings.Join([]string{prefix, in.Key}, "")
+
+				deleteKeys = append(deleteKeys, pk)
+
+				Logger.Debug("synced key: ", in.Key, ", MetaDelete key: ", pk)
+			}
+		}
+		lock.Unlock()
+
+		if len(deleteKeys) > 0 {
+			Logger.Info("MultiDelete Keys.")
+			MetaMultiDelete(deleteKeys)
+		}
+
+		return
+	}()
+
+	for k, fk := range fileKeys {
+		Logger.Debug("Sync Key Index:", k, ", ", fk)
+		data, err := EntityGet(fk)
+		if err != nil || data == nil {
+			continue
+		} else {
+			frequest := &pbv.File{Key: fk, Data: data}
+			if err := stream.Send(frequest); err != nil {
+				Logger.Warn("Stream_02: Failed to send a filerequest: ", err)
+			}
+		}
+	}
+
+	stream.CloseSend()
+	<-waitc
+
 	return nil
 }

@@ -28,6 +28,7 @@ func StartHttpServer() {
 		v1.GET("/ping", HttpPing)
 		v1.GET("/s/:key", HttpGet)
 		v1.GET("/form-files.html", HttpFormFiles)
+		v1.GET("/sync-list.html", HttpSyncList)
 		v1.POST("/uploads", HttpUpload)
 	}
 
@@ -48,45 +49,48 @@ func HttpPing(c *gin.Context) {
 func HttpGet(c *gin.Context) {
 	timer_start := time.Now()
 	key := c.Param("key")
-	var data []byte
-	var err error
-	data, err = CacheGet(key)
-	if err != nil {
+
+	data, err := CacheGet(key)
+	//Logger.Info(data, err)
+	if err != nil || data == nil {
 		Logger.Debug("cache miss.")
 		c.Header("X-Potatofs-Cache", "MISS")
-	} else {
-		Logger.Debug("cache hit.")
-		c.Header("X-Potatofs-Cache", "HIT")
 		data, err = EntityGet(key)
-		if err != nil {
-			Logger.Debug("db miss.")
+		if err == nil {
 			if len(data) <= CACHE_MAX_SIZE {
 				CacheSet(key, data)
 			}
 		}
 	}
 
-	if err == nil {
-		var ettobj EntityObject
-		erru := json.Unmarshal(data, &ettobj)
+	var ettobj EntityObject
+	erru := json.Unmarshal(data, &ettobj)
 
-		var eo_name, eo_mime, eo_size string
-		var eo_data []byte
+	var eo_name, eo_mime, eo_size string
+	var eo_data []byte
+	time_response := strings.Join([]string{strconv.Itoa(int(int64(time.Since(timer_start) / time.Millisecond))), "ms"}, " ")
 
-		if erru == nil {
-			eo_name = ettobj.Name
-			eo_mime = ettobj.Mime
-			eo_size = ettobj.Size
-			eo_data = ettobj.Data
-		}
+	if erru == nil {
+		eo_name = ettobj.Name
+		eo_mime = ettobj.Mime
+		eo_size = ettobj.Size
+		eo_data = ettobj.Data
+
 		Logger.Debug(eo_name)
-		// c.Header("Content-Type", "image/jpeg")
-		time_response := strings.Join([]string{strconv.Itoa(int(int64(time.Since(timer_start) / time.Millisecond))), "ms"}, " ")
+
 		c.Header("X-Potatofs-Response-Time", time_response)
 		c.Header("Content-Length", eo_size)
 		c.Data(http.StatusOK, eo_mime, eo_data)
+
 	} else {
-		c.String(http.StatusNotFound, "Error 404")
+		eo_name = "Error: 404"
+		eo_mime = "text/html"
+		eo_size = strconv.Itoa(len([]byte("Error:404")))
+		eo_data = []byte("Error:404")
+
+		c.Header("X-Potatofs-Response-Time", time_response)
+		c.Header("Content-Length", eo_size)
+		c.Data(http.StatusNotFound, eo_mime, eo_data)
 	}
 
 }
@@ -171,4 +175,10 @@ func HttpFormFiles(c *gin.Context) {
 	f := strings.Join([]string{f1, f2, f3}, "")
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, f)
+}
+
+func HttpSyncList(c *gin.Context) {
+	listHtml := MetaSyncList()
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, listHtml)
 }

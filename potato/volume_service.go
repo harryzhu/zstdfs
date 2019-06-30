@@ -34,10 +34,14 @@ func (vs *VolumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileS
 				err := EntitySet(key, in.Data)
 				if err == nil {
 					resp.Key = key
+					Logger.Debug("SET: ", resp.Key)
+				} else {
+					return err
 				}
 			}
 
-			if err := stream.Send(resp); err != nil {
+			err := stream.Send(resp)
+			if err != nil {
 				return err
 			}
 

@@ -129,9 +129,15 @@ func openMetaCollection() error {
 	} else {
 		meta_dir = CFG.Volume.Meta_dir
 	}
+
+	so := moss.DefaultStoreOptions
+	so.CollectionOptions.MinMergePercentage = 0.5
+	so.CompactionPercentage = 0.7
+	so.CompactionSync = true
+	//so.KeepFiles = true
+	spo := moss.StorePersistOptions{CompactionConcern: moss.CompactionAllow}
 	var store *moss.Store
-	store, CMETA, err = moss.OpenStoreCollection(meta_dir,
-		moss.StoreOptions{}, moss.StorePersistOptions{CompactionConcern: moss.CompactionForce})
+	store, CMETA, err = moss.OpenStoreCollection(meta_dir, so, spo)
 	//CMETA, err = moss.NewCollection(moss.CollectionOptions{})
 	if err != nil || store == nil || CMETA == nil {
 		Logger.Fatal("Cache collection cannot open: ", err)
@@ -243,4 +249,12 @@ func smokeTest() error {
 	}
 
 	return nil
+}
+
+func testOptions() {
+	opt_volume_max_size := WriteInt(256 << 20)
+	opt_volume_max_cache_size := WriteInt(256 << 20)
+
+	conf := NewOption(opt_volume_max_size, opt_volume_max_cache_size)
+	Logger.Info(conf.i)
 }
