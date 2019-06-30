@@ -28,7 +28,9 @@ func StartHttpServer() {
 		v1.GET("/ping", HttpPing)
 		v1.GET("/s/:key", HttpGet)
 		v1.GET("/form-files.html", HttpFormFiles)
-		v1.GET("/sync-list.html", HttpSyncList)
+		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
+		v1.GET("/meta-list.html", HttpMetaList)
+		v1.GET("/list", HttpList)
 		v1.POST("/uploads", HttpUpload)
 	}
 
@@ -177,8 +179,20 @@ func HttpFormFiles(c *gin.Context) {
 	c.String(http.StatusOK, f)
 }
 
-func HttpSyncList(c *gin.Context) {
+func HttpMetaSyncList(c *gin.Context) {
 	listHtml := MetaSyncList()
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, listHtml)
+}
+
+func HttpMetaList(c *gin.Context) {
+	listHtml := MetaList()
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, listHtml)
+}
+
+func HttpList(c *gin.Context) {
+	listHtml := EntityScan("fd")
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
 }

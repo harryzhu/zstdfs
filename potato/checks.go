@@ -134,7 +134,7 @@ func openMetaCollection() error {
 	so.CollectionOptions.MinMergePercentage = 0.5
 	so.CompactionPercentage = 0.7
 	so.CompactionSync = true
-	//so.KeepFiles = true
+	so.KeepFiles = false
 	spo := moss.StorePersistOptions{CompactionConcern: moss.CompactionAllow}
 	var store *moss.Store
 	store, CMETA, err = moss.OpenStoreCollection(meta_dir, so, spo)

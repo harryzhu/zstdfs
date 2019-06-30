@@ -55,3 +55,16 @@ func EntityCompaction() error {
 	db_compact()
 	return nil
 }
+
+func EntityScan(prefix string) string {
+	keys := db_scan()
+	listHtml := ""
+	href := strings.Join([]string{"<a href=\"", CFG.Http.Site_url, "/v1/s"}, "")
+	if len(keys) > 0 {
+		for _, v := range keys {
+			listHtml = strings.Join([]string{href, "/", v, "\">", v, "</a><br/>", listHtml}, "")
+		}
+	}
+
+	return listHtml
+}

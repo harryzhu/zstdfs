@@ -31,6 +31,26 @@ func cm_get(key string) ([]byte, error) {
 	}
 
 	defer ssMeta.Close()
+	result, err := ssMeta.Get([]byte(key), moss.ReadOptions{})
+	if err != nil {
+		return nil, errors.New("failed to get key from cache")
+	}
+
+	if result == nil {
+		return nil, errors.New("failed to get key from cache")
+	}
+
+	return result, nil
+}
+
+func cm_kget(key string) ([]byte, error) {
+	ssMeta, err := CMETA.Snapshot()
+
+	if err != nil || ssMeta == nil {
+		return nil, errors.New("failed to get key from cache")
+	}
+
+	defer ssMeta.Close()
 	result, err := ssMeta.Get([]byte(key), moss.ReadOptions{NoCopyValue: true})
 	if err != nil {
 		return nil, errors.New("failed to get key from cache")
@@ -41,8 +61,6 @@ func cm_get(key string) ([]byte, error) {
 	}
 
 	return result, nil
-
-	//return nil, errors.New("failed to get key from cache")
 }
 
 func cm_del(key string) error {

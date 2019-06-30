@@ -11,7 +11,7 @@ import (
 func MetaGet(prefix string, key string) ([]byte, error) {
 	metakey := strings.Join([]string{prefix, key}, ":")
 	Logger.Debug("Meta Get:", metakey)
-	data, err := cm_get(metakey)
+	data, err := cm_kget(metakey)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func MetaSyncCount() (res int) {
 
 	iter, err := ssm.StartIterator([]byte("sync:"), nil, moss.IteratorOptions{})
 	if err != nil || iter == nil {
-		return res
+		return -1
 	}
 
 	err = iter.Next()
@@ -76,36 +76,74 @@ func MetaSyncList() (listHtml string) {
 		if err != nil {
 			Logger.Error("expected ssm ok")
 		}
-		for _, slave := range slaves {
 
-			prefix := strings.Join([]string{"sync:", slave, ":"}, "")
-			prefix_length := len(prefix)
-			Logger.Debug("sync-list: prefix_length: ", prefix_length, ", prefix: ", prefix)
-			iter, err := ssm.StartIterator([]byte(prefix), nil, moss.IteratorOptions{})
-			if err != nil || iter == nil {
-				Logger.Error("expected iter")
+		iter, err := ssm.StartIterator([]byte("sync:"), nil, moss.IteratorOptions{})
+		if err != nil || iter == nil {
+			Logger.Error("expected iter")
+		}
+
+		for i := 0; i < 1000; i++ {
+			k, _, err := iter.Current()
+			if err != nil {
+				continue
+			}
+			if k != nil {
+				k_raw := string(k)
+				fileKeys = append(fileKeys, k_raw)
 			}
 
-			for i := 0; i < 500; i++ {
-				k, v, err := iter.Current()
-				if err != nil {
-					continue
-				}
-				if k != nil && v != nil {
-					//k_raw := string(k)[prefix_length:]
-					k_raw := string(k)
-					//Logger.Debug("add to sync list:", k_raw)
-					fileKeys = append(fileKeys, k_raw)
-				}
-
-				err = iter.Next()
-				if err != nil {
-					break
-				}
+			err = iter.Next()
+			if err != nil {
+				break
 			}
 		}
+
 		ssm.Close()
+
 	}
+
+	fileKeys_len := len(fileKeys)
+	if fileKeys_len == 0 {
+		Logger.Debug("No Entities Replication Needed.")
+		return ""
+	}
+	listHtml = ""
+	for k, v := range fileKeys {
+		listHtml = strings.Join([]string{v, " : ", strconv.Itoa(k), "<br/>", listHtml}, "")
+	}
+
+	return listHtml
+}
+
+func MetaList() (listHtml string) {
+	fileKeys := []string{}
+
+	ssm, err := CMETA.Snapshot()
+	if err != nil {
+		Logger.Error("expected ssm ok")
+	}
+
+	iter, err := ssm.StartIterator(nil, nil, moss.IteratorOptions{})
+	if err != nil || iter == nil {
+		Logger.Error("expected iter")
+	}
+
+	for i := 0; i < 500; i++ {
+		k, _, err := iter.Current()
+		if err != nil {
+			continue
+		}
+		if k != nil {
+			fileKeys = append(fileKeys, string(k))
+		}
+
+		err = iter.Next()
+		if err != nil {
+			break
+		}
+	}
+
+	ssm.Close()
 
 	fileKeys_len := len(fileKeys)
 	if fileKeys_len == 0 {

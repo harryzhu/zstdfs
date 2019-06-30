@@ -26,12 +26,13 @@ func RunReplicateParallel() error {
 	}
 
 	if IsReplicationNeeded == false {
+		Logger.Debug("====no replication needed==== IsReplicationNeeded:", IsReplicationNeeded)
 		return nil
 	}
 
 	msc := MetaSyncCount()
 	if msc <= 0 {
-		Logger.Debug("====no replication needed====:", msc)
+		Logger.Debug("====no replication needed==== MetaSyncCount:", msc)
 		return nil
 	}
 

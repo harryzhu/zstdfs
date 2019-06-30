@@ -73,3 +73,29 @@ func db_compact() error {
 	}
 	return nil
 }
+
+func db_scan() (keys []string) {
+	err := DB.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchSize = 100
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		klimit := 0
+		for it.Rewind(); it.Valid(); it.Next() {
+			if klimit > 100 {
+				break
+			}
+			item := it.Item()
+			k := item.Key()
+			//Logger.Info("key=", k)
+			keys = append(keys, string(k))
+
+			klimit++
+		}
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+	return keys
+}
