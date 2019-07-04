@@ -12,4 +12,5 @@ func init() {
 	setEntityMaxSize()
 	setCacheMaxSize()
 	setIsMaster()
+	openLevel()
 }

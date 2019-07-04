@@ -11,6 +11,7 @@ type Entity struct {
 	Data []byte
 }
 
+// swagger:operation EntitySet
 func EntitySet(key string, data []byte) error {
 	err := db_set(key, data)
 	if err != nil {
@@ -20,6 +21,7 @@ func EntitySet(key string, data []byte) error {
 		for _, slave := range SLAVES {
 			prefix := strings.Join([]string{"sync", slave}, ":")
 			MetaSet(prefix, key, []byte("0"))
+
 		}
 	}
 

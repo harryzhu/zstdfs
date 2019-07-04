@@ -53,7 +53,7 @@ func HttpGet(c *gin.Context) {
 	key := c.Param("key")
 
 	data, err := CacheGet(key)
-	//Logger.Info(data, err)
+
 	if err != nil || data == nil {
 		Logger.Debug("cache miss.")
 		c.Header("X-Potatofs-Cache", "MISS")

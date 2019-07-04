@@ -5,6 +5,7 @@ import (
 	"github.com/couchbase/moss"
 	"github.com/dgraph-io/badger"
 	log "github.com/sirupsen/logrus"
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
@@ -35,4 +36,8 @@ var (
 var (
 	batchWriter moss.Batch
 	batchReader moss.Batch
+)
+
+var (
+	LDB *leveldb.DB
 )

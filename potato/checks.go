@@ -8,6 +8,7 @@ import (
 	"github.com/couchbase/moss"
 	"github.com/dgraph-io/badger"
 	log "github.com/sirupsen/logrus"
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 func Echo() error {
@@ -257,4 +258,16 @@ func testOptions() {
 
 	conf := NewOption(opt_volume_max_size, opt_volume_max_cache_size)
 	Logger.Info(conf.i)
+}
+
+func openLevel() {
+	var err error
+	LDB, err = leveldb.OpenFile(CFG.Volume.Ldb_dir, nil)
+	if err != nil {
+		Logger.Error("Error while opening LDB")
+	}
+
+	ldb_set("ffffff", []byte("dddd"))
+	dd, _ := ldb_get("ffffff")
+	Logger.Info("ff222ffff", dd)
 }

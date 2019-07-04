@@ -5,13 +5,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/couchbase/moss"
+	//"github.com/couchbase/moss"
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 func MetaGet(prefix string, key string) ([]byte, error) {
 	metakey := strings.Join([]string{prefix, key}, ":")
 	Logger.Debug("Meta Get:", metakey)
-	data, err := cm_kget(metakey)
+	data, err := ldb_get(metakey)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +22,7 @@ func MetaGet(prefix string, key string) ([]byte, error) {
 func MetaSet(prefix string, key string, data []byte) error {
 	metakey := strings.Join([]string{prefix, key}, ":")
 	Logger.Debug("Meta Set:", metakey)
-	if err := cm_set(metakey, data); err != nil {
+	if err := ldb_set(metakey, data); err != nil {
 		return err
 	}
 	return nil
@@ -30,7 +31,7 @@ func MetaSet(prefix string, key string, data []byte) error {
 func MetaDelete(prefix string, key string) error {
 	metakey := strings.Join([]string{prefix, key}, ":")
 	Logger.Debug("Meta Delete:", metakey)
-	if err := cm_del(metakey); err != nil {
+	if err := ldb_del(metakey); err != nil {
 		return err
 	}
 	return nil
@@ -38,7 +39,7 @@ func MetaDelete(prefix string, key string) error {
 
 func MetaMultiDelete(keys []string) error {
 	Logger.Debug("Meta Multi-Delete: ", len(keys))
-	if err := cm_mdel(keys); err != nil {
+	if err := ldb_mdel(keys); err != nil {
 		return err
 	}
 	return nil
@@ -46,24 +47,19 @@ func MetaMultiDelete(keys []string) error {
 
 func MetaSyncCount() (res int) {
 	res = 0
-	ssm, err := CMETA.Snapshot()
-	if err != nil {
-		res = -1
+	iter := LDB.NewIterator(&util.Range{Start: []byte("sync:"), Limit: nil}, nil)
+	for iter.Next() {
+		res++
+		if res > 0 {
+			break
+		}
 	}
-
-	iter, err := ssm.StartIterator([]byte("sync:"), nil, moss.IteratorOptions{})
-	if err != nil || iter == nil {
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		Logger.Error("MetaSyncCount: ", err)
 		return -1
 	}
-
-	err = iter.Next()
-	if err != nil {
-		res = -1
-	} else {
-		res++
-	}
-
-	ssm.Close()
 	return res
 }
 
@@ -71,34 +67,23 @@ func MetaSyncList() (listHtml string) {
 	slaves := CFG.Replication.Slaves
 	fileKeys := []string{}
 	if len(slaves) > 0 {
+		res := 0
+		iter := LDB.NewIterator(&util.Range{Start: []byte("sync:"), Limit: nil}, nil)
+		for iter.Next() {
+			if len(iter.Key()) > 0 {
+				fileKeys = append(fileKeys, string(iter.Key()))
+				res++
+				if res > 1000 {
+					break
+				}
+			}
 
-		ssm, err := CMETA.Snapshot()
+		}
+		iter.Release()
+		err := iter.Error()
 		if err != nil {
-			Logger.Error("expected ssm ok")
+			Logger.Error("MetaSyncList: ", err)
 		}
-
-		iter, err := ssm.StartIterator([]byte("sync:"), nil, moss.IteratorOptions{})
-		if err != nil || iter == nil {
-			Logger.Error("expected iter")
-		}
-
-		for i := 0; i < 1000; i++ {
-			k, _, err := iter.Current()
-			if err != nil {
-				continue
-			}
-			if k != nil {
-				k_raw := string(k)
-				fileKeys = append(fileKeys, k_raw)
-			}
-
-			err = iter.Next()
-			if err != nil {
-				break
-			}
-		}
-
-		ssm.Close()
 
 	}
 
@@ -118,32 +103,23 @@ func MetaSyncList() (listHtml string) {
 func MetaList() (listHtml string) {
 	fileKeys := []string{}
 
-	ssm, err := CMETA.Snapshot()
+	res := 0
+	iter := LDB.NewIterator(nil, nil)
+	for iter.Next() {
+		if len(iter.Key()) > 0 {
+			fileKeys = append(fileKeys, string(iter.Key()))
+			res++
+			if res > 100 {
+				break
+			}
+		}
+
+	}
+	iter.Release()
+	err := iter.Error()
 	if err != nil {
-		Logger.Error("expected ssm ok")
+		Logger.Error("MetaSyncList: ", err)
 	}
-
-	iter, err := ssm.StartIterator(nil, nil, moss.IteratorOptions{})
-	if err != nil || iter == nil {
-		Logger.Error("expected iter")
-	}
-
-	for i := 0; i < 500; i++ {
-		k, _, err := iter.Current()
-		if err != nil {
-			continue
-		}
-		if k != nil {
-			fileKeys = append(fileKeys, string(k))
-		}
-
-		err = iter.Next()
-		if err != nil {
-			break
-		}
-	}
-
-	ssm.Close()
 
 	fileKeys_len := len(fileKeys)
 	if fileKeys_len == 0 {
