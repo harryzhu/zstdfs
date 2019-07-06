@@ -5,11 +5,25 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/couchbase/moss"
 	"github.com/dgraph-io/badger"
+	"github.com/golang/groupcache"
 	log "github.com/sirupsen/logrus"
 	"github.com/syndtr/goleveldb/leveldb"
 )
+
+func init() {
+	loadConfigFromFile()
+
+	openDatabase()
+	smokeTest()
+	getSlavesLength()
+	IsDBValueLogGCNeeded = true
+	setEntityMaxSize()
+	setCacheMaxSize()
+	setIsMaster()
+	openMeta()
+	openGroupCache()
+}
 
 func Echo() error {
 	Logger.Info("Echo is OK.")
@@ -121,88 +135,12 @@ func openDatabase() error {
 	return nil
 }
 
-func openMetaCollection() error {
-	var err error
-	var meta_dir string
-	_, err = os.Stat(CFG.Volume.Meta_dir)
-	if os.IsNotExist(err) {
-		Logger.Fatal("META DIR is not writeable: CFG.Volume.Meta_dir")
-	} else {
-		meta_dir = CFG.Volume.Meta_dir
-	}
-
-	so := moss.DefaultStoreOptions
-	so.CollectionOptions.MinMergePercentage = 0.5
-	so.CompactionPercentage = 0.7
-	so.CompactionSync = true
-	so.KeepFiles = false
-	spo := moss.StorePersistOptions{CompactionConcern: moss.CompactionAllow}
-	var store *moss.Store
-	store, CMETA, err = moss.OpenStoreCollection(meta_dir, so, spo)
-	//CMETA, err = moss.NewCollection(moss.CollectionOptions{})
-	if err != nil || store == nil || CMETA == nil {
-		Logger.Fatal("Cache collection cannot open: ", err)
-		return err
-	}
-	CMETA.Start()
-	return nil
-}
-
-func openCacheCollection() error {
-	var err error
-	CREADER, err = moss.NewCollection(moss.CollectionOptions{})
-	if err != nil {
-		Logger.Fatal("Cache collection cannot open: ", err)
-		return err
-	}
-	CREADER.Start()
-
-	batchWriter, err = CMETA.NewBatch(0, 0)
-	if err != nil {
-		Logger.Fatal("Cache CMETA cannot NewBatch: ", err)
-	}
-
-	batchReader, err = CREADER.NewBatch(0, 0)
-	if err != nil {
-		Logger.Fatal("Cache CREADER cannot NewBatch: ", err)
-	}
-	return nil
-}
-
 func smokeTest() error {
 	const TOTAL_STEPS string = "5"
 	// cache writer:
-	batchWriter.Set([]byte("smokeTest-CacheMETA"), []byte("OK"))
-	CMETA.ExecuteBatch(batchWriter, moss.WriteOptions{})
-
-	ssWriter, err := CMETA.Snapshot()
-	defer ssWriter.Close()
-
-	ropts_writer := moss.ReadOptions{}
-	valstc_writer, err := ssWriter.Get([]byte("smokeTest-CacheMETA"), ropts_writer)
-	if err != nil {
-		Logger.Fatal("smokeTest-CacheWriter: ", err)
-	} else {
-		Logger.Info("1/", TOTAL_STEPS, ", smokeTest-CacheMETA: ", string(valstc_writer))
-	}
-
-	// cache reader:
-	batchReader.Set([]byte("smokeTest-CacheReader"), []byte("OK"))
-	CREADER.ExecuteBatch(batchReader, moss.WriteOptions{})
-
-	ssReader, err := CREADER.Snapshot()
-	defer ssReader.Close()
-
-	ropts_reader := moss.ReadOptions{}
-	valstc_reader, err := ssReader.Get([]byte("smokeTest-CacheReader"), ropts_reader)
-	if err != nil {
-		Logger.Fatal("smokeTest-CacheReader: ", err)
-	} else {
-		Logger.Info("2/", TOTAL_STEPS, ", smokeTest-CacheReader: ", string(valstc_reader))
-	}
 
 	// DB
-	err = DB.Update(func(txn *badger.Txn) error {
+	err := DB.Update(func(txn *badger.Txn) error {
 		err := txn.Set([]byte("smokeTest-Database"), Zip([]byte("OK")))
 		return err
 	})
@@ -260,14 +198,48 @@ func testOptions() {
 	Logger.Info(conf.i)
 }
 
-func openLevel() {
+func openMeta() {
 	var err error
-	LDB, err = leveldb.OpenFile(CFG.Volume.Ldb_dir, nil)
-	if err != nil {
-		Logger.Error("Error while opening LDB")
+	var meta_dir string
+	_, err = os.Stat(CFG.Volume.Meta_dir)
+	if os.IsNotExist(err) {
+		Logger.Fatal("META DIR is not writeable: CFG.Volume.Meta_dir")
+	} else {
+		meta_dir = CFG.Volume.Meta_dir
+		Logger.Debug("meta_dir:", meta_dir)
 	}
 
-	ldb_set("ffffff", []byte("dddd"))
-	dd, _ := ldb_get("ffffff")
-	Logger.Info("ff222ffff", dd)
+	LDB, err = leveldb.OpenFile(CFG.Volume.Meta_dir, nil)
+	if err != nil {
+		Logger.Fatal("Error while opening LDB")
+	}
+
+}
+
+func openGroupCache() {
+	csf := CFG.Volume.Cache_self
+	cps := CFG.Volume.Cache_peers
+	if cps == nil || len(cps) < 1 {
+		Logger.Fatal("Cache Peers Configuration Error.")
+	}
+
+	opts := groupcache.HTTPPoolOptions{BasePath: "/_groupcache/"}
+	CACHE_PEERS = groupcache.NewHTTPPoolOpts(csf, &opts)
+
+	cps_str := strings.Join(cps, ",")
+	Logger.Debug("Cache Peers:", cps_str)
+	CACHE_PEERS.Set(cps_str)
+
+	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
+		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
+			//Logger.Info("groupcache.NewGroup: ", csf)
+			data, err := EntityGet(key)
+			if err != nil {
+				return err
+			}
+
+			dest.SetBytes(data)
+			return nil
+		}))
+
 }

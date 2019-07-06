@@ -9,7 +9,7 @@ import (
 	"time"
 
 	pbv "./pb/volume"
-	"github.com/couchbase/moss"
+	//"github.com/syndtr/goleveldb/leveldb"
 
 	//"github.com/dgraph-io/badger"
 	"golang.org/x/net/context"
@@ -75,40 +75,15 @@ func RunReplicateParallel() error {
 }
 
 func replicate(ip_port string) error {
-
-	fileKeys := []string{}
-
-	ssm, err := CMETA.Snapshot()
-	if err != nil {
-		Logger.Error("expected ssm ok")
-	}
 	prefix := strings.Join([]string{"sync:", ip_port, ":"}, "")
 	prefix_length := len(prefix)
 	Logger.Debug("sync: prefix_length: ", prefix_length, ", prefix: ", prefix)
-	iter, err := ssm.StartIterator([]byte(prefix), nil, moss.IteratorOptions{})
-	if err != nil || iter == nil {
-		Logger.Error("expected iter")
+
+	fileKeys, err := MetaScan(prefix)
+	if err != nil {
+		Logger.Debug("MetaScan Error.")
+		return err
 	}
-
-	for i := 0; i < 50; i++ {
-		k, v, err := iter.Current()
-		if err != nil {
-			continue
-		}
-		if k != nil && v != nil {
-			k_raw := string(k)[prefix_length:]
-			Logger.Debug("add to sync list:", k_raw)
-			fileKeys = append(fileKeys, k_raw)
-		}
-
-		err = iter.Next()
-		if err != nil {
-			break
-		}
-	}
-
-	ssm.Close()
-
 	fileKeys_len := len(fileKeys)
 	if fileKeys_len == 0 {
 		Logger.Debug("No Entities Replication Needed.")

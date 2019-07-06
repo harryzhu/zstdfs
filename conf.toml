@@ -10,9 +10,10 @@ port = "8864"
 db_data_dir = "/Volumes/HDD2/4/d"
 db_value_dir = "/Volumes/HDD2/4/v"
 meta_dir = "/Volumes/HDD2/4/meta"
-ldb_dir = "/Volumes/HDD2/4/ldb"
 max_size = 33554432
 max_cache_size = 33554432
+cache_self = "http://127.0.0.1:8081"
+cache_peers = ["http://127.0.0.1:8082","http://127.0.0.1:8083"]
 
 [http]
 ip = "127.0.0.1"

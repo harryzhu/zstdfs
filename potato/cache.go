@@ -3,33 +3,38 @@ package potato
 import (
 	"errors"
 
-	"github.com/couchbase/moss"
+	//"github.com/golang/groupcache"
+	pb "github.com/golang/groupcache/groupcachepb"
 )
 
 func CacheGet(key string) ([]byte, error) {
-	ssReader, err := CREADER.Snapshot()
-	if err == nil {
-		defer ssReader.Close()
-
-		result, err := ssReader.Get([]byte(key), moss.ReadOptions{})
-		if err != nil {
-			return nil, errors.New("failed to get key from cache")
-		}
-		return result, nil
+	data, err := getFromPeer(CACHEGROUPNAME, key)
+	if err != nil {
+		Logger.Debug("CacheGet: ", err)
+		return nil, err
 	}
-	return nil, errors.New("failed to get key from cache")
+	return data, nil
 }
 
 func CacheSet(key string, data []byte) error {
-	batchReader, err := CREADER.NewBatch(0, 0)
-	if err != nil {
-		Logger.Error("Cache CREADER cannot NewBatch: ", err)
-		return err
-	}
-	err = batchReader.Set([]byte(key), data)
-	CREADER.ExecuteBatch(batchReader, moss.WriteOptions{})
-	if err != nil {
-		return err
-	}
+
 	return nil
+}
+
+func getFromPeer(groupName, key string) ([]byte, error) {
+	req := &pb.GetRequest{Group: &groupName, Key: &key}
+	res := &pb.GetResponse{}
+
+	peer, ok := CACHE_PEERS.PickPeer(key)
+	if ok == false {
+		Logger.Debug("getFromPeer: cannot PickPeer.")
+		return nil, errors.New("getFromPeer: cannot PickPeer.")
+	}
+
+	err := peer.Get(nil, req, res)
+	if err != nil {
+		Logger.Debug("getFromPeer: cannot get by key:", key)
+		return nil, err
+	}
+	return res.Value, nil
 }

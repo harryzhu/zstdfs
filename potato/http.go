@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/groupcache"
 )
 
 func StartHttpServer() {
@@ -26,11 +27,12 @@ func StartHttpServer() {
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/ping", HttpPing)
-		v1.GET("/s/:key", HttpGet)
+		v1.GET("/k/:key", HttpGet)
 		v1.GET("/form-files.html", HttpFormFiles)
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
 		v1.GET("/list", HttpList)
+		v1.GET("/_groupcache/:key", HttpGroupCache)
 		v1.POST("/uploads", HttpUpload)
 	}
 
@@ -195,4 +197,40 @@ func HttpList(c *gin.Context) {
 	listHtml := EntityScan("fd")
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
+}
+
+func HttpGroupCache(c *gin.Context) {
+	key := c.Param("key")
+
+	Logger.Info("adfasdadsa:", key)
+
+	var data []byte
+
+	CACHE_GROUP.Get(nil, key, groupcache.AllocatingByteSliceSink(&data))
+	Logger.Info("rrrrr:", len(data))
+
+	var ettobj EntityObject
+	//erru := json.Unmarshal(data, &ettobj)
+	erru := json.Unmarshal(data, &ettobj)
+
+	var eo_name, eo_mime, eo_size string
+	var eo_data []byte
+
+	if erru == nil {
+		eo_name = ettobj.Name
+		eo_mime = ettobj.Mime
+		eo_size = ettobj.Size
+		eo_data = ettobj.Data
+
+		Logger.Debug(eo_name)
+
+		c.Header("Content-Length", eo_size)
+		c.Data(http.StatusOK, eo_mime, eo_data)
+
+	} else {
+		m404 := "404 NOT Found"
+
+		c.Header("Content-Length", strconv.Itoa(len([]byte(m404))))
+		c.Data(http.StatusOK, "text/html", []byte(m404))
+	}
 }

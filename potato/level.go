@@ -3,6 +3,7 @@ package potato
 import (
 	// 	//"github.com/BurntSushi/toml"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 func ldb_set(key string, data []byte) error {
@@ -62,4 +63,25 @@ func ldb_mdel(keys []string) error {
 	}
 
 	return nil
+}
+
+func ldb_scan(prefix string) ([]string, error) {
+	res := 0
+	var keys []string
+	iter := LDB.NewIterator(&util.Range{Start: []byte(prefix), Limit: nil}, nil)
+	for iter.Next() {
+		res++
+		if res > 100 {
+			break
+		}
+		keys = append(keys, string(iter.Key()))
+	}
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		Logger.Error("ldb_scan: ", err)
+		return nil, err
+	}
+
+	return keys, nil
 }

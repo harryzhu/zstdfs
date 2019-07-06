@@ -63,6 +63,14 @@ func MetaSyncCount() (res int) {
 	return res
 }
 
+func MetaScan(prefix string) ([]string, error) {
+	keys, err := ldb_scan(prefix)
+	if err != nil {
+		return nil, err
+	}
+	return keys, nil
+}
+
 func MetaSyncList() (listHtml string) {
 	slaves := CFG.Replication.Slaves
 	fileKeys := []string{}

@@ -32,7 +32,8 @@ type volumeConfig struct {
 	Db_data_dir    string
 	Db_value_dir   string
 	Meta_dir       string
-	Ldb_dir        string
+	Cache_self     string
+	Cache_peers    []string
 	Max_size       int
 	Max_cache_size int
 }
