@@ -32,6 +32,7 @@ func StartHttpServer() {
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
 		v1.GET("/list", HttpList)
+		v1.GET("/stats", HttpStats)
 		v1.GET("/_groupcache/:key", HttpGroupCache)
 		v1.POST("/uploads", HttpUpload)
 	}
@@ -199,10 +200,17 @@ func HttpList(c *gin.Context) {
 	c.String(http.StatusOK, listHtml)
 }
 
+func HttpStats(c *gin.Context) {
+	Logger.Debug("PeerLoad:", CACHE_GROUP.Stats.PeerLoads.String())
+	Logger.Debug("PeerErrors:", CACHE_GROUP.Stats.PeerErrors.String())
+	Logger.Debug("Loads:", CACHE_GROUP.Stats.Loads.String())
+	Logger.Debug("CacheHits:", CACHE_GROUP.Stats.CacheHits.String())
+	Logger.Debug("Gets:", CACHE_GROUP.Stats.Gets.String())
+	Logger.Debug("LocalLoads:", CACHE_GROUP.Stats.LocalLoads.String())
+}
+
 func HttpGroupCache(c *gin.Context) {
 	key := c.Param("key")
-
-	Logger.Info("adfasdadsa:", key)
 
 	var data []byte
 
@@ -210,7 +218,6 @@ func HttpGroupCache(c *gin.Context) {
 	Logger.Info("rrrrr:", len(data))
 
 	var ettobj EntityObject
-	//erru := json.Unmarshal(data, &ettobj)
 	erru := json.Unmarshal(data, &ettobj)
 
 	var eo_name, eo_mime, eo_size string

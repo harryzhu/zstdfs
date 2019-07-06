@@ -116,7 +116,6 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 	}
 	Logger.Debug("fileKeys length: ", fileKeys_len)
 
-	//for i := 0; i < fileKeys_len; i++ {
 	//ctx, cancel := context.WithTimeout(context.Background(), 24*3600*time.Second)
 	ctx, _ := context.WithTimeout(context.Background(), 24*3600*time.Second)
 	//defer cancel()
@@ -157,19 +156,24 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 			MetaMultiDelete(deleteKeys)
 		}
 
-		return
+		//return
 	}()
 
+	var fileKey string
 	for k, fk := range fileKeys {
-		Logger.Debug("Sync Key Index:", k, ", ", fk)
-		data, err := EntityGet(fk)
+		fileKey = fk[len(prefix):]
+		Logger.Debug("Sync Key Index:", k, ", ", fileKey)
+
+		data, err := EntityGet(fileKey)
 		if err != nil || data == nil {
+			Logger.Debug("Stream_02: EntityGet Error: ", fileKey)
 			continue
 		} else {
-			frequest := &pbv.File{Key: fk, Data: data}
+			frequest := &pbv.File{Key: fileKey, Data: data}
 			if err := stream.Send(frequest); err != nil {
 				Logger.Warn("Stream_02: Failed to send a filerequest: ", err)
 			}
+			Logger.Debug("Stream_02: Sending: ", fileKey)
 		}
 	}
 

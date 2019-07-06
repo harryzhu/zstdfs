@@ -41,7 +41,7 @@ func db_get(key string) ([]byte, error) {
 		return nil
 	})
 	if err != nil {
-		//Logger.Debug("failed to get key or the key does not exist: ", key, " ,Error: ", err)
+		Logger.Debug("failed to get key or the key does not exist: ", key, " ,Error: ", err)
 		return nil, err
 	}
 	return Unzip(valCopy), nil
