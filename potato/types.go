@@ -34,6 +34,7 @@ type volumeConfig struct {
 	Meta_dir       string
 	Cache_self     string
 	Cache_peers    []string
+	Cache_basepath string
 	Max_size       int
 	Max_cache_size int
 }

@@ -9,6 +9,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,8 @@ func StartHttpServer() {
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/ping", HttpPing)
-		v1.GET("/k/:key", HttpGet)
+		//v1.GET("/k/:key", HttpGet)
+		v1.GET("/k/:key", HttpGroupCache)
 		v1.GET("/form-files.html", HttpFormFiles)
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
@@ -52,13 +54,14 @@ func HttpPing(c *gin.Context) {
 }
 
 func HttpGet(c *gin.Context) {
+
 	timer_start := time.Now()
 	key := c.Param("key")
 
 	data, err := CacheGet(key)
 
 	if err != nil || data == nil {
-		Logger.Debug("cache miss.")
+		Logger.Debug("cache MISS.")
 		c.Header("X-Potatofs-Cache", "MISS")
 		data, err = EntityGet(key)
 		if err == nil {
@@ -66,6 +69,9 @@ func HttpGet(c *gin.Context) {
 				CacheSet(key, data)
 			}
 		}
+	} else {
+		Logger.Debug("cache HIT.")
+		c.Header("X-Potatofs-Cache", "HIT")
 	}
 
 	var ettobj EntityObject
@@ -103,7 +109,7 @@ func HttpGet(c *gin.Context) {
 func HttpUpload(c *gin.Context) {
 	form, _ := c.MultipartForm()
 	files := form.File["uploads[]"]
-	Logger.Debug("fffiles:", len(files))
+	Logger.Debug("files:", len(files))
 	var resp []*EntityResponse
 	for _, file := range files {
 		Logger.Debug("uploading: ", file.Filename)
@@ -132,7 +138,7 @@ func HttpUpload(c *gin.Context) {
 
 			sb_key := ByteMD5(fileData)
 			if EntityExists(sb_key) == true {
-				ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "s", sb_key}, "/")
+				ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "k", sb_key}, "/")
 				ett.Name = sb_key
 				ett.Size = fsize
 				ett.Mime = fmime
@@ -147,7 +153,7 @@ func HttpUpload(c *gin.Context) {
 						Logger.Debug("Error while EntitySet: ", sb_key)
 					} else {
 						Logger.Debug("OK while EntitySet: ", sb_key)
-						ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "s", sb_key}, "/")
+						ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "k", sb_key}, "/")
 						ett.Name = sb_key
 						ett.Size = fsize
 						ett.Mime = fmime
@@ -201,21 +207,33 @@ func HttpList(c *gin.Context) {
 }
 
 func HttpStats(c *gin.Context) {
-	Logger.Debug("PeerLoad:", CACHE_GROUP.Stats.PeerLoads.String())
-	Logger.Debug("PeerErrors:", CACHE_GROUP.Stats.PeerErrors.String())
-	Logger.Debug("Loads:", CACHE_GROUP.Stats.Loads.String())
-	Logger.Debug("CacheHits:", CACHE_GROUP.Stats.CacheHits.String())
-	Logger.Debug("Gets:", CACHE_GROUP.Stats.Gets.String())
-	Logger.Debug("LocalLoads:", CACHE_GROUP.Stats.LocalLoads.String())
+	str_stats := strings.Join([]string{"Stats:<br/>", "PeerLoad:", CACHE_GROUP.Stats.PeerLoads.String(),
+		"</br>PeerErrors:", CACHE_GROUP.Stats.PeerErrors.String(),
+		"</br>Loads:", CACHE_GROUP.Stats.Loads.String(),
+		"</br>CacheHits:", CACHE_GROUP.Stats.CacheHits.String(),
+		"</br>Gets:", CACHE_GROUP.Stats.Gets.String(),
+		"</br>LocalLoads:", CACHE_GROUP.Stats.LocalLoads.String(),
+		"</br>DBGetCounter:", strconv.FormatUint(atomic.LoadUint64(&DBGetCounter), 10),
+		"</br>DBSetCounter:", strconv.FormatUint(atomic.LoadUint64(&DBSetCounter), 10),
+	}, "")
+
+	c.Data(http.StatusOK, "text/html", []byte(str_stats))
 }
 
 func HttpGroupCache(c *gin.Context) {
 	key := c.Param("key")
 
+	Error404 := "404 NOT Found"
+
 	var data []byte
 
-	CACHE_GROUP.Get(nil, key, groupcache.AllocatingByteSliceSink(&data))
-	Logger.Info("rrrrr:", len(data))
+	err := CACHE_GROUP.Get(c, key, groupcache.AllocatingByteSliceSink(&data))
+
+	if err != nil {
+		c.Header("Content-Length", strconv.Itoa(len([]byte(Error404))))
+		c.Data(http.StatusOK, "text/html", []byte(Error404))
+		return
+	}
 
 	var ettobj EntityObject
 	erru := json.Unmarshal(data, &ettobj)
@@ -235,9 +253,8 @@ func HttpGroupCache(c *gin.Context) {
 		c.Data(http.StatusOK, eo_mime, eo_data)
 
 	} else {
-		m404 := "404 NOT Found"
 
-		c.Header("Content-Length", strconv.Itoa(len([]byte(m404))))
-		c.Data(http.StatusOK, "text/html", []byte(m404))
+		c.Header("Content-Length", strconv.Itoa(len([]byte(Error404))))
+		c.Data(http.StatusOK, "text/html", []byte(Error404))
 	}
 }

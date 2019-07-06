@@ -1,6 +1,7 @@
 package potato
 
 import (
+
 	//"github.com/BurntSushi/toml"
 	//"github.com/couchbase/moss"
 	"github.com/dgraph-io/badger"
@@ -11,7 +12,7 @@ import (
 
 const (
 	GRPCMAXMSGSIZE int    = 256 << 20
-	CACHEGROUPSIZE int64  = 256 << 20
+	CACHEGROUPSIZE int64  = 1024 << 20
 	CACHEGROUPNAME string = "groupcache"
 )
 
@@ -23,13 +24,14 @@ var (
 	IsReplicationNeeded  bool = true
 	//CMETA                moss.Collection
 	//CREADER              moss.Collection
-	HTTP_TEMP_DIR string
-	HTTP_SITE_URL string
-	IsMaster      bool
-	SLAVES        []string
-	SLAVES_LENGTH int
-	CACHE_GROUP   *groupcache.Group
-	CACHE_PEERS   *groupcache.HTTPPool
+	HTTP_TEMP_DIR  string
+	HTTP_SITE_URL  string
+	IsMaster       bool
+	SLAVES         []string
+	SLAVES_LENGTH  int
+	CACHE_GROUP    *groupcache.Group
+	CACHE_PEERS    *groupcache.HTTPPool
+	CACHE_BASEPATH string = "/_groupcache/"
 )
 
 var (
@@ -40,4 +42,9 @@ var (
 
 var (
 	LDB *leveldb.DB
+)
+
+var (
+	DBGetCounter uint64 = 0
+	DBSetCounter uint64 = 0
 )

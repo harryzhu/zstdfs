@@ -12,8 +12,9 @@ db_value_dir = "/Volumes/HDD2/4/v"
 meta_dir = "/Volumes/HDD2/4/meta"
 max_size = 33554432
 max_cache_size = 33554432
+cache_basepath = "/k/"
 cache_self = "http://127.0.0.1:8874"
-cache_peers = ["http://127.0.0.1:7759","http://127.0.0.1:6646"]
+cache_peers = ["http://127.0.0.1:8874","http://127.0.0.1:7759","http://127.0.0.1:6646"]
 
 [http]
 ip = "127.0.0.1"

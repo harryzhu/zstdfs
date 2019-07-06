@@ -219,16 +219,23 @@ func openMeta() {
 func openGroupCache() {
 	csf := CFG.Volume.Cache_self
 	cps := CFG.Volume.Cache_peers
+	cbp := CFG.Volume.Cache_basepath
 	if cps == nil || len(cps) < 1 {
 		Logger.Fatal("Cache Peers Configuration Error.")
 	}
+	if cbp != "" {
+		CACHE_BASEPATH = cbp
+	}
 
-	opts := groupcache.HTTPPoolOptions{BasePath: "/_groupcache/"}
+	Logger.Debug("CACHE_BASEPATH: ", CACHE_BASEPATH)
+
+	opts := groupcache.HTTPPoolOptions{BasePath: CACHE_BASEPATH}
 	CACHE_PEERS = groupcache.NewHTTPPoolOpts(csf, &opts)
 
-	cps_str := strings.Join(cps, ",")
+	cps_str := "\"" + strings.Join(cps, "\",\"") + "\""
 	Logger.Debug("Cache Peers:", cps_str)
-	CACHE_PEERS.Set(cps_str)
+	//CACHE_PEERS.Set("http://127.0.0.1:8874", "http://127.0.0.1:7759", "http://127.0.0.1:6646")
+	CACHE_PEERS.Set(cps...)
 
 	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
