@@ -58,6 +58,7 @@ func HttpHome(c *gin.Context) {
 	links := strings.Join([]string{
 		"<a href=\"/v1/form-files.html\">/v1/form-files.html</a>",
 		"<a href=\"/v1/meta-sync-list.html\">/v1/meta-sync-list.html</a>",
+		"<a href=\"/v1/meta-list.html\">/v1/meta-list.html</a>",
 		"<a href=\"/v1/list\">/v1/list</a>",
 		"<a href=\"/v1/stats\">/v1/stats</a>",
 	}, "<br/>")
