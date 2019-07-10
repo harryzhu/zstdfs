@@ -27,6 +27,7 @@ func StartHttpServer() {
 	r.Use(gin.Recovery())
 	v1 := r.Group("/v1")
 	{
+		v1.GET("/", HttpHome)
 		v1.GET("/ping", HttpPing)
 		//v1.GET("/k/:key", HttpGet)
 		v1.GET("/k/:key", HttpGroupCache)
@@ -51,6 +52,17 @@ func HttpPing(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "pong",
 	})
+}
+
+func HttpHome(c *gin.Context) {
+	links := strings.Join([]string{
+		"<a href=\"/v1/form-files.html\">/v1/form-files.html</a>",
+		"<a href=\"/v1/meta-sync-list.html\">/v1/meta-sync-list.html</a>",
+		"<a href=\"/v1/list\">/v1/list</a>",
+		"<a href=\"/v1/stats\">/v1/stats</a>",
+	}, "<br/>")
+
+	c.Data(http.StatusOK, "text/html", []byte(links))
 }
 
 func HttpGet(c *gin.Context) {
@@ -207,12 +219,16 @@ func HttpList(c *gin.Context) {
 }
 
 func HttpStats(c *gin.Context) {
-	str_stats := strings.Join([]string{"Stats:<br/>", "PeerLoad:", CACHE_GROUP.Stats.PeerLoads.String(),
+	str_stats := strings.Join([]string{"Stats:",
+		"</br>Gets:", CACHE_GROUP.Stats.Gets.String(),
+		"</br>CacheHits:", CACHE_GROUP.Stats.CacheHits.String(),
+		"<br/>PeerLoads:", CACHE_GROUP.Stats.PeerLoads.String(),
 		"</br>PeerErrors:", CACHE_GROUP.Stats.PeerErrors.String(),
 		"</br>Loads:", CACHE_GROUP.Stats.Loads.String(),
-		"</br>CacheHits:", CACHE_GROUP.Stats.CacheHits.String(),
-		"</br>Gets:", CACHE_GROUP.Stats.Gets.String(),
+		"</br>LoadsDeduped:", CACHE_GROUP.Stats.LoadsDeduped.String(),
 		"</br>LocalLoads:", CACHE_GROUP.Stats.LocalLoads.String(),
+		"</br>LocalLoadErrs:", CACHE_GROUP.Stats.LocalLoadErrs.String(),
+		"</br>ServerRequests:", CACHE_GROUP.Stats.ServerRequests.String(),
 		"</br>DBGetCounter:", strconv.FormatUint(atomic.LoadUint64(&DBGetCounter), 10),
 		"</br>DBSetCounter:", strconv.FormatUint(atomic.LoadUint64(&DBSetCounter), 10),
 	}, "")
