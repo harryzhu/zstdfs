@@ -2,50 +2,123 @@ package potato
 
 import (
 	"encoding/json"
-	//"io"
+	"io"
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
+	//"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/groupcache"
 )
+
+var r = gin.Default()
 
 func StartHttpServer() {
 	addressHttp := strings.Join([]string{CFG.Http.Ip, CFG.Http.Port}, ":")
 	if MODE == "PRODUCTION" {
 		gin.SetMode(gin.ReleaseMode)
+		gin.DisableConsoleColor()
+		logfile := CFG.Http.Log_file
+		f, _ := os.Create(logfile)
+		gin.DefaultWriter = io.MultiWriter(f)
 	} else {
 		gin.SetMode(gin.DebugMode)
+		Logger.Info("in DebugMode, log will not flush to disk.")
 	}
-	r := gin.Default()
+
+	if CFG.Http.Cors_enabled == true {
+		corsConfig := cors.DefaultConfig()
+		corsConfig.AllowOrigins = CFG.Http.Cors_allow_origins
+		corsConfig.AllowMethods = CFG.Http.Cors_allow_methods
+		corsConfig.AllowHeaders = CFG.Http.Cors_allow_headers
+		corsConfig.ExposeHeaders = CFG.Http.Cors_expose_headers
+		corsConfig.AllowCredentials = CFG.Http.Cors_allow_credentials
+		corsConfig.MaxAge = CFG.Http.Cors_maxage_hours * time.Hour
+
+		r.Use(cors.New(corsConfig))
+		Logger.Info("CORS is enabled.")
+	} else {
+		r.Use(cors.Default())
+	}
+
+	//r.Use(Validate())
+
+	r.Use(gzip.Gzip(gzip.DefaultCompression))
+	//r.Use(AuthRequired())
+	r.LoadHTMLGlob("static/**/*.tmpl")
 	r.Use(gin.Recovery())
+	r.GET("/", HttpDefaultHome)
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/", HttpHome)
 		v1.GET("/ping", HttpPing)
 		//v1.GET("/k/:key", HttpGet)
 		v1.GET("/k/:key", HttpGroupCache)
-		v1.GET("/form-files.html", HttpFormFiles)
+		v1.GET("/form-uploads.html", HttpFormFiles)
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
 		v1.GET("/list", HttpList)
 		v1.GET("/stats", HttpStats)
+		v1.GET("/signin", HttpSignin)
 		v1.GET("/_groupcache/:key", HttpGroupCache)
+
+		// POST
 		v1.POST("/uploads", HttpUpload)
+		v1.POST("/auth", HttpAuth)
 	}
 
 	r.GET("/favicon.ico", HttpFavicon)
 	r.Run(addressHttp)
 }
 
+// func Validate() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		val, _ := c.Cookie("name")
+// 		Logger.Info("cookie:", val)
+// 		username := c.Query("user01")
+// 		password := c.Query("pswd01")
+
+// 		if username == "user01" && password == "pswd01" {
+// 			// session := sessions.Default(context)
+// 			// session.Set("session_01", "hahaha")
+// 			// session.Save()
+
+// 			c.Next()
+// 		} else {
+// 			//c.Abort()
+// 			//c.JSON(http.StatusUnauthorized, gin.H{"message": "authentication failed."})
+// 		}
+
+// 	}
+// }
+
 func HttpFavicon(c *gin.Context) {
-	c.Data(http.StatusOK, "image/x-icon", []byte("-"))
+	fileData, err := ioutil.ReadFile(CFG.Http.Favicon_file)
+	if err != nil {
+		fileData = []byte("")
+	}
+	c.Data(http.StatusOK, "image/x-icon", fileData)
+}
+
+func HttpSignin(c *gin.Context) {
+	actionPath := strings.Join([]string{HTTP_SITE_URL, "v1", "auth"}, "/")
+
+	c.Header("Content-Type", "text/html")
+	c.HTML(http.StatusOK, "v1/signin.tmpl", gin.H{"action": actionPath})
+}
+
+func HttpAuth(c *gin.Context) {
+	c.SetCookie("name", "test", 3600, "/", "", false, false)
+	c.Redirect(302, "/")
 }
 
 func HttpPing(c *gin.Context) {
@@ -54,16 +127,12 @@ func HttpPing(c *gin.Context) {
 	})
 }
 
-func HttpHome(c *gin.Context) {
-	links := strings.Join([]string{
-		"<a href=\"/v1/form-files.html\">/v1/form-files.html</a>",
-		"<a href=\"/v1/meta-sync-list.html\">/v1/meta-sync-list.html</a>",
-		"<a href=\"/v1/meta-list.html\">/v1/meta-list.html</a>",
-		"<a href=\"/v1/list\">/v1/list</a>",
-		"<a href=\"/v1/stats\">/v1/stats</a>",
-	}, "<br/>")
+func HttpDefaultHome(c *gin.Context) {
+	c.Data(http.StatusOK, "text/html", []byte("OK"))
+}
 
-	c.Data(http.StatusOK, "text/html", []byte(links))
+func HttpHome(c *gin.Context) {
+	c.HTML(http.StatusOK, "v1/index.tmpl", gin.H{})
 }
 
 func HttpGet(c *gin.Context) {
@@ -134,6 +203,9 @@ func HttpUpload(c *gin.Context) {
 			fname := file.Filename
 			fsize := strconv.Itoa(len(fileData))
 			fmime := mime.TypeByExtension(path.Ext(ftemp))
+			if fmime == "" {
+				fmime = "application/octet-stream"
+			}
 
 			sb := &EntityObject{
 				Name: fname,
@@ -149,7 +221,10 @@ func HttpUpload(c *gin.Context) {
 				Mime: "",
 			}
 
+			fileExt := path.Ext(path.Base(file.Filename))
 			sb_key := ByteMD5(fileData)
+			sb_key = strings.ToLower(strings.Join([]string{sb_key, fileExt}, ""))
+
 			if EntityExists(sb_key) == true {
 				ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "k", sb_key}, "/")
 				ett.Name = sb_key
@@ -189,16 +264,9 @@ func HttpUpload(c *gin.Context) {
 }
 
 func HttpFormFiles(c *gin.Context) {
-	f1 := `<form class="form-files" method="POST" action="`
-	f2 := strings.Join([]string{HTTP_SITE_URL, "v1", "uploads"}, "/")
-	f3 := `" enctype="multipart/form-data">
-		<input type="file" class="frm-file" name="uploads[]" multiple />
-		<input type="submit" class="frm-submit" value="Upload">
-</form>
-	`
-	f := strings.Join([]string{f1, f2, f3}, "")
+	formAction := strings.Join([]string{HTTP_SITE_URL, "v1", "uploads"}, "/")
 	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, f)
+	c.HTML(http.StatusOK, "v1/form-uploads.tmpl", gin.H{"action": formAction})
 }
 
 func HttpMetaSyncList(c *gin.Context) {
@@ -220,21 +288,21 @@ func HttpList(c *gin.Context) {
 }
 
 func HttpStats(c *gin.Context) {
-	str_stats := strings.Join([]string{"Stats:",
-		"</br>Gets:", CACHE_GROUP.Stats.Gets.String(),
-		"</br>CacheHits:", CACHE_GROUP.Stats.CacheHits.String(),
-		"<br/>PeerLoads:", CACHE_GROUP.Stats.PeerLoads.String(),
-		"</br>PeerErrors:", CACHE_GROUP.Stats.PeerErrors.String(),
-		"</br>Loads:", CACHE_GROUP.Stats.Loads.String(),
-		"</br>LoadsDeduped:", CACHE_GROUP.Stats.LoadsDeduped.String(),
-		"</br>LocalLoads:", CACHE_GROUP.Stats.LocalLoads.String(),
-		"</br>LocalLoadErrs:", CACHE_GROUP.Stats.LocalLoadErrs.String(),
-		"</br>ServerRequests:", CACHE_GROUP.Stats.ServerRequests.String(),
-		"</br>DBGetCounter:", strconv.FormatUint(atomic.LoadUint64(&DBGetCounter), 10),
-		"</br>DBSetCounter:", strconv.FormatUint(atomic.LoadUint64(&DBSetCounter), 10),
-	}, "")
+	var stats = make(map[string]string)
+	stats["Gets"] = CACHE_GROUP.Stats.Gets.String()
+	stats["DBGetCounter"] = strconv.FormatUint(atomic.LoadUint64(&DBGetCounter), 10)
+	stats["DBSetCounter"] = strconv.FormatUint(atomic.LoadUint64(&DBSetCounter), 10)
+	stats["CacheHits"] = CACHE_GROUP.Stats.CacheHits.String()
+	stats["PeerLoads"] = CACHE_GROUP.Stats.PeerLoads.String()
+	stats["PeerErrors"] = CACHE_GROUP.Stats.PeerErrors.String()
+	stats["Loads"] = CACHE_GROUP.Stats.Loads.String()
+	stats["LoadsDeduped"] = CACHE_GROUP.Stats.LoadsDeduped.String()
+	stats["LocalLoads"] = CACHE_GROUP.Stats.LocalLoads.String()
+	stats["LocalLoadErrs"] = CACHE_GROUP.Stats.LocalLoadErrs.String()
+	stats["ServerRequests"] = CACHE_GROUP.Stats.ServerRequests.String()
+	c.Header("Content-Type", "text/html")
+	c.HTML(http.StatusOK, "v1/stats.tmpl", gin.H{"Stats": stats})
 
-	c.Data(http.StatusOK, "text/html", []byte(str_stats))
 }
 
 func HttpGroupCache(c *gin.Context) {
@@ -247,7 +315,6 @@ func HttpGroupCache(c *gin.Context) {
 	err := CACHE_GROUP.Get(c, key, groupcache.AllocatingByteSliceSink(&data))
 
 	if err != nil {
-		c.Header("Content-Length", strconv.Itoa(len([]byte(Error404))))
 		c.Data(http.StatusOK, "text/html", []byte(Error404))
 		return
 	}
@@ -264,14 +331,14 @@ func HttpGroupCache(c *gin.Context) {
 		eo_size = ettobj.Size
 		eo_data = ettobj.Data
 
-		Logger.Debug(eo_name)
-
+		if eo_mime == "" {
+			eo_mime = "application/octet-stream"
+		}
+		c.Header("X-PotatoFS-Name", eo_name)
 		c.Header("Content-Length", eo_size)
 		c.Data(http.StatusOK, eo_mime, eo_data)
 
 	} else {
-
-		c.Header("Content-Length", strconv.Itoa(len([]byte(Error404))))
 		c.Data(http.StatusOK, "text/html", []byte(Error404))
 	}
 }

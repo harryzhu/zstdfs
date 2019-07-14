@@ -239,7 +239,6 @@ func openGroupCache() {
 
 	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
-			//Logger.Info("groupcache.NewGroup: ", csf)
 			data, err := EntityGet(key)
 			if err != nil {
 				return err

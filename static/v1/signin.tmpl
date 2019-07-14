@@ -1,0 +1,9 @@
+{{ define "v1/signin.tmpl" }}
+<form class="form-auth" method="POST" action="{{ .action }}">
+		<input type="text" class="frm-username" name="frmusername" id="frmusername" />
+		<input type="text" class="frm-password" name="frmpassword" id="frmpassword" />
+		<input type="submit" class="frm-submit" value="Signin">
+</form>
+	
+
+{{ end }}

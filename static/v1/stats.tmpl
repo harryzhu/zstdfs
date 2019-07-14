@@ -1,0 +1,7 @@
+{{ define "v1/stats.tmpl" }}
+Stats:<br/>
+{{ range $k,$v := .Stats }}
+{{ $k }} : {{ $v }} <br/>
+{{ end }}
+
+{{ end }}

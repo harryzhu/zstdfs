@@ -21,6 +21,15 @@ ip = "127.0.0.1"
 port = "8874"
 site_url = "http://127.0.0.1:8874"
 temp_dir = "/Volumes/HDD2/4/temp"
+log_file = "/Volumes/HDD2/4/access.log"
+favicon_file = "./static/v1/favicon.ico"
+cors_enabled = false
+cors_allow_origins= ["http://127.0.0.1:8874"]
+cors_allow_methods= ["PUT","GET","POST"]
+cors_allow_headers= ["Origin", "Content-Length", "Content-Type"]
+cors_expose_headers= ["Content-Length"]
+cors_allow_credentials = true
+cors_maxage_hours = 72
 
 [replication]
 is_master = true

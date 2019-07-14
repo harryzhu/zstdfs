@@ -1,5 +1,9 @@
 package potato
 
+import (
+	"time"
+)
+
 type EntityObject struct {
 	Name string
 	Mime string
@@ -40,10 +44,19 @@ type volumeConfig struct {
 }
 
 type httpConfig struct {
-	Ip       string
-	Port     string
-	Site_url string
-	Temp_dir string
+	Ip                     string
+	Port                   string
+	Site_url               string
+	Log_file               string
+	Favicon_file           string
+	Temp_dir               string
+	Cors_enabled           bool
+	Cors_allow_credentials bool
+	Cors_allow_origins     []string
+	Cors_allow_methods     []string
+	Cors_allow_headers     []string
+	Cors_expose_headers    []string
+	Cors_maxage_hours      time.Duration
 }
 
 type replicationConfig struct {

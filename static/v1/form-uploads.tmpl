@@ -1,0 +1,8 @@
+{{ define "v1/form-uploads.tmpl" }}
+<form class="form-files" method="POST" action="{{ .action }}" enctype="multipart/form-data">
+		<input type="file" class="frm-file" name="uploads[]" multiple />
+		<input type="submit" class="frm-submit" value="Upload">
+</form>
+	
+
+{{ end }}
