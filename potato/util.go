@@ -2,6 +2,7 @@ package potato
 
 import (
 	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"strings"
 
@@ -23,6 +24,12 @@ func Unzip(src []byte) []byte {
 
 func ByteMD5(b []byte) string {
 	ctx := md5.New()
+	ctx.Write(b)
+	return strings.ToLower(hex.EncodeToString(ctx.Sum(nil)))
+}
+
+func ByteSHA256(b []byte) string {
+	ctx := sha256.New()
 	ctx.Write(b)
 	return strings.ToLower(hex.EncodeToString(ctx.Sum(nil)))
 }

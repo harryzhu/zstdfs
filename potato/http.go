@@ -222,7 +222,8 @@ func HttpUpload(c *gin.Context) {
 			}
 
 			fileExt := path.Ext(path.Base(file.Filename))
-			sb_key := ByteMD5(fileData)
+			//sb_key := ByteMD5(fileData)
+			sb_key := ByteSHA256(fileData)
 			sb_key = strings.ToLower(strings.Join([]string{sb_key, fileExt}, ""))
 
 			if EntityExists(sb_key) == true {
