@@ -31,16 +31,30 @@ func Echo() error {
 }
 
 func loadConfigFromFile() error {
+	cfgFileName := "conf.toml"
 
-	_, err := os.Stat("conf.toml")
+	ENV_POTATOFS_CONF_SUFFIX := strings.Trim(os.Getenv("POTATOFS_CONF_SUFFIX"), " ")
+	if len(ENV_POTATOFS_CONF_SUFFIX) > 0 {
+		cfgFileNameOverwrite := strings.ToLower(strings.Join([]string{"conf", ENV_POTATOFS_CONF_SUFFIX, "toml"}, "."))
+
+		_, err := os.Stat(cfgFileNameOverwrite)
+		if err == nil {
+			Logger.Info(cfgFileNameOverwrite, " will overwrite ", cfgFileName)
+			cfgFileName = cfgFileNameOverwrite
+		} else {
+			Logger.Info(cfgFileNameOverwrite, " does not exist, will try to load ", cfgFileName)
+		}
+
+	}
+	_, err := os.Stat(cfgFileName)
 	if err != nil {
 		Logger.Fatal("cannot find the configuration file: conf.toml")
 	}
 
-	if _, err := toml.DecodeFile("conf.toml", &CFG); err != nil {
+	if _, err := toml.DecodeFile(cfgFileName, &CFG); err != nil {
 		Logger.Fatal(err)
 	} else {
-		Logger.Info("conf.toml", " was loaded.")
+		Logger.Info(cfgFileName, " was loaded.")
 		Logger.Info(CFG.Welcome)
 		switch strings.ToUpper(CFG.Global.Log_level) {
 		case "DEBUG":
@@ -236,7 +250,6 @@ func openGroupCache() {
 	Logger.Debug("Cache Peers:", cps_str)
 	//CACHE_PEERS.Set("http://127.0.0.1:8874", "http://127.0.0.1:7759", "http://127.0.0.1:6646")
 	CACHE_PEERS.Set(cps...)
-
 
 	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {

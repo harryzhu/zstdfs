@@ -1,0 +1,36 @@
+welcome = "Thanks for using potato file system."
+
+[global]
+is_debug = true
+log_level = "DEBUG"
+
+[volume]
+ip = "127.0.0.1"
+port = "8864"
+db_data_dir = "/Volumes/HDD2/4/d"
+db_value_dir = "/Volumes/HDD2/4/v"
+meta_dir = "/Volumes/HDD2/4/meta"
+max_size = 33554432
+max_cache_size = 33554432
+cache_basepath = "/k/"
+cache_self = "http://127.0.0.1:8874"
+cache_peers = ["http://127.0.0.1:8874","http://127.0.0.1:7759","http://127.0.0.1:6646"]
+
+[http]
+ip = "127.0.0.1"
+port = "8874"
+site_url = "http://127.0.0.1:8874"
+temp_dir = "/Volumes/HDD2/4/temp"
+log_file = "/Volumes/HDD2/4/access.log"
+favicon_file = "./static/v1/favicon.ico"
+cors_enabled = false
+cors_allow_origins= ["http://127.0.0.1:8874"]
+cors_allow_methods= ["PUT","GET","POST"]
+cors_allow_headers= ["Origin", "Content-Length", "Content-Type"]
+cors_expose_headers= ["Content-Length"]
+cors_allow_credentials = true
+cors_maxage_hours = 72
+
+[replication]
+is_master = true
+slaves = ["127.0.0.1:7749","127.0.0.1:6636"]
