@@ -1,7 +1,9 @@
 package potato
 
 import (
+	//"net/http"
 	"os"
+	//"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -22,7 +24,7 @@ func init() {
 	setCacheMaxSize()
 	setIsMaster()
 	openMeta()
-	openGroupCache()
+	go openGroupCache()
 }
 
 func Echo() error {
