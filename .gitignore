@@ -1,5 +1,6 @@
 data/
 .DS_Store
+conf.toml
 *.log
 *.temp
 *.zip

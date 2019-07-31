@@ -1,26 +1,36 @@
 package potato
 
 import (
-	"encoding/json"
-	"io"
-	"io/ioutil"
-	"mime"
-	"net/http"
-	"os"
-	"path"
-	"strconv"
-	"strings"
-	"sync/atomic"
-	"time"
+"encoding/json"
+"io"
+"io/ioutil"
+"mime"
+"net/http"
+"os"
+"path"
+"strconv"
+"strings"
+"sync/atomic"
+"time"
 
 	//"github.com/gin-gonic/contrib/sessions"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/gzip"
-	"github.com/gin-gonic/gin"
-	"github.com/golang/groupcache"
+"github.com/gin-contrib/cors"
+"github.com/gin-contrib/gzip"
+"github.com/gin-gonic/gin"
+"github.com/golang/groupcache"
 )
 
 var r = gin.Default()
+var FaviconByte = []byte("")
+
+func beforeStartHttpServer(){
+// pre-load favicon file
+	if FaviconFile, err := ioutil.ReadFile(CFG.Http.Favicon_file); err == nil {
+		FaviconByte = FaviconFile
+	}else{
+		Logger.Warn("cannot read favicon file:",CFG.Http.Favicon_file)
+	}
+}
 
 func StartHttpServer() {
 	addressHttp := strings.Join([]string{CFG.Http.Ip, CFG.Http.Port}, ":")
@@ -63,6 +73,7 @@ func StartHttpServer() {
 		v1.GET("/ping", HttpPing)
 		//v1.GET("/k/:key", HttpGet)
 		v1.GET("/k/:key", HttpGroupCache)
+		v1.GET("/s/:key", HttpGet)
 		v1.GET("/form-uploads.html", HttpFormFiles)
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
@@ -71,12 +82,15 @@ func StartHttpServer() {
 		v1.GET("/signin", HttpSignin)
 		v1.GET("/_groupcache/:key", HttpGroupCache)
 
+
 		// POST
 		v1.POST("/uploads", HttpUpload)
 		v1.POST("/auth", HttpAuth)
 	}
 
 	r.GET("/favicon.ico", HttpFavicon)
+	Logger.Info("HTTP Endpoint: ",addressHttp)
+	beforeStartHttpServer()
 	r.Run(addressHttp)
 }
 
@@ -102,11 +116,7 @@ func StartHttpServer() {
 // }
 
 func HttpFavicon(c *gin.Context) {
-	fileData, err := ioutil.ReadFile(CFG.Http.Favicon_file)
-	if err != nil {
-		fileData = []byte("")
-	}
-	c.Data(http.StatusOK, "image/x-icon", fileData)
+	c.Data(http.StatusOK, "image/x-icon", FaviconByte)
 }
 
 func HttpSignin(c *gin.Context) {
@@ -124,11 +134,11 @@ func HttpAuth(c *gin.Context) {
 func HttpPing(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "pong",
-	})
+		})
 }
 
 func HttpDefaultHome(c *gin.Context) {
-	c.Data(http.StatusOK, "text/html", []byte("OK"))
+	c.HTML(http.StatusOK, "default/index.tmpl", gin.H{})	
 }
 
 func HttpHome(c *gin.Context) {

@@ -63,12 +63,13 @@ func StartNodeServer() {
 	if err != nil {
 		Logger.Fatalf("Failed to listen: ", err)
 	} else {
-		Logger.Info("Start as Volume Role: ", addressVolume)
+		Logger.Info("RPC Endpoint: ", addressVolume)
 
 	}
 
 	grpcServerVolume := grpc.NewServer(grpc.MaxMsgSize(GRPCMAXMSGSIZE))
 	pbv.RegisterVolumeServiceServer(grpcServerVolume, &VolumeService{})
+
 	grpcServerVolume.Serve(listening)
 }
 

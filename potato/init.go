@@ -237,6 +237,7 @@ func openGroupCache() {
 	//CACHE_PEERS.Set("http://127.0.0.1:8874", "http://127.0.0.1:7759", "http://127.0.0.1:6646")
 	CACHE_PEERS.Set(cps...)
 
+
 	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
 			data, err := EntityGet(key)

@@ -22,8 +22,6 @@ var (
 	DB                   *badger.DB
 	IsDBValueLogGCNeeded bool
 	IsReplicationNeeded  bool = true
-	//CMETA                moss.Collection
-	//CREADER              moss.Collection
 	HTTP_TEMP_DIR  string
 	HTTP_SITE_URL  string
 	IsMaster       bool

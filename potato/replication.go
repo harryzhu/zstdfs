@@ -122,7 +122,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 
 	stream, err := client.StreamSendFile(ctx)
 	if err != nil {
-		Logger.Warn("Stream_01 StreamSendFile ERROR: ", err)
+		//Logger.Warn("Stream_01 StreamSendFile ERROR: ", err)
 		return err
 	}
 	var lock sync.Mutex
