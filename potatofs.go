@@ -15,7 +15,7 @@ func main() {
 	wg.Add(3)
 	go func() {
 		cronVolume := cron.New()
-		//cronVolume.AddFunc("* */5 * * * *", func() { potato.EntityCompaction() })
+		cronVolume.AddFunc("*/5 * * * * *", func() { potato.HealthCheck("172.16.32.45:8864") })
 		cronVolume.AddFunc("*/90 * * * * *", func() { potato.RunReplicateParallel() })
 		cronVolume.Start()
 	}()

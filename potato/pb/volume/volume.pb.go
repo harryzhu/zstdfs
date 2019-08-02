@@ -8,8 +8,6 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -55,6 +53,61 @@ func (m *Empty) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
+type Message struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=Code,proto3" json:"Code,omitempty"`
+	Okay                 bool     `protobuf:"varint,2,opt,name=Okay,proto3" json:"Okay,omitempty"`
+	Data                 []byte   `protobuf:"bytes,3,opt,name=Data,proto3" json:"Data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Message) Reset()         { *m = Message{} }
+func (m *Message) String() string { return proto.CompactTextString(m) }
+func (*Message) ProtoMessage()    {}
+func (*Message) Descriptor() ([]byte, []int) {
+	return fileDescriptor_498b213ad3bcd5ad, []int{1}
+}
+
+func (m *Message) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Message.Unmarshal(m, b)
+}
+func (m *Message) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Message.Marshal(b, m, deterministic)
+}
+func (m *Message) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Message.Merge(m, src)
+}
+func (m *Message) XXX_Size() int {
+	return xxx_messageInfo_Message.Size(m)
+}
+func (m *Message) XXX_DiscardUnknown() {
+	xxx_messageInfo_Message.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Message proto.InternalMessageInfo
+
+func (m *Message) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *Message) GetOkay() bool {
+	if m != nil {
+		return m.Okay
+	}
+	return false
+}
+
+func (m *Message) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
 type File struct {
 	Key                  string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
 	Data                 []byte   `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
@@ -67,7 +120,7 @@ func (m *File) Reset()         { *m = File{} }
 func (m *File) String() string { return proto.CompactTextString(m) }
 func (*File) ProtoMessage()    {}
 func (*File) Descriptor() ([]byte, []int) {
-	return fileDescriptor_498b213ad3bcd5ad, []int{1}
+	return fileDescriptor_498b213ad3bcd5ad, []int{2}
 }
 
 func (m *File) XXX_Unmarshal(b []byte) error {
@@ -104,22 +157,28 @@ func (m *File) GetData() []byte {
 
 func init() {
 	proto.RegisterType((*Empty)(nil), "volume.Empty")
+	proto.RegisterType((*Message)(nil), "volume.Message")
 	proto.RegisterType((*File)(nil), "volume.File")
 }
 
 func init() { proto.RegisterFile("volume.proto", fileDescriptor_498b213ad3bcd5ad) }
 
 var fileDescriptor_498b213ad3bcd5ad = []byte{
-	// 142 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xcb, 0xcf, 0x29,
-	0xcd, 0x4d, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x83, 0xf0, 0x94, 0xd8, 0xb9, 0x58,
-	0x5d, 0x73, 0x0b, 0x4a, 0x2a, 0x95, 0x74, 0xb8, 0x58, 0xdc, 0x32, 0x73, 0x52, 0x85, 0x04, 0xb8,
-	0x98, 0xbd, 0x53, 0x2b, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x40, 0x4c, 0x21, 0x21, 0x2e,
-	0x16, 0x97, 0xc4, 0x92, 0x44, 0x09, 0x26, 0x05, 0x46, 0x0d, 0x9e, 0x20, 0x30, 0xdb, 0xc8, 0x99,
-	0x8b, 0x37, 0x0c, 0x6c, 0x40, 0x70, 0x6a, 0x51, 0x59, 0x66, 0x72, 0xaa, 0x90, 0x11, 0x17, 0x5f,
-	0x70, 0x49, 0x51, 0x6a, 0x62, 0x6e, 0x70, 0x6a, 0x5e, 0x0a, 0xd8, 0x20, 0x1e, 0x3d, 0xa8, 0x85,
-	0x20, 0x9e, 0x14, 0x0a, 0x4f, 0x89, 0x41, 0x83, 0xd1, 0x80, 0x31, 0x89, 0x0d, 0xec, 0x14, 0x63,
-	0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4e, 0xcb, 0xe3, 0x77, 0x9a, 0x00, 0x00, 0x00,
+	// 210 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0x5d, 0x4b, 0x86, 0x30,
+	0x18, 0x86, 0xdf, 0xf9, 0x59, 0x4f, 0xf6, 0xc1, 0x8e, 0xc4, 0x23, 0xd9, 0xd1, 0x0e, 0x42, 0xca,
+	0x7e, 0x82, 0x19, 0x41, 0x44, 0x30, 0xa1, 0xf3, 0xa5, 0x0f, 0x29, 0x6a, 0x13, 0x5d, 0x82, 0xff,
+	0x3e, 0xb6, 0xac, 0xe8, 0x3d, 0xbb, 0xee, 0x9b, 0x9b, 0xed, 0xe2, 0x81, 0x68, 0x55, 0xc3, 0xe7,
+	0x88, 0xd9, 0x34, 0x2b, 0xad, 0x68, 0xf0, 0x9d, 0x58, 0x08, 0x7e, 0x39, 0x4e, 0x7a, 0x63, 0x25,
+	0x84, 0xcf, 0xb8, 0x2c, 0xf2, 0x1d, 0x29, 0x05, 0xaf, 0x50, 0x0d, 0xc6, 0x24, 0x25, 0xdc, 0x17,
+	0x96, 0x4d, 0xf7, 0xd2, 0xcb, 0x2d, 0x76, 0x52, 0xc2, 0x4f, 0x84, 0x65, 0xd3, 0xdd, 0x4b, 0x2d,
+	0x63, 0x37, 0x25, 0x3c, 0x12, 0x96, 0xd9, 0x35, 0x78, 0x0f, 0xdd, 0x80, 0xf4, 0x0a, 0xdc, 0x27,
+	0xdc, 0xec, 0x13, 0xa7, 0xc2, 0xe0, 0xef, 0xda, 0xf9, 0x5b, 0xe7, 0x2b, 0x9c, 0xbf, 0x5a, 0x8f,
+	0x0a, 0xe7, 0xb5, 0xab, 0x91, 0xde, 0xc2, 0xd9, 0x23, 0xca, 0x41, 0xb7, 0x45, 0x8b, 0x75, 0x4f,
+	0x2f, 0xb3, 0x5d, 0x7a, 0x57, 0x4b, 0x8e, 0x0b, 0x76, 0xa0, 0x39, 0x5c, 0x54, 0x7a, 0x46, 0x39,
+	0x56, 0xf8, 0xd1, 0xd8, 0xbf, 0xa3, 0x9f, 0x91, 0x49, 0xc9, 0xbf, 0xc4, 0x0e, 0x9c, 0xdc, 0x90,
+	0xb7, 0xc0, 0x1e, 0xe1, 0xee, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x64, 0xdc, 0x77, 0x71, 0x14, 0x01,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -134,6 +193,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type VolumeServiceClient interface {
+	HealthCheck(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	StreamSendFile(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendFileClient, error)
 }
 
@@ -143,6 +203,15 @@ type volumeServiceClient struct {
 
 func NewVolumeServiceClient(cc *grpc.ClientConn) VolumeServiceClient {
 	return &volumeServiceClient{cc}
+}
+
+func (c *volumeServiceClient) HealthCheck(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/volume.VolumeService/HealthCheck", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *volumeServiceClient) StreamSendFile(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendFileClient, error) {
@@ -178,19 +247,30 @@ func (x *volumeServiceStreamSendFileClient) Recv() (*File, error) {
 
 // VolumeServiceServer is the server API for VolumeService service.
 type VolumeServiceServer interface {
+	HealthCheck(context.Context, *Message) (*Message, error)
 	StreamSendFile(VolumeService_StreamSendFileServer) error
-}
-
-// UnimplementedVolumeServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedVolumeServiceServer struct {
-}
-
-func (*UnimplementedVolumeServiceServer) StreamSendFile(srv VolumeService_StreamSendFileServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamSendFile not implemented")
 }
 
 func RegisterVolumeServiceServer(s *grpc.Server, srv VolumeServiceServer) {
 	s.RegisterService(&_VolumeService_serviceDesc, srv)
+}
+
+func _VolumeService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VolumeServiceServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/volume.VolumeService/HealthCheck",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VolumeServiceServer).HealthCheck(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _VolumeService_StreamSendFile_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -222,7 +302,12 @@ func (x *volumeServiceStreamSendFileServer) Recv() (*File, error) {
 var _VolumeService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "volume.VolumeService",
 	HandlerType: (*VolumeServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "HealthCheck",
+			Handler:    _VolumeService_HealthCheck_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StreamSendFile",

@@ -22,14 +22,14 @@ var (
 	DB                   *badger.DB
 	IsDBValueLogGCNeeded bool
 	IsReplicationNeeded  bool = true
-	HTTP_TEMP_DIR  string
-	HTTP_SITE_URL  string
-	IsMaster       bool
-	SLAVES         []string
-	SLAVES_LENGTH  int
-	CACHE_GROUP    *groupcache.Group
-	CACHE_PEERS    *groupcache.HTTPPool
-	CACHE_BASEPATH string = "/_groupcache/"
+	HTTP_TEMP_DIR        string
+	HTTP_SITE_URL        string
+	IsMaster             bool
+	SLAVES               []string
+	SLAVES_LENGTH        int
+	CACHE_GROUP          *groupcache.Group
+	CACHE_PEERS          *groupcache.HTTPPool
+	CACHE_BASEPATH       string = "/_groupcache/"
 )
 
 var (
@@ -45,4 +45,8 @@ var (
 var (
 	DBGetCounter uint64 = 0
 	DBSetCounter uint64 = 0
+)
+
+var (
+	VOLUMES_LIVE map[string]int
 )

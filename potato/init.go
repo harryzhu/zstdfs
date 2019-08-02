@@ -14,6 +14,8 @@ import (
 )
 
 func init() {
+	VOLUMES_LIVE = make(map[string]int, 10)
+
 	loadConfigFromFile()
 
 	openDatabase()
@@ -24,7 +26,7 @@ func init() {
 	setCacheMaxSize()
 	setIsMaster()
 	openMeta()
-	go openGroupCache()
+	openGroupCache()
 }
 
 func Echo() error {

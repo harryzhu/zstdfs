@@ -1,34 +1,34 @@
 package potato
 
 import (
-"encoding/json"
-"io"
-"io/ioutil"
-"mime"
-"net/http"
-"os"
-"path"
-"strconv"
-"strings"
-"sync/atomic"
-"time"
+	"encoding/json"
+	"io"
+	"io/ioutil"
+	"mime"
+	"net/http"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+	"sync/atomic"
+	"time"
 
 	//"github.com/gin-gonic/contrib/sessions"
-"github.com/gin-contrib/cors"
-"github.com/gin-contrib/gzip"
-"github.com/gin-gonic/gin"
-"github.com/golang/groupcache"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/gzip"
+	"github.com/gin-gonic/gin"
+	"github.com/golang/groupcache"
 )
 
 var r = gin.Default()
 var FaviconByte = []byte("")
 
-func beforeStartHttpServer(){
-// pre-load favicon file
+func beforeStartHttpServer() {
+	// pre-load favicon file
 	if FaviconFile, err := ioutil.ReadFile(CFG.Http.Favicon_file); err == nil {
 		FaviconByte = FaviconFile
-	}else{
-		Logger.Warn("cannot read favicon file:",CFG.Http.Favicon_file)
+	} else {
+		Logger.Warn("cannot read favicon file:", CFG.Http.Favicon_file)
 	}
 }
 
@@ -82,14 +82,13 @@ func StartHttpServer() {
 		v1.GET("/signin", HttpSignin)
 		v1.GET("/_groupcache/:key", HttpGroupCache)
 
-
 		// POST
 		v1.POST("/uploads", HttpUpload)
 		v1.POST("/auth", HttpAuth)
 	}
 
 	r.GET("/favicon.ico", HttpFavicon)
-	Logger.Info("HTTP Endpoint: ",addressHttp)
+	Logger.Info("Endpoint HTTP: ", addressHttp)
 	beforeStartHttpServer()
 	r.Run(addressHttp)
 }
@@ -134,11 +133,11 @@ func HttpAuth(c *gin.Context) {
 func HttpPing(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "pong",
-		})
+	})
 }
 
 func HttpDefaultHome(c *gin.Context) {
-	c.HTML(http.StatusOK, "default/index.tmpl", gin.H{})	
+	c.HTML(http.StatusOK, "default/index.tmpl", gin.H{})
 }
 
 func HttpHome(c *gin.Context) {

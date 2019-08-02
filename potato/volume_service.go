@@ -7,12 +7,16 @@ import (
 	"strings"
 
 	pbv "./pb/volume"
-	//"golang.org/x/net/context"
+	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
 )
 
 type VolumeService struct{}
+
+func (vs *VolumeService) HealthCheck(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
+	return &pbv.Message{Code: 200, Okay: true, Data: []byte("OK")}, nil
+}
 
 func (vs *VolumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileServer) error {
 	for {
@@ -63,7 +67,7 @@ func StartNodeServer() {
 	if err != nil {
 		Logger.Fatalf("Failed to listen: ", err)
 	} else {
-		Logger.Info("RPC Endpoint: ", addressVolume)
+		Logger.Info("Endpoint RPC: ", addressVolume)
 
 	}
 
