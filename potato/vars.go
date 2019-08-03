@@ -48,5 +48,7 @@ var (
 )
 
 var (
-	VOLUMES_LIVE map[string]int
+	VOLUME_SELF       map[string]string
+	VOLUME_PEERS      []string
+	VOLUME_PEERS_LIVE map[string]bool
 )

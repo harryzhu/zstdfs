@@ -18,6 +18,20 @@ func (vs *VolumeService) HealthCheck(ctx context.Context, MessageIn *pbv.Message
 	return &pbv.Message{Code: 200, Okay: true, Data: []byte("OK")}, nil
 }
 
+func (vs *VolumeService) ReadFile(ctx context.Context, FileIn *pbv.File) (*pbv.File, error) {
+	f := &pbv.File{}
+	if len(FileIn.Key) > 0 {
+		data, err := EntityGet(FileIn.Key)
+		if err != nil {
+			return nil, err
+		}
+		f.Key = FileIn.Key
+		f.Data = data
+		return f, nil
+	}
+	return nil, errors.New("ERROR")
+}
+
 func (vs *VolumeService) StreamSendFile(stream pbv.VolumeService_StreamSendFileServer) error {
 	for {
 		in, err := stream.Recv()

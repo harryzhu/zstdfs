@@ -78,8 +78,11 @@ func StartHttpServer() {
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
 		v1.GET("/list", HttpList)
+		v1.GET("/list-checker", HttpListWithChecker)
 		v1.GET("/stats", HttpStats)
 		v1.GET("/signin", HttpSignin)
+		v1.GET("/checker", HttpChecker)
+		v1.GET("/checker/:key", HttpChecker)
 		v1.GET("/_groupcache/:key", HttpGroupCache)
 
 		// POST
@@ -88,6 +91,7 @@ func StartHttpServer() {
 	}
 
 	r.GET("/favicon.ico", HttpFavicon)
+
 	Logger.Info("Endpoint HTTP: ", addressHttp)
 	beforeStartHttpServer()
 	r.Run(addressHttp)
@@ -123,6 +127,19 @@ func HttpSignin(c *gin.Context) {
 
 	c.Header("Content-Type", "text/html")
 	c.HTML(http.StatusOK, "v1/signin.tmpl", gin.H{"action": actionPath})
+}
+
+func HttpChecker(c *gin.Context) {
+	c.Header("Content-Type", "text/html")
+
+	key := c.Param("key")
+
+	if len(key) > 0 {
+		c.HTML(http.StatusOK, "default/checker.tmpl", gin.H{"frmkey": key})
+	} else {
+		c.HTML(http.StatusOK, "default/checker.tmpl", gin.H{"frmkey": ""})
+	}
+
 }
 
 func HttpAuth(c *gin.Context) {
@@ -293,6 +310,12 @@ func HttpMetaList(c *gin.Context) {
 
 func HttpList(c *gin.Context) {
 	listHtml := EntityScan("fd")
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, listHtml)
+}
+
+func HttpListWithChecker(c *gin.Context) {
+	listHtml := EntityScanHtmlChecker("fd")
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
 }

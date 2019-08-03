@@ -25,8 +25,21 @@ func RunReplicateParallel() error {
 		return nil
 	}
 
+	have_volume_peers_live := false
+	for _, b_live := range VOLUME_PEERS_LIVE {
+		if b_live == true {
+			have_volume_peers_live = true
+			break
+		}
+	}
+
+	if have_volume_peers_live == false {
+		//Logger.Debug("====no replication needed==== no volume peers online")
+		return nil
+	}
+
 	if IsReplicationNeeded == false {
-		Logger.Debug("====no replication needed==== IsReplicationNeeded:", IsReplicationNeeded)
+		//Logger.Debug("====no replication needed==== IsReplicationNeeded:", IsReplicationNeeded)
 		return nil
 	}
 
@@ -40,66 +53,38 @@ func RunReplicateParallel() error {
 	if len(slaves) > 0 {
 		//Logger.Debug("Begin: IsReplicationNeeded: ", IsReplicationNeeded)
 		IsReplicationNeeded = false
-		wg := sync.WaitGroup{}
+		wg_rep := sync.WaitGroup{}
 
 		for _, slave := range slaves {
-			conn, err := grpc.Dial(slave, grpc.WithInsecure(),
-				grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(GRPCMAXMSGSIZE)))
-			if err != nil {
-				Logger.Error("Slave Conn Error:", err)
-				return nil
-			}
-			defer conn.Close()
+			if _, ok := VOLUME_PEERS_LIVE[slave]; ok {
+				conn, err := grpc.Dial(slave, grpc.WithInsecure(),
+					grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(GRPCMAXMSGSIZE)))
+				if err != nil {
+					Logger.Error("Slave Conn Error:", err)
+					return nil
+				}
+				defer conn.Close()
 
-			Logger.Debug("Slave Connection State: ", slave, " : ", conn.GetState().String())
-			if conn.GetState().String() == "IDLE" || conn.GetState().String() == "CONNECTING" || conn.GetState().String() == "READY" {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					Logger.Debug("Thread Start: replicate to: ", slave)
-					replicate(slave)
-					Logger.Debug("Thread End: ", slave)
-					time.Sleep(1 * time.Second)
+				Logger.Debug("Slave Connection State: ", slave, " : ", conn.GetState().String())
+				if conn.GetState().String() == "IDLE" || conn.GetState().String() == "CONNECTING" || conn.GetState().String() == "READY" {
+					wg_rep.Add(1)
+					go func() {
+						defer wg_rep.Done()
+						Logger.Debug("Thread Start: replicate to: ", slave)
+						replicate(slave)
+						Logger.Debug("Thread End: ", slave)
+						time.Sleep(50 * time.Millisecond)
 
-				}()
-				time.Sleep(1 * time.Second)
+					}()
+					time.Sleep(50 * time.Millisecond)
+				}
 			}
 
 		}
 
-		wg.Wait()
+		wg_rep.Wait()
 		//Logger.Debug("Complete: IsReplicationNeeded: ", IsReplicationNeeded)
 		IsReplicationNeeded = true
-	}
-	return nil
-}
-
-func HealthCheck(ip_port string) error {
-	conn, err := grpc.Dial(ip_port, grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(GRPCMAXMSGSIZE)))
-	if err != nil {
-		//Logger.Debug("HealthCheck: Client Conn Error:", err)
-		VOLUMES_LIVE[ip_port] = 0
-		return nil
-	}
-	defer conn.Close()
-
-	client := pbv.NewVolumeServiceClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	NodeStatus, err := client.HealthCheck(ctx, &pbv.Message{Code: 200, Okay: true, Data: []byte("Ping")})
-	if err != nil {
-		Logger.Debug("HealthCheck ERROR: ", err)
-		VOLUMES_LIVE[ip_port] = 0
-		return err
-	}
-	Logger.Debug("HealthCheck Node is Online: ", NodeStatus.Code)
-	VOLUMES_LIVE[ip_port] = 1
-
-	for k, v := range VOLUMES_LIVE {
-		Logger.Debug("Node Status::::", k, " : ", v)
 	}
 	return nil
 }
@@ -121,7 +106,7 @@ func replicate(ip_port string) error {
 	}
 
 	conn, err := grpc.Dial(ip_port, grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(GRPCMAXMSGSIZE)))
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(GRPCMAXMSGSIZE), grpc.MaxCallRecvMsgSize(GRPCMAXMSGSIZE)))
 	if err != nil {
 		Logger.Error("Client Conn Error:", err)
 		return nil

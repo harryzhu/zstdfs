@@ -3,6 +3,7 @@ package volume;
 
 service VolumeService {
   rpc HealthCheck(Message) returns (Message){}
+  rpc ReadFile(File) returns (File){}
   rpc StreamSendFile(stream File) returns (stream File){}
 }
 

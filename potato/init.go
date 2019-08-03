@@ -14,10 +14,9 @@ import (
 )
 
 func init() {
-	VOLUMES_LIVE = make(map[string]int, 10)
 
 	loadConfigFromFile()
-
+	getVolume()
 	openDatabase()
 	smokeTest()
 	getSlavesLength()
@@ -76,6 +75,36 @@ func loadConfigFromFile() error {
 		Logger.SetLevel(log.DebugLevel)
 	}
 	return nil
+}
+
+func getVolume() {
+	VOLUME_SELF = make(map[string]string, 3)
+
+	v_ip := CFG.Volume.Ip
+	v_port := CFG.Volume.Port
+	v_peers := CFG.Volume.Peers
+
+	v_ip_port := strings.Join([]string{v_ip, v_port}, ":")
+
+	if len(v_ip) < 1 || len(v_port) < 1 || len(v_peers) < 1 {
+		Logger.Fatal("config file error: volume ip/port/peers cannot be empty.")
+	} else {
+		VOLUME_SELF["ip"] = v_ip
+		VOLUME_SELF["port"] = v_port
+		VOLUME_SELF["address"] = v_ip_port
+	}
+
+	for _, ip_port := range v_peers {
+		if ip_port != v_ip_port {
+			VOLUME_PEERS = append(VOLUME_PEERS, ip_port)
+		}
+
+	}
+
+	VOLUME_PEERS_LIVE = make(map[string]bool, len(VOLUME_PEERS))
+	for _, v := range VOLUME_PEERS {
+		VOLUME_PEERS_LIVE[v] = false
+	}
 }
 
 func getRunMode() {
@@ -258,6 +287,10 @@ func openGroupCache() {
 	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
 			data, err := EntityGet(key)
+			if err != nil {
+				data, err = EntityGetRoundRobin(key)
+			}
+
 			if err != nil {
 				return err
 			}

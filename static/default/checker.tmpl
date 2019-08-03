@@ -1,0 +1,58 @@
+{{ define "default/checker.tmpl" }}
+<style type="text/css">
+	#idtxt{
+		width: 600px;
+	}
+	.image-wrapper{
+		width: 950px;
+		padding: 20px 20px 0 20px;
+		border: 1px solid #dcdcdd;
+		border-radius: 5px;
+	}
+
+	.image-wrapper ul,
+	.image-wrapper li{
+		margin:0;
+		padding:0;
+	}
+
+	.image-wrapper li{
+		width: 300px;
+		margin-right:20px;
+		margin-bottom:20px;
+		border-radius: 5px;
+		display: inline-block;
+		min-height: 300px;
+		background-color: #A9A9A9;
+	}
+
+	.image-wrapper li:last-child{
+		margin-right:0;
+	}
+
+	
+	img{width: 300px;height: auto;border-radius: 5px;padding: 0;margin: 0;}
+}
+</style>
+<form>
+	<input type=text id="idtxt" max=256 width="400" value={{ .frmkey }}><input type="button" value="x3" onclick="gen3()">
+</form>
+
+<div class="image-wrapper">
+	<ul>
+		<li id="p8874">1</li>
+		<li id="p7759">2</li>
+		<li id="p6646">3</li>
+	</ul>
+</div>
+
+<script type="text/javascript">
+	function gen3(){
+		var frmid = document.getElementById("idtxt").value;
+		document.getElementById("p8874").innerHTML= "<img src='http://127.0.0.1:8874/v1/k/"+ frmid +"' />";
+		document.getElementById("p7759").innerHTML= "<img src='http://127.0.0.1:7759/v1/k/"+ frmid +"' />";
+		document.getElementById("p6646").innerHTML= "<img src='http://127.0.0.1:6646/v1/k/"+ frmid +"' />";
+	}
+	gen3();
+</script>
+{{ end }}

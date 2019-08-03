@@ -33,6 +33,7 @@ type globalConfig struct {
 type volumeConfig struct {
 	Ip             string
 	Port           string
+	Peers          []string
 	Db_data_dir    string
 	Db_value_dir   string
 	Meta_dir       string
