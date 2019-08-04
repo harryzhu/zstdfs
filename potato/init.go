@@ -1,302 +1,130 @@
 package potato
 
 import (
-	//"net/http"
 	"os"
-	//"strconv"
 	"strings"
 
-	"github.com/BurntSushi/toml"
+	//"time"
+
+	//"github.com/BurntSushi/toml"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/groupcache"
-	log "github.com/sirupsen/logrus"
+
+	//log "github.com/sirupsen/logrus"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+func OnReady() error {
+	return nil
+}
+
 func init() {
-
 	loadConfigFromFile()
-	getVolume()
-	openDatabase()
+	useConfig()
+
+	openBDB()
+	openLDB()
+	openCacheGroup()
+
 	smokeTest()
-	getSlavesLength()
-	IsDBValueLogGCNeeded = true
-	setEntityMaxSize()
-	setCacheMaxSize()
-	setIsMaster()
-	openMeta()
-	openGroupCache()
 }
 
-func Echo() error {
-	Logger.Info("Echo is OK.")
-	return nil
-}
-
-func loadConfigFromFile() error {
-	cfgFileName := "conf.toml"
-
-	ENV_POTATOFS_CONF_SUFFIX := strings.Trim(os.Getenv("POTATOFS_CONF_SUFFIX"), " ")
-	if len(ENV_POTATOFS_CONF_SUFFIX) > 0 {
-		cfgFileNameOverwrite := strings.ToLower(strings.Join([]string{"conf", ENV_POTATOFS_CONF_SUFFIX, "toml"}, "."))
-
-		_, err := os.Stat(cfgFileNameOverwrite)
-		if err == nil {
-			Logger.Info(cfgFileNameOverwrite, " will overwrite ", cfgFileName)
-			cfgFileName = cfgFileNameOverwrite
-		} else {
-			Logger.Info(cfgFileNameOverwrite, " does not exist, will try to load ", cfgFileName)
-		}
-
-	}
-	_, err := os.Stat(cfgFileName)
-	if err != nil {
-		Logger.Fatal("cannot find the configuration file: conf.toml")
+func openBDB() {
+	if _, err := os.Stat(cfg.Volume.Db_data_dir); err != nil {
+		logger.Fatal("cannot find the data dir: ", cfg.Volume.Db_data_dir)
 	}
 
-	if _, err := toml.DecodeFile(cfgFileName, &CFG); err != nil {
-		Logger.Fatal(err)
-	} else {
-		Logger.Info(cfgFileName, " was loaded.")
-		Logger.Info(CFG.Welcome)
-		switch strings.ToUpper(CFG.Global.Log_level) {
-		case "DEBUG":
-			Logger.SetLevel(log.DebugLevel)
-		case "INFO":
-			Logger.SetLevel(log.InfoLevel)
-		case "WARN":
-			Logger.SetLevel(log.WarnLevel)
-		case "ERROR":
-			Logger.SetLevel(log.ErrorLevel)
-		default:
-			Logger.SetLevel(log.ErrorLevel)
-		}
-
-		Logger.SetLevel(log.DebugLevel)
-	}
-	return nil
-}
-
-func getVolume() {
-	VOLUME_SELF = make(map[string]string, 3)
-
-	v_ip := CFG.Volume.Ip
-	v_port := CFG.Volume.Port
-	v_peers := CFG.Volume.Peers
-
-	v_ip_port := strings.Join([]string{v_ip, v_port}, ":")
-
-	if len(v_ip) < 1 || len(v_port) < 1 || len(v_peers) < 1 {
-		Logger.Fatal("config file error: volume ip/port/peers cannot be empty.")
-	} else {
-		VOLUME_SELF["ip"] = v_ip
-		VOLUME_SELF["port"] = v_port
-		VOLUME_SELF["address"] = v_ip_port
-	}
-
-	for _, ip_port := range v_peers {
-		if ip_port != v_ip_port {
-			VOLUME_PEERS = append(VOLUME_PEERS, ip_port)
-		}
-
-	}
-
-	VOLUME_PEERS_LIVE = make(map[string]bool, len(VOLUME_PEERS))
-	for _, v := range VOLUME_PEERS {
-		VOLUME_PEERS_LIVE[v] = false
-	}
-}
-
-func getRunMode() {
-	if CFG.Global.Is_debug == true {
-		MODE = "DEBUG"
-	} else {
-		MODE = "PRODUCTION"
-	}
-}
-
-func getSlavesLength() {
-	if len(CFG.Replication.Slaves) >= 0 {
-		SLAVES = CFG.Replication.Slaves
-	} else {
-		Logger.Fatal("Relication Slaves should be like: [\"12.34.56.78:910\",\"1.2.3.4:5678\"]")
-	}
-
-	self_ip_port := strings.Join([]string{CFG.Volume.Ip, CFG.Volume.Port}, ":")
-
-	if len(SLAVES) > 0 {
-		for _, v := range SLAVES {
-			if v == self_ip_port {
-				Logger.Fatal("Relication Slaves can not include(myself): ", self_ip_port)
-			}
-		}
-		SLAVES_LENGTH = len(SLAVES)
-	} else {
-		SLAVES_LENGTH = 0
-	}
-}
-
-func setEntityMaxSize() {
-	if CFG.Volume.Max_size > 0 {
-		ENTITY_MAX_SIZE = CFG.Volume.Max_size
-	}
-}
-
-func setCacheMaxSize() {
-	if CFG.Volume.Max_cache_size > 0 {
-		CACHE_MAX_SIZE = CFG.Volume.Max_cache_size
-	}
-}
-
-func setIsMaster() {
-	if CFG.Replication.Is_master == true {
-		IsMaster = true
-	} else {
-		IsMaster = false
-	}
-
-}
-
-func openDatabase() error {
-
-	if _, err := os.Stat(CFG.Volume.Db_data_dir); err != nil {
-		Logger.Fatal("cannot find the data dir: ", CFG.Volume.Db_data_dir)
-	}
-
-	if _, err := os.Stat(CFG.Volume.Db_value_dir); err != nil {
-		Logger.Fatal("cannot find the value dir: ", CFG.Volume.Db_value_dir)
+	if _, err := os.Stat(cfg.Volume.Db_value_dir); err != nil {
+		logger.Fatal("cannot find the value dir: ", cfg.Volume.Db_value_dir)
 	}
 	opts := badger.DefaultOptions
 	opts.Truncate = true
 	opts.MaxTableSize = 64 << 20  // 64MB
 	opts.LevelOneSize = 256 << 20 // 256MB
-	opts.Dir = CFG.Volume.Db_data_dir
-	opts.ValueDir = CFG.Volume.Db_value_dir
+	opts.Dir = cfg.Volume.Db_data_dir
+	opts.ValueDir = cfg.Volume.Db_value_dir
 
 	var err error
-	DB, err = badger.Open(opts)
+	bdb, err = badger.Open(opts)
 	if err != nil {
-		Logger.Fatal("db cannot open: ", err)
+		logger.Fatal("db cannot open: ", err)
 	}
-
-	return nil
 }
 
-func smokeTest() error {
-	const TOTAL_STEPS string = "5"
-	// cache writer:
-
-	// DB
-	err := DB.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte("smokeTest-Database"), Zip([]byte("OK")))
-		return err
-	})
-
-	if err != nil {
-		Logger.Fatal("smokeTest-Database: Set: ", err)
+func openLDB() {
+	if _, err := os.Stat(cfg.Volume.Meta_dir); err != nil {
+		logger.Fatal("cannot find the meta dir: ", cfg.Volume.Meta_dir)
 	}
 
-	var valCopy []byte
-	err = DB.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte("smokeTest-Database"))
-		if err != nil {
-			return err
-		} else {
-			err := item.Value(func(val []byte) error {
-				valCopy = append([]byte{}, val...)
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-	})
-
-	if err != nil {
-		Logger.Fatal("smokeTest-Database: Get: ", err)
-	}
-
-	Logger.Info("3/", TOTAL_STEPS, ", smokeTest-Database: ", string(Unzip(valCopy)))
-
-	_, err = os.Stat(CFG.Http.Temp_dir)
-	if os.IsNotExist(err) {
-		Logger.Fatal("4/", TOTAL_STEPS, ", smokeTest-HTTP TEMP DIR is not writeable: CFG.Http.Temp_dir")
-	} else {
-		HTTP_TEMP_DIR = CFG.Http.Temp_dir
-		Logger.Info("4/", TOTAL_STEPS, ", smokeTest-HTTP_TEMP_DIR: ", HTTP_TEMP_DIR)
-	}
-
-	if len(CFG.Http.Site_url) > 0 {
-		HTTP_SITE_URL = CFG.Http.Site_url
-		Logger.Info("5/", TOTAL_STEPS, ", smokeTest-HTTP_SITE_URL: ", HTTP_SITE_URL)
-	} else {
-		Logger.Fatal("5/", TOTAL_STEPS, ", smokeTest-HTTP_SITE_URL: CFG.Http.Site_url ")
-	}
-
-	return nil
-}
-
-func testOptions() {
-	opt_volume_max_size := WriteInt(256 << 20)
-	opt_volume_max_cache_size := WriteInt(256 << 20)
-
-	conf := NewOption(opt_volume_max_size, opt_volume_max_cache_size)
-	Logger.Info(conf.i)
-}
-
-func openMeta() {
 	var err error
-	var meta_dir string
-	_, err = os.Stat(CFG.Volume.Meta_dir)
-	if os.IsNotExist(err) {
-		Logger.Fatal("META DIR is not writeable: CFG.Volume.Meta_dir")
-	} else {
-		meta_dir = CFG.Volume.Meta_dir
-		Logger.Debug("meta_dir:", meta_dir)
-	}
-
-	LDB, err = leveldb.OpenFile(CFG.Volume.Meta_dir, nil)
+	ldb, err = leveldb.OpenFile(cfg.Volume.Meta_dir, nil)
 	if err != nil {
-		Logger.Fatal("Error while opening LDB")
+		logger.Fatal("Error while opening ldb")
 	}
 
 }
 
-func openGroupCache() {
-	csf := CFG.Volume.Cache_self
-	cps := CFG.Volume.Cache_peers
-	cbp := CFG.Volume.Cache_basepath
-	if cps == nil || len(cps) < 1 {
-		Logger.Fatal("Cache Peers Configuration Error.")
-	}
-	if cbp != "" {
-		CACHE_BASEPATH = cbp
-	}
-
-	Logger.Debug("CACHE_BASEPATH: ", CACHE_BASEPATH)
-
-	opts := groupcache.HTTPPoolOptions{BasePath: CACHE_BASEPATH}
-	CACHE_PEERS = groupcache.NewHTTPPoolOpts(csf, &opts)
-
-	cps_str := "\"" + strings.Join(cps, "\",\"") + "\""
-	Logger.Debug("Cache Peers:", cps_str)
-	//CACHE_PEERS.Set("http://127.0.0.1:8874", "http://127.0.0.1:7759", "http://127.0.0.1:6646")
-	CACHE_PEERS.Set(cps...)
-
-	CACHE_GROUP = groupcache.NewGroup(CACHEGROUPNAME, CACHEGROUPSIZE, groupcache.GetterFunc(
+func openCacheGroup() {
+	cacheGroup = groupcache.NewGroup(cacheGroupName, cacheSize, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
-			data, err := EntityGet(key)
-			if err != nil {
-				data, err = EntityGetRoundRobin(key)
-			}
+			// data, err := EntityGet(key)
+			// if err != nil {
+			// 	data, err = EntityGetRoundRobin(key)
+			// }
 
-			if err != nil {
-				return err
-			}
+			// if err != nil {
+			// 	return err
+			// }
 
-			dest.SetBytes(data)
+			// dest.SetBytes(data)
 			return nil
 		}))
 
+}
+
+func useConfig() {
+	cv_max_size_mb := cfg.Volume.Max_size_mb
+	if cv_max_size_mb > 0 {
+		entityMaxSize = cv_max_size_mb * 1024 * 1024
+	}
+	logger.Info("Limits: entity Max Size: ", entityMaxSize)
+
+	if grpcMAXMSGSIZE < entityMaxSize*16 {
+		grpcMAXMSGSIZE = entityMaxSize * 16
+	}
+	logger.Info("Limits: rpc Message Max Size: ", grpcMAXMSGSIZE)
+
+	if cacheSize < int64(entityMaxSize*64) {
+		cacheSize = int64(entityMaxSize * 64)
+	}
+	logger.Info("Limits: cache Size: ", cacheSize)
+
+	if cfg.Volume.Is_master != false {
+		isMaster = true
+	}
+	logger.Info("Volume is Master: ", isMaster)
+
+	if cfg.Volume.Ip == "" || cfg.Volume.Port == "" {
+		logger.Fatal("Volume IP/Port cannot be empty.")
+	} else {
+		volumeSelf = strings.Join([]string{cfg.Volume.Ip, cfg.Volume.Port}, ":")
+		logger.Info("Volume RPC(Local): ", volumeSelf)
+	}
+
+	if len(cfg.Volume.Peers) > 0 {
+		cvp := cfg.Volume.Peers
+		for _, addr := range cvp {
+			if len(addr) > 0 && addr != volumeSelf {
+				volumePeers = append(volumePeers, addr)
+			}
+		}
+		volumePeersLength = len(volumePeers)
+	}
+	logger.Info("Volume Peers: ", strings.Join(volumePeers, "; "))
+	logger.Info("Volume Peers Length: ", volumePeersLength)
+
+	volumePeersLive = make(map[string]bool, volumePeersLength)
+	for _, vp := range volumePeers {
+		volumePeersLive[vp] = false
+	}
 }

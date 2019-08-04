@@ -12,9 +12,10 @@ import (
 
 func main() {
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(2)
 	go func() {
 		cronVolume := cron.New()
+		//cronVolume.AddFunc("* */8 * * * *", func() { potato.BdbCompaction() })
 		cronVolume.AddFunc("*/5 * * * * *", func() { potato.Heartbeat() })
 		//cronVolume.AddFunc("*/3 * * * * *", func() { potato.RunReplicateParallel() })
 		cronVolume.Start()
@@ -24,11 +25,11 @@ func main() {
 		potato.StartNodeServer()
 	}()
 
-	go func() {
-		potato.StartHttpServer()
-	}()
+	// go func() {
+	// 	potato.StartHttpServer()
+	// }()
 
-	potato.Echo()
+	potato.OnReady()
 
 	wg.Wait()
 

@@ -56,9 +56,10 @@ func (m *Empty) XXX_DiscardUnknown() {
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
 type Message struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=Code,proto3" json:"Code,omitempty"`
-	Okay                 bool     `protobuf:"varint,2,opt,name=Okay,proto3" json:"Okay,omitempty"`
-	Data                 []byte   `protobuf:"bytes,3,opt,name=Data,proto3" json:"Data,omitempty"`
+	Key                  []byte   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
+	Data                 []byte   `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
+	Action               string   `protobuf:"bytes,3,opt,name=Action,proto3" json:"Action,omitempty"`
+	ErrCode              int32    `protobuf:"varint,4,opt,name=ErrCode,proto3" json:"ErrCode,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -89,18 +90,11 @@ func (m *Message) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Message proto.InternalMessageInfo
 
-func (m *Message) GetCode() int32 {
+func (m *Message) GetKey() []byte {
 	if m != nil {
-		return m.Code
+		return m.Key
 	}
-	return 0
-}
-
-func (m *Message) GetOkay() bool {
-	if m != nil {
-		return m.Okay
-	}
-	return false
+	return nil
 }
 
 func (m *Message) GetData() []byte {
@@ -110,77 +104,43 @@ func (m *Message) GetData() []byte {
 	return nil
 }
 
-type File struct {
-	Key                  string   `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
-	Data                 []byte   `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *File) Reset()         { *m = File{} }
-func (m *File) String() string { return proto.CompactTextString(m) }
-func (*File) ProtoMessage()    {}
-func (*File) Descriptor() ([]byte, []int) {
-	return fileDescriptor_498b213ad3bcd5ad, []int{2}
-}
-
-func (m *File) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_File.Unmarshal(m, b)
-}
-func (m *File) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_File.Marshal(b, m, deterministic)
-}
-func (m *File) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_File.Merge(m, src)
-}
-func (m *File) XXX_Size() int {
-	return xxx_messageInfo_File.Size(m)
-}
-func (m *File) XXX_DiscardUnknown() {
-	xxx_messageInfo_File.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_File proto.InternalMessageInfo
-
-func (m *File) GetKey() string {
+func (m *Message) GetAction() string {
 	if m != nil {
-		return m.Key
+		return m.Action
 	}
 	return ""
 }
 
-func (m *File) GetData() []byte {
+func (m *Message) GetErrCode() int32 {
 	if m != nil {
-		return m.Data
+		return m.ErrCode
 	}
-	return nil
+	return 0
 }
 
 func init() {
 	proto.RegisterType((*Empty)(nil), "volume.Empty")
 	proto.RegisterType((*Message)(nil), "volume.Message")
-	proto.RegisterType((*File)(nil), "volume.File")
 }
 
 func init() { proto.RegisterFile("volume.proto", fileDescriptor_498b213ad3bcd5ad) }
 
 var fileDescriptor_498b213ad3bcd5ad = []byte{
-	// 221 bytes of a gzipped FileDescriptorProto
+	// 214 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xcb, 0xcf, 0x29,
 	0xcd, 0x4d, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x83, 0xf0, 0x94, 0xd8, 0xb9, 0x58,
-	0x5d, 0x73, 0x0b, 0x4a, 0x2a, 0x95, 0x5c, 0xb9, 0xd8, 0x7d, 0x53, 0x8b, 0x8b, 0x13, 0xd3, 0x53,
-	0x85, 0x84, 0xb8, 0x58, 0x9c, 0xf3, 0x53, 0x52, 0x25, 0x18, 0x15, 0x18, 0x35, 0x58, 0x83, 0xc0,
-	0x6c, 0x90, 0x98, 0x7f, 0x76, 0x62, 0xa5, 0x04, 0x93, 0x02, 0xa3, 0x06, 0x47, 0x10, 0x98, 0x0d,
-	0x12, 0x73, 0x49, 0x2c, 0x49, 0x94, 0x60, 0x56, 0x60, 0xd4, 0xe0, 0x09, 0x02, 0xb3, 0x95, 0x74,
-	0xb8, 0x58, 0xdc, 0x32, 0x73, 0x52, 0x85, 0x04, 0xb8, 0x98, 0xbd, 0x53, 0x2b, 0xc1, 0x46, 0x70,
-	0x06, 0x81, 0x98, 0x70, 0xd5, 0x4c, 0x08, 0xd5, 0x46, 0x0b, 0x18, 0xb9, 0x78, 0xc3, 0xc0, 0x0e,
-	0x09, 0x4e, 0x2d, 0x2a, 0xcb, 0x4c, 0x4e, 0x15, 0x32, 0xe4, 0xe2, 0xf6, 0x48, 0x4d, 0xcc, 0x29,
-	0xc9, 0x70, 0xce, 0x48, 0x4d, 0xce, 0x16, 0xe2, 0xd7, 0x83, 0xba, 0x1a, 0xea, 0x36, 0x29, 0x74,
-	0x01, 0x25, 0x06, 0x21, 0x0d, 0x2e, 0x8e, 0xa0, 0xd4, 0xc4, 0x14, 0xb0, 0xb5, 0x3c, 0x30, 0x69,
-	0x10, 0x4f, 0x0a, 0x85, 0xa7, 0xc4, 0x20, 0x64, 0xc4, 0xc5, 0x17, 0x5c, 0x52, 0x94, 0x9a, 0x98,
-	0x1b, 0x9c, 0x9a, 0x47, 0x84, 0x7a, 0x0d, 0x46, 0x03, 0xc6, 0x24, 0x36, 0x70, 0x78, 0x19, 0x03,
-	0x02, 0x00, 0x00, 0xff, 0xff, 0x8a, 0x26, 0x63, 0x3d, 0x3f, 0x01, 0x00, 0x00,
+	0x5d, 0x73, 0x0b, 0x4a, 0x2a, 0x95, 0x12, 0xb9, 0xd8, 0x7d, 0x53, 0x8b, 0x8b, 0x13, 0xd3, 0x53,
+	0x85, 0x04, 0xb8, 0x98, 0xbd, 0x53, 0x2b, 0x25, 0x18, 0x15, 0x18, 0x35, 0x78, 0x82, 0x40, 0x4c,
+	0x21, 0x21, 0x2e, 0x16, 0x97, 0xc4, 0x92, 0x44, 0x09, 0x26, 0xb0, 0x10, 0x98, 0x2d, 0x24, 0xc6,
+	0xc5, 0xe6, 0x98, 0x5c, 0x92, 0x99, 0x9f, 0x27, 0xc1, 0xac, 0xc0, 0xa8, 0xc1, 0x19, 0x04, 0xe5,
+	0x09, 0x49, 0x70, 0xb1, 0xbb, 0x16, 0x15, 0x39, 0xe7, 0xa7, 0xa4, 0x4a, 0xb0, 0x28, 0x30, 0x6a,
+	0xb0, 0x06, 0xc1, 0xb8, 0x46, 0xeb, 0x19, 0xb9, 0x78, 0xc3, 0xc0, 0xd6, 0x06, 0xa7, 0x16, 0x95,
+	0x65, 0x26, 0xa7, 0x0a, 0x19, 0x72, 0x71, 0x7b, 0xa4, 0x26, 0xe6, 0x94, 0x64, 0x38, 0x67, 0xa4,
+	0x26, 0x67, 0x0b, 0xf1, 0xeb, 0x41, 0xdd, 0x08, 0x75, 0x89, 0x14, 0xba, 0x80, 0x12, 0x83, 0x90,
+	0x1e, 0x17, 0x47, 0x50, 0x6a, 0x62, 0x8a, 0x5b, 0x66, 0x4e, 0x2a, 0x51, 0xea, 0xad, 0xb9, 0x04,
+	0x83, 0x4b, 0x8a, 0x52, 0x13, 0x73, 0x83, 0x53, 0xf3, 0x52, 0x60, 0x3e, 0x24, 0x42, 0xa3, 0x06,
+	0xa3, 0x01, 0x63, 0x12, 0x1b, 0x38, 0xb0, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa6, 0x2f,
+	0xe0, 0x09, 0x3c, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -196,8 +156,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type VolumeServiceClient interface {
 	HealthCheck(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
-	ReadFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error)
-	StreamSendFile(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendFileClient, error)
+	ReadFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	StreamSendMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendMessageClient, error)
 }
 
 type volumeServiceClient struct {
@@ -217,8 +177,8 @@ func (c *volumeServiceClient) HealthCheck(ctx context.Context, in *Message, opts
 	return out, nil
 }
 
-func (c *volumeServiceClient) ReadFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error) {
-	out := new(File)
+func (c *volumeServiceClient) ReadFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
 	err := c.cc.Invoke(ctx, "/volume.VolumeService/ReadFile", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -226,31 +186,31 @@ func (c *volumeServiceClient) ReadFile(ctx context.Context, in *File, opts ...gr
 	return out, nil
 }
 
-func (c *volumeServiceClient) StreamSendFile(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendFileClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_VolumeService_serviceDesc.Streams[0], "/volume.VolumeService/StreamSendFile", opts...)
+func (c *volumeServiceClient) StreamSendMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendMessageClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_VolumeService_serviceDesc.Streams[0], "/volume.VolumeService/StreamSendMessage", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &volumeServiceStreamSendFileClient{stream}
+	x := &volumeServiceStreamSendMessageClient{stream}
 	return x, nil
 }
 
-type VolumeService_StreamSendFileClient interface {
-	Send(*File) error
-	Recv() (*File, error)
+type VolumeService_StreamSendMessageClient interface {
+	Send(*Message) error
+	Recv() (*Message, error)
 	grpc.ClientStream
 }
 
-type volumeServiceStreamSendFileClient struct {
+type volumeServiceStreamSendMessageClient struct {
 	grpc.ClientStream
 }
 
-func (x *volumeServiceStreamSendFileClient) Send(m *File) error {
+func (x *volumeServiceStreamSendMessageClient) Send(m *Message) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *volumeServiceStreamSendFileClient) Recv() (*File, error) {
-	m := new(File)
+func (x *volumeServiceStreamSendMessageClient) Recv() (*Message, error) {
+	m := new(Message)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -260,8 +220,8 @@ func (x *volumeServiceStreamSendFileClient) Recv() (*File, error) {
 // VolumeServiceServer is the server API for VolumeService service.
 type VolumeServiceServer interface {
 	HealthCheck(context.Context, *Message) (*Message, error)
-	ReadFile(context.Context, *File) (*File, error)
-	StreamSendFile(VolumeService_StreamSendFileServer) error
+	ReadFile(context.Context, *Message) (*Message, error)
+	StreamSendMessage(VolumeService_StreamSendMessageServer) error
 }
 
 // UnimplementedVolumeServiceServer can be embedded to have forward compatible implementations.
@@ -271,11 +231,11 @@ type UnimplementedVolumeServiceServer struct {
 func (*UnimplementedVolumeServiceServer) HealthCheck(ctx context.Context, req *Message) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
 }
-func (*UnimplementedVolumeServiceServer) ReadFile(ctx context.Context, req *File) (*File, error) {
+func (*UnimplementedVolumeServiceServer) ReadFile(ctx context.Context, req *Message) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadFile not implemented")
 }
-func (*UnimplementedVolumeServiceServer) StreamSendFile(srv VolumeService_StreamSendFileServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamSendFile not implemented")
+func (*UnimplementedVolumeServiceServer) StreamSendMessage(srv VolumeService_StreamSendMessageServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamSendMessage not implemented")
 }
 
 func RegisterVolumeServiceServer(s *grpc.Server, srv VolumeServiceServer) {
@@ -301,7 +261,7 @@ func _VolumeService_HealthCheck_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _VolumeService_ReadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(File)
+	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -313,31 +273,31 @@ func _VolumeService_ReadFile_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/volume.VolumeService/ReadFile",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VolumeServiceServer).ReadFile(ctx, req.(*File))
+		return srv.(VolumeServiceServer).ReadFile(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VolumeService_StreamSendFile_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(VolumeServiceServer).StreamSendFile(&volumeServiceStreamSendFileServer{stream})
+func _VolumeService_StreamSendMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(VolumeServiceServer).StreamSendMessage(&volumeServiceStreamSendMessageServer{stream})
 }
 
-type VolumeService_StreamSendFileServer interface {
-	Send(*File) error
-	Recv() (*File, error)
+type VolumeService_StreamSendMessageServer interface {
+	Send(*Message) error
+	Recv() (*Message, error)
 	grpc.ServerStream
 }
 
-type volumeServiceStreamSendFileServer struct {
+type volumeServiceStreamSendMessageServer struct {
 	grpc.ServerStream
 }
 
-func (x *volumeServiceStreamSendFileServer) Send(m *File) error {
+func (x *volumeServiceStreamSendMessageServer) Send(m *Message) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *volumeServiceStreamSendFileServer) Recv() (*File, error) {
-	m := new(File)
+func (x *volumeServiceStreamSendMessageServer) Recv() (*Message, error) {
+	m := new(Message)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -359,8 +319,8 @@ var _VolumeService_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "StreamSendFile",
-			Handler:       _VolumeService_StreamSendFile_Handler,
+			StreamName:    "StreamSendMessage",
+			Handler:       _VolumeService_StreamSendMessage_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

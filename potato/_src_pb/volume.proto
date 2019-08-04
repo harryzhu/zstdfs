@@ -2,9 +2,9 @@ syntax = "proto3";
 package volume;
 
 service VolumeService {
-  rpc HealthCheck(Message) returns (Message){}
-  rpc ReadFile(File) returns (File){}
-  rpc StreamSendFile(stream File) returns (stream File){}
+	rpc HealthCheck(Message) returns (Message){}
+	rpc ReadFile(Message) returns (Message){}
+	rpc StreamSendMessage(stream Message) returns (stream Message){}
 }
 
 message Empty{
@@ -12,13 +12,9 @@ message Empty{
 }
 
 message Message{
-	int32 Code = 1;
-	bool Okay = 2;
-	bytes Data = 3;	
-}
-
-message File{
-	string Key = 1;
+	bytes Key = 1;
 	bytes Data = 2;
+	string Action = 3;
+	int32 ErrCode = 4;
 }
 

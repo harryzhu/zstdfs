@@ -1,33 +1,32 @@
 package potato
 
 import (
-	// 	//"github.com/BurntSushi/toml"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func ldb_set(key string, data []byte) error {
-	err := LDB.Put([]byte(key), data, nil)
+func ldb_set(key []byte, data []byte) error {
+	err := ldb.Put(key, data, nil)
 	if err != nil {
-		Logger.Error("LDB cannot set key-val")
+		logger.Error("LDB cannot set key-val")
 		return err
 	}
 	return nil
 }
 
-func ldb_get(key string) (data []byte, err error) {
-	data, err = LDB.Get([]byte(key), nil)
+func ldb_get(key []byte) (data []byte, err error) {
+	data, err = ldb.Get(key, nil)
 	if err != nil {
-		Logger.Error("LDB cannot get key-val", err)
+		logger.Error("LDB cannot get key-val", err)
 		return nil, err
 	}
 	return data, nil
 }
 
-func ldb_del(key string) error {
-	err := LDB.Delete([]byte(key), nil)
+func ldb_del(key []byte) error {
+	err := ldb.Delete(key, nil)
 	if err != nil {
-		Logger.Error("LDB cannot delete key")
+		logger.Error("LDB cannot delete key")
 		return err
 	}
 	return nil
@@ -39,9 +38,9 @@ func ldb_mset(keys []string, val []byte) error {
 		for _, v := range keys {
 			batch.Put([]byte(v), val)
 		}
-		err := LDB.Write(batch, nil)
+		err := ldb.Write(batch, nil)
 		if err != nil {
-			Logger.Error("LDB cannot mset key-val")
+			logger.Error("LDB cannot mset key-val")
 			return err
 		}
 	}
@@ -55,9 +54,9 @@ func ldb_mdel(keys []string) error {
 		for _, v := range keys {
 			batch.Delete([]byte(v))
 		}
-		err := LDB.Write(batch, nil)
+		err := ldb.Write(batch, nil)
 		if err != nil {
-			Logger.Error("LDB cannot mset key-val")
+			logger.Error("LDB cannot mset key-val")
 			return err
 		}
 	}
@@ -65,21 +64,21 @@ func ldb_mdel(keys []string) error {
 	return nil
 }
 
-func ldb_scan(prefix string) ([]string, error) {
+func ldb_scan(prefix []byte) ([]string, error) {
 	res := 0
 	var keys []string
-	iter := LDB.NewIterator(&util.Range{Start: []byte(prefix), Limit: nil}, nil)
+	iter := ldb.NewIterator(&util.Range{Start: prefix, Limit: nil}, nil)
 	for iter.Next() {
-		res++
-		if res > 100 {
+		if res > 99 {
 			break
 		}
 		keys = append(keys, string(iter.Key()))
+		res++
 	}
 	iter.Release()
 	err := iter.Error()
 	if err != nil {
-		Logger.Error("ldb_scan: ", err)
+		logger.Error("ldb_scan: ", err)
 		return nil, err
 	}
 
