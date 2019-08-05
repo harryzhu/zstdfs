@@ -25,9 +25,9 @@ func main() {
 		potato.StartNodeServer()
 	}()
 
-	// go func() {
-	// 	potato.StartHttpServer()
-	// }()
+	go func() {
+		potato.StartHttpServer()
+	}()
 
 	potato.OnReady()
 

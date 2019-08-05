@@ -67,22 +67,34 @@ func openLDB() {
 func openCacheGroup() {
 	cacheGroup = groupcache.NewGroup(cacheGroupName, cacheSize, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
-			// data, err := EntityGet(key)
+			data, err := EntityGet([]byte(key))
 			// if err != nil {
 			// 	data, err = EntityGetRoundRobin(key)
 			// }
 
-			// if err != nil {
-			// 	return err
-			// }
+			if err != nil {
+				return err
+			}
 
-			// dest.SetBytes(data)
+			dest.SetBytes(data)
 			return nil
 		}))
 
 }
 
 func useConfig() {
+	if cfg.Global.Is_debug == true {
+		isDebug = true
+	} else {
+		isDebug = false
+	}
+	logger.Info("node is running in debug mode: ", isDebug)
+
+	if cfg.Volume.Is_master != false {
+		isMaster = true
+	}
+	logger.Info("Volume is Master: ", isMaster)
+
 	cv_max_size_mb := cfg.Volume.Max_size_mb
 	if cv_max_size_mb > 0 {
 		entityMaxSize = cv_max_size_mb * 1024 * 1024
@@ -98,11 +110,6 @@ func useConfig() {
 		cacheSize = int64(entityMaxSize * 64)
 	}
 	logger.Info("Limits: cache Size: ", cacheSize)
-
-	if cfg.Volume.Is_master != false {
-		isMaster = true
-	}
-	logger.Info("Volume is Master: ", isMaster)
 
 	if cfg.Volume.Ip == "" || cfg.Volume.Port == "" {
 		logger.Fatal("Volume IP/Port cannot be empty.")

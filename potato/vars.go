@@ -18,6 +18,7 @@ var (
 
 // dynamic
 var (
+	isDebug               bool = true
 	isBDBValueLogGCNeeded bool = true
 	isMaster              bool = true
 	volumeSelf            string

@@ -7,21 +7,18 @@ log_level = "DEBUG"
 [volume]
 ip = "172.16.32.45"
 port = "8864"
+peers = ["172.16.32.45:8864","172.16.32.45:7749","172.16.32.45:6636"]
+is_master = true
 db_data_dir = "/home/ops/dev/data/pfs/d"
 db_value_dir = "/home/ops/dev/data/pfs/v"
 meta_dir = "/home/ops/dev/data/pfs/meta"
-max_size = 33554432
-max_cache_size = 33554432
-cache_basepath = "/k/"
-cache_self = "http://172.16.32.45:8874"
-#cache_peers = ["http://172.16.32.45:8874","http://172.16.32.45:7759","http://172.16.32.45:6646"]
-cache_peers = ["http://172.16.32.45:8874",]
+max_size_mb = 32
 
 [http]
 ip = "172.16.32.45"
 port = "8874"
 site_url = "http://172.16.32.45:8874"
-temp_dir = "/home/ops/dev/data/pfs/temp"
+temp_upload_dir = "/home/ops/dev/data/pfs/temp"
 log_file = "/home/ops/dev/data/pfs/access.log"
 favicon_file = "/home/ops/dev/vendor/go3rd/src/potatofs/static/v1/favicon.ico"
 cors_enabled = false
@@ -31,7 +28,3 @@ cors_allow_headers= ["Origin", "Content-Length", "Content-Type"]
 cors_expose_headers= ["Content-Length"]
 cors_allow_credentials = true
 cors_maxage_hours = 72
-
-[replication]
-is_master = true
-slaves = ["172.16.32.45:7749","172.16.32.45:6636"]

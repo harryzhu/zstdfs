@@ -2,10 +2,10 @@ package potato
 
 import (
 	"errors"
-	//"strconv"
+	"strconv"
 	"strings"
-	//"github.com/couchbase/moss"
-	//"github.com/syndtr/goleveldb/leveldb/util"
+
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 func MetaGet(key []byte) ([]byte, error) {
@@ -70,76 +70,76 @@ func MetaScan(prefix []byte) ([]string, error) {
 	return keys, nil
 }
 
-// func MetaSyncList() (listHtml string) {
-// 	slaves := CFG.Replication.Slaves
-// 	fileKeys := []string{}
-// 	if len(slaves) > 0 {
-// 		res := 0
-// 		iter := LDB.NewIterator(&util.Range{Start: []byte("sync/"), Limit: nil}, nil)
-// 		for iter.Next() {
-// 			if len(iter.Key()) > 0 {
-// 				fileKeys = append(fileKeys, string(iter.Key()))
-// 				res++
-// 				if res > 1000 {
-// 					break
-// 				}
-// 			}
+func MetaSyncList() (listHtml string) {
+	slaves := cfg.Volume.Peers
+	fileKeys := []string{}
+	if len(slaves) > 0 {
+		res := 0
+		iter := ldb.NewIterator(&util.Range{Start: []byte("sync/"), Limit: nil}, nil)
+		for iter.Next() {
+			if len(iter.Key()) > 0 {
+				fileKeys = append(fileKeys, string(iter.Key()))
+				res++
+				if res > 1000 {
+					break
+				}
+			}
 
-// 		}
-// 		iter.Release()
-// 		err := iter.Error()
-// 		if err != nil {
-// 			Logger.Error("MetaSyncList: ", err)
-// 		}
+		}
+		iter.Release()
+		err := iter.Error()
+		if err != nil {
+			logger.Error("MetaSyncList: ", err)
+		}
 
-// 	}
+	}
 
-// 	fileKeys_len := len(fileKeys)
-// 	if fileKeys_len == 0 {
-// 		Logger.Debug("No Entities Replication Needed.")
-// 		return ""
-// 	}
-// 	listHtml = ""
-// 	for k, v := range fileKeys {
-// 		listHtml = strings.Join([]string{v, " : ", strconv.Itoa(k), "<br/>", listHtml}, "")
-// 	}
+	fileKeys_len := len(fileKeys)
+	if fileKeys_len == 0 {
+		logger.Debug("No Entities Replication Needed.")
+		return ""
+	}
+	listHtml = ""
+	for k, v := range fileKeys {
+		listHtml = strings.Join([]string{v, " : ", strconv.Itoa(k), "<br/>", listHtml}, "")
+	}
 
-// 	return listHtml
-// }
+	return listHtml
+}
 
-// func MetaList() (listHtml string) {
-// 	fileKeys := []string{}
+func MetaList() (listHtml string) {
+	fileKeys := []string{}
 
-// 	res := 0
-// 	iter := LDB.NewIterator(nil, nil)
-// 	for iter.Next() {
-// 		if len(iter.Key()) > 0 {
-// 			fileKeys = append(fileKeys, string(iter.Key()))
-// 			res++
-// 			if res > 100 {
-// 				break
-// 			}
-// 		}
+	res := 0
+	iter := ldb.NewIterator(nil, nil)
+	for iter.Next() {
+		if len(iter.Key()) > 0 {
+			fileKeys = append(fileKeys, string(iter.Key()))
+			res++
+			if res > 100 {
+				break
+			}
+		}
 
-// 	}
-// 	iter.Release()
-// 	err := iter.Error()
-// 	if err != nil {
-// 		Logger.Error("MetaSyncList: ", err)
-// 	}
+	}
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		logger.Error("MetaSyncList: ", err)
+	}
 
-// 	fileKeys_len := len(fileKeys)
-// 	if fileKeys_len == 0 {
-// 		Logger.Debug("No Entities Replication Needed.")
-// 		return ""
-// 	}
-// 	listHtml = ""
-// 	for k, v := range fileKeys {
-// 		listHtml = strings.Join([]string{v, " : ", strconv.Itoa(k), "<br/>", listHtml}, "")
-// 	}
+	fileKeys_len := len(fileKeys)
+	if fileKeys_len == 0 {
+		logger.Debug("No Entities Replication Needed.")
+		return ""
+	}
+	listHtml = ""
+	for k, v := range fileKeys {
+		listHtml = strings.Join([]string{v, " : ", strconv.Itoa(k), "<br/>", listHtml}, "")
+	}
 
-// 	return listHtml
-// }
+	return listHtml
+}
 
 func metaKeyJoin(cat, action, rpcaddress, key string) string {
 	if len(cat) <= 0 || len(action) <= 0 || len(rpcaddress) <= 0 || len(key) <= 0 {
