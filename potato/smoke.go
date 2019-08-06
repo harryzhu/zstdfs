@@ -31,10 +31,10 @@ func smokeTest() {
 	for _, p := range volumePeers {
 		if len(p) > 0 {
 			testMetaKey = metaKeyJoin("test", "get", p, ByteSHA256([]byte(testKey)))
-			logger.Info("smokeTest: MetaKey: Join: ", testMetaKey)
-			logger.Info("smokeTest: MetaKey: Split: ", strings.Join(metaKeySplit(testMetaKey), ";"))
+			logger.Info("smokeTest: MetaKeyJoin: ", testMetaKey)
+			logger.Info("smokeTest: MetaKeySplit: ", strings.Join(metaKeySplit(testMetaKey), ";"))
 			if len(metaKeySplit(testMetaKey)) != 4 {
-				logger.Fatal("smokeTest: MetaKey: Split: Error.")
+				logger.Fatal("smokeTest: MetaKeySplit: Error.")
 			}
 
 			if nil != MetaSet([]byte(testMetaKey), testMetaVal) {

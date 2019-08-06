@@ -68,9 +68,9 @@ func openCacheGroup() {
 	cacheGroup = groupcache.NewGroup(cacheGroupName, cacheSize, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
 			data, err := EntityGet([]byte(key))
-			// if err != nil {
-			// 	data, err = EntityGetRoundRobin(key)
-			// }
+			if err != nil {
+				data, err = EntityGetRoundRobin([]byte(key))
+			}
 
 			if err != nil {
 				return err
@@ -106,8 +106,11 @@ func useConfig() {
 	}
 	logger.Info("Limits: rpc Message Max Size: ", grpcMAXMSGSIZE)
 
-	if cacheSize < int64(entityMaxSize*64) {
+	cv_cache_size_mb := cfg.Volume.Cache_size_mb
+	if cv_cache_size_mb <= 16 {
 		cacheSize = int64(entityMaxSize * 64)
+	} else {
+		cacheSize = int64(cv_cache_size_mb * 1024 * 1024)
 	}
 	logger.Info("Limits: cache Size: ", cacheSize)
 

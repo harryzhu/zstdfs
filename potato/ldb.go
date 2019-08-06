@@ -64,12 +64,12 @@ func ldb_mdel(keys []string) error {
 	return nil
 }
 
-func ldb_scan(prefix []byte) ([]string, error) {
-	res := 0
+func ldb_scan(prefix []byte, size int) ([]string, error) {
+	res := 1
 	var keys []string
 	iter := ldb.NewIterator(&util.Range{Start: prefix, Limit: nil}, nil)
 	for iter.Next() {
-		if res > 99 {
+		if res > size {
 			break
 		}
 		keys = append(keys, string(iter.Key()))

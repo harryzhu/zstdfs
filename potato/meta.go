@@ -44,23 +44,25 @@ func MetaMultiDelete(keys []string) error {
 	return nil
 }
 
-// func MetaSyncCount() (res int) {
-// 	res = 0
-// 	iter := LDB.NewIterator(&util.Range{Start: []byte("sync/"), Limit: nil}, nil)
-// 	for iter.Next() {
-// 		res++
-// 		if res > 0 {
-// 			break
-// 		}
-// 	}
-// 	iter.Release()
-// 	err := iter.Error()
-// 	if err != nil {
-// 		Logger.Error("MetaSyncCount: ", err)
-// 		return -1
-// 	}
-// 	return res
-// }
+func MetaScanExists(prefix []byte) bool {
+	res := 0
+	iter := ldb.NewIterator(&util.Range{Start: prefix, Limit: nil}, nil)
+	for iter.Next() {
+		if res > 0 {
+			break
+		}
+		res++
+	}
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		logger.Error("MetaScanCount: ", err)
+	}
+	if res > 0 {
+		return true
+	}
+	return false
+}
 
 func MetaScan(prefix []byte) ([]string, error) {
 	keys, err := ldb_scan(prefix)

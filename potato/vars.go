@@ -20,6 +20,7 @@ var (
 var (
 	isDebug               bool = true
 	isBDBValueLogGCNeeded bool = true
+	isReplicationNeeded   bool = true
 	isMaster              bool = true
 	volumeSelf            string
 	volumePeers           []string
