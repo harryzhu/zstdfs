@@ -135,9 +135,9 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 	}
 	logger.Debug("fileKeys length: ", fileKeys_len)
 
-	//ctx, _ := context.WithTimeout(context.Background(), 24*3600*time.Second)
-	ctx, cancel() := context.WithTimeout(context.Background(), 24*3600*time.Second)
-	defer cancel()
+	ctx, _ := context.WithTimeout(context.Background(), 24*3600*time.Second)
+	//ctx, cancel() := context.WithTimeout(context.Background(), 24*3600*time.Second)
+	//defer cancel()
 
 	stream, err := client.StreamSendMessage(ctx)
 	if err != nil {

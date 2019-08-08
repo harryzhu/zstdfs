@@ -64,8 +64,8 @@ func MetaScanExists(prefix []byte) bool {
 	return false
 }
 
-func MetaScan(prefix []byte) ([]string, error) {
-	keys, err := ldb_scan(prefix)
+func MetaScan(prefix []byte, size int) ([]string, error) {
+	keys, err := ldb_scan(prefix, size)
 	if err != nil {
 		return nil, err
 	}
