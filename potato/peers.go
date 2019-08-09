@@ -4,13 +4,12 @@ package potato
 // 	"strings"
 // )
 
-func PeersMark(cat, action, key string) error {
+func PeersMark(cat, action, key, val string) error {
 	if isMaster == true && volumePeersLength > 0 {
-		var key string
+		var metakey string
 		for _, peer := range volumePeers {
-			if key = metaKeyJoin(cat, action, peer, key); len(key) > 0 {
-				MetaSet([]byte(key), []byte("1"))
-			}
+			metakey = metaKeyJoin(cat, action, peer, key)
+			MetaSet([]byte(metakey), []byte(val))
 		}
 	}
 

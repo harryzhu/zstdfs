@@ -72,17 +72,17 @@ func MetaScan(prefix []byte, size int) ([]string, error) {
 	return keys, nil
 }
 
-func MetaSyncList() (listHtml string) {
+func MetaScanList(prefix []byte, size int) (listHtml string) {
 	slaves := cfg.Volume.Peers
 	fileKeys := []string{}
 	if len(slaves) > 0 {
 		res := 0
-		iter := ldb.NewIterator(&util.Range{Start: []byte("sync/"), Limit: nil}, nil)
+		iter := ldb.NewIterator(&util.Range{Start: prefix, Limit: nil}, nil)
 		for iter.Next() {
 			if len(iter.Key()) > 0 {
 				fileKeys = append(fileKeys, string(iter.Key()))
 				res++
-				if res > 1000 {
+				if res >= size {
 					break
 				}
 			}
@@ -109,7 +109,7 @@ func MetaSyncList() (listHtml string) {
 	return listHtml
 }
 
-func MetaList() (listHtml string) {
+func MetaList(size int) (listHtml string) {
 	fileKeys := []string{}
 
 	res := 0
@@ -118,7 +118,7 @@ func MetaList() (listHtml string) {
 		if len(iter.Key()) > 0 {
 			fileKeys = append(fileKeys, string(iter.Key()))
 			res++
-			if res > 100 {
+			if res >= size {
 				break
 			}
 		}

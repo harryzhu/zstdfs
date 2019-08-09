@@ -73,7 +73,7 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 						if err != nil {
 							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 400, Data: []byte("error-set")}
 						} else {
-							PeersMark("sync", "set", string(key))
+							PeersMark("sync", "set", string(key), "1")
 							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 0, Data: nil}
 						}
 					}
@@ -85,7 +85,7 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 						if err != nil {
 							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 400, Data: []byte("error-del")}
 						} else {
-							PeersMark("sync", "del", string(key))
+							PeersMark("sync", "del", string(key), "1")
 							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 0, Data: nil}
 						}
 					}

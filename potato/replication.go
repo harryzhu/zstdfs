@@ -71,14 +71,7 @@ func RunReplicateParallel() error {
 			defer wg_rep.Done()
 			//logger.Debug("Thread Start: replicate to: ", ip_port)
 			replicate("sync", "del", ip_port)
-			//logger.Debug("Thread End: ", ip_port)
 			time.Sleep(50 * time.Millisecond)
-
-		}()
-
-		go func() {
-			defer wg_rep.Done()
-			//logger.Debug("Thread Start: replicate to: ", ip_port)
 			replicate("sync", "set", ip_port)
 			//logger.Debug("Thread End: ", ip_port)
 			time.Sleep(50 * time.Millisecond)
@@ -98,8 +91,7 @@ func RunReplicateParallel() error {
 
 func replicate(cat, action, ip_port string) error {
 	prefix := strings.Join([]string{cat, action, ip_port}, "/")
-	prefix_length := len(prefix)
-	logger.Debug("sync: prefix_length: ", prefix_length, ", prefix: ", prefix)
+	logger.Debug("sync: prefix length: ", len(prefix), ", prefix: ", prefix)
 
 	fileKeys, err := MetaScan([]byte(prefix), 100)
 	if err != nil {
@@ -180,6 +172,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 
 	action := ""
 	fileKey := ""
+	frequest := &pbv.Message{}
 	for k, fk := range fileKeys {
 		logger.Debug("Sync Key Index:", k, ", ", fk)
 		arr_fk := strings.Split(fk, "/")
@@ -199,7 +192,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 				logger.Debug("Stream_02: EntityGet Error: ", fileKey)
 				continue
 			} else {
-				frequest := &pbv.Message{Key: []byte(fileKey), Data: data, Action: action, ErrCode: 0}
+				frequest = &pbv.Message{Key: []byte(fileKey), Data: data, Action: action, ErrCode: 0}
 				if err := stream.Send(frequest); err != nil {
 					logger.Warn("Stream_02: Failed to send a filerequest: ", err)
 				}
@@ -208,7 +201,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 		}
 
 		if action == "del" {
-			frequest := &pbv.Message{Key: []byte(fileKey), Data: []byte("del"), Action: action, ErrCode: 0}
+			frequest = &pbv.Message{Key: []byte(fileKey), Data: []byte("del"), Action: action, ErrCode: 0}
 			if err := stream.Send(frequest); err != nil {
 				logger.Warn("Stream_02: Failed to send a filerequest: ", err)
 			}

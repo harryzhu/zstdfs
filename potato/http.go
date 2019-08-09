@@ -170,7 +170,7 @@ func HttpDelete(c *gin.Context) {
 		if err != nil {
 			msg = "cannot delete the key."
 		} else {
-			PeersMark("sync", "del", key)
+			PeersMark("sync", "del", key, "1")
 			msg = "delete successfully."
 		}
 	}
@@ -228,9 +228,11 @@ func HttpUpload(c *gin.Context) {
 
 				if err == nil {
 					err := EntitySet([]byte(sb_key), byteEntityObject)
+					//PeersMark("sync", "set", sb_key, "1")
 					if err != nil {
 						logger.Debug("Error while EntitySet: ", sb_key)
 					} else {
+						PeersMark("sync", "set", sb_key, "1")
 						logger.Debug("OK while EntitySet: ", sb_key)
 						ett.URL = strings.Join([]string{HTTP_SITE_URL, "v1", "k", sb_key}, "/")
 						ett.Name = sb_key
@@ -261,13 +263,13 @@ func HttpFormFiles(c *gin.Context) {
 }
 
 func HttpMetaSyncList(c *gin.Context) {
-	listHtml := MetaSyncList()
+	listHtml := MetaScanList([]byte("sync/"), 1000)
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
 }
 
 func HttpMetaList(c *gin.Context) {
-	listHtml := MetaList()
+	listHtml := MetaList(100)
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
 }

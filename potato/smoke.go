@@ -48,6 +48,7 @@ func smokeTest() {
 					logger.Fatal("smokeTest: MetaGet value failed.")
 				}
 			}
+
 			if nil != MetaDelete([]byte(testMetaKey)) {
 				logger.Fatal("smokeTest: MetaDelete failed.")
 			}
