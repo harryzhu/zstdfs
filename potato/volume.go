@@ -49,44 +49,72 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 		action := in.Action
 		errcode := in.ErrCode
 		data := in.Data
-		resp := &pbv.Message{Key: []byte(""), Data: []byte("error"), Action: "none", ErrCode: 400}
+		resp := &pbv.Message{}
 
+		logger.Info("StreamSendMessage: key: ", string(key))
 		if IsEmpty(key) || IsEmpty(data) || IsEmptyString(action) {
 			logger.Error("StreamSendMessage: key/action/errcode/data is invalid.", errcode)
-			resp = &pbv.Message{Key: []byte(""), Action: "none", ErrCode: 400, Data: []byte("error")}
+			resp.Key = []byte("")
+			resp.Action = "none"
+			resp.ErrCode = 400
+			resp.Data = []byte("error-empty")
 		} else {
-			switch strings.ToLower(action) {
+			logger.Info("StreamSendMessage: action: ", strings.ToLower(action))
+			switch action {
 			case "get":
 				{
+					resp.Key = key
+					resp.Action = "none"
+					resp.ErrCode = 404
+					resp.Data = nil
+
 					if EntityExists(key) == true {
 						data, err := EntityGet(key)
-						if err != nil {
-							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 404, Data: []byte("error-get")}
+						if err == nil {
+							resp.Key = key
+							resp.Action = "none"
+							resp.ErrCode = 0
+							resp.Data = data
 						}
-						resp = &pbv.Message{Key: key, Action: "none", ErrCode: 0, Data: data}
 					}
 				}
 			case "set":
 				{
+					resp.Key = key
+					resp.Action = "none"
+					resp.ErrCode = 0
+					resp.Data = nil
+
 					if EntityExists(key) == false {
 						err := EntitySet(key, data)
 						if err != nil {
-							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 400, Data: []byte("error-set")}
+							logger.Error("vs:StreamSendMessage:Error EntitySet:", err)
+							resp.Key = key
+							resp.Action = "none"
+							resp.ErrCode = 400
+							resp.Data = []byte("error-set")
 						} else {
 							PeersMark("sync", "set", string(key), "1")
-							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 0, Data: nil}
 						}
 					}
+
 				}
 			case "del":
 				{
+					resp.Key = key
+					resp.Action = "none"
+					resp.ErrCode = 0
+					resp.Data = nil
+
 					if EntityExists(key) == true {
 						err := EntityDelete(key)
 						if err != nil {
-							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 400, Data: []byte("error-del")}
+							resp.Key = key
+							resp.Action = "none"
+							resp.ErrCode = 400
+							resp.Data = []byte("error-del")
 						} else {
 							PeersMark("sync", "del", string(key), "1")
-							resp = &pbv.Message{Key: key, Action: "none", ErrCode: 0, Data: nil}
 						}
 					}
 				}

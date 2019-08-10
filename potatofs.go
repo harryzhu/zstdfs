@@ -17,7 +17,7 @@ func main() {
 		cronVolume := cron.New()
 		//cronVolume.AddFunc("* */8 * * * *", func() { potato.BdbCompaction() })
 		cronVolume.AddFunc("*/5 * * * * *", func() { potato.Heartbeat() })
-		//cronVolume.AddFunc("*/3 * * * * *", func() { potato.RunReplicateParallel() })
+		cronVolume.AddFunc("*/3 * * * * *", func() { potato.RunReplicateParallel() })
 		cronVolume.Start()
 	}()
 

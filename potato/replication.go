@@ -39,7 +39,7 @@ func RunReplicateParallel() error {
 	}
 
 	if isReplicationNeeded == false {
-		//logger.Debug("====no replication needed==== IsReplicationNeeded:", IsReplicationNeeded)
+		//logger.Debug("====no replication needed==== isReplicationNeeded: false")
 		return nil
 	}
 
@@ -57,16 +57,7 @@ func RunReplicateParallel() error {
 			continue
 		}
 
-		conn, err := grpc.Dial(ip_port, grpc.WithInsecure(),
-			grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(grpcMAXMSGSIZE), grpc.MaxCallRecvMsgSize(grpcMAXMSGSIZE)))
-		if err != nil {
-			logger.Error("Peer Conn Error:", err)
-			continue
-		}
-		defer conn.Close()
-
-		//logger.Debug("Peer Connection State: ", ip_port, " : ", conn.GetState().String())
-		wg_rep.Add(2)
+		wg_rep.Add(1)
 		go func() {
 			defer wg_rep.Done()
 			//logger.Debug("Thread Start: replicate to: ", ip_port)
@@ -110,7 +101,7 @@ func replicate(cat, action, ip_port string) error {
 		logger.Error("Client Conn Error:", err)
 		return nil
 	}
-	defer conn.Close()
+	//defer conn.Close()
 
 	c := pbv.NewVolumeServiceClient(conn)
 
@@ -120,7 +111,7 @@ func replicate(cat, action, ip_port string) error {
 }
 
 func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix string, fileKeys []string) error {
-	logger.Debug("Start Replication..........")
+	logger.Debug("Start Replication from: ", volumeSelf, " to ", ip_port, ", Prefix: ", prefix, " ..........")
 	fileKeys_len := len(fileKeys)
 	if fileKeys_len == 0 {
 		return nil
@@ -146,18 +137,21 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 			if err == io.EOF {
 				// read done.
 				close(waitc)
-				//logger.Debug("runStreamSendFile: break loop: stream.Recv, close waitc: ", err)
+				logger.Debug("runStreamSendFile: break loop: stream.Recv, close waitc: ", err)
 				break
 			}
 			if err != nil {
 				logger.Warn("runStreamSendFile: Failed to receive a file response: ", err)
+				continue
 			}
-			if len(in.Key) > 0 && in.ErrCode == 0 {
-				pk := strings.Join([]string{prefix, string(in.Key)}, "")
+
+			logger.Debug("runStreamSendMessage: Key: ", string(in.Key), string(in.Action), in.ErrCode, string(in.Data))
+			if in != nil && len(in.Key) > 0 && in.ErrCode == 0 {
+				pk := strings.Join([]string{prefix, string(in.Key)}, "/")
 
 				deleteKeys = append(deleteKeys, pk)
 
-				logger.Debug("OK: runStreamSendFile key: ", in.Key, ", MetaDelete key: ", pk)
+				logger.Debug("OK: runStreamSendFile key: ", string(in.Key), ", MetaDelete key: ", pk)
 			}
 		}
 		lock.Unlock()
@@ -192,7 +186,10 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 				logger.Debug("Stream_02: EntityGet Error: ", fileKey)
 				continue
 			} else {
-				frequest = &pbv.Message{Key: []byte(fileKey), Data: data, Action: action, ErrCode: 0}
+				frequest.Key = []byte(fileKey)
+				frequest.Data = data
+				frequest.Action = action
+				frequest.ErrCode = 0
 				if err := stream.Send(frequest); err != nil {
 					logger.Warn("Stream_02: Failed to send a filerequest: ", err)
 				}
@@ -201,7 +198,10 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 		}
 
 		if action == "del" {
-			frequest = &pbv.Message{Key: []byte(fileKey), Data: []byte("del"), Action: action, ErrCode: 0}
+			frequest.Key = []byte(fileKey)
+			frequest.Data = nil
+			frequest.Action = action
+			frequest.ErrCode = 0
 			if err := stream.Send(frequest); err != nil {
 				logger.Warn("Stream_02: Failed to send a filerequest: ", err)
 			}

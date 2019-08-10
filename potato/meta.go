@@ -91,7 +91,7 @@ func MetaScanList(prefix []byte, size int) (listHtml string) {
 		iter.Release()
 		err := iter.Error()
 		if err != nil {
-			logger.Error("MetaSyncList: ", err)
+			logger.Error("MetaScanList: ", err)
 		}
 
 	}

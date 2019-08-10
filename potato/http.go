@@ -2,6 +2,7 @@ package potato
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -63,6 +64,11 @@ func StartHttpServer() {
 		gin.DefaultWriter = io.MultiWriter(f)
 	} else {
 		gin.SetMode(gin.DebugMode)
+
+		logfile := cfg.Http.Log_file
+		f, _ := os.Create(logfile)
+		gin.DefaultWriter = io.MultiWriter(f)
+
 		logger.Info("in DebugMode, log will not flush to disk.")
 	}
 
@@ -80,6 +86,23 @@ func StartHttpServer() {
 	} else {
 		r.Use(cors.Default())
 	}
+
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+
+		// your custom format
+		return fmt.Sprintf("[%s] - %s %s %s %d %s \"%s\" [%s] \"%s\" \n",
+			param.TimeStamp.Format(time.RFC3339),
+			param.ClientIP,
+			param.Request.Proto,
+			param.Method,
+			param.StatusCode,
+			param.Latency,
+			param.Path,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
+	}))
+	r.Use(gin.Recovery())
 
 	//r.Use(Validate())
 
@@ -191,6 +214,10 @@ func HttpUpload(c *gin.Context) {
 
 		fileData, err := ioutil.ReadFile(ftemp)
 		if err == nil {
+			if len(fileData) > entityMaxSize {
+				continue
+			}
+
 			fname := file.Filename
 			fsize := strconv.Itoa(len(fileData))
 			fmime := mime.TypeByExtension(path.Ext(ftemp))
@@ -307,15 +334,12 @@ func HttpStats(c *gin.Context) {
 func HttpGroupCache(c *gin.Context) {
 	key := c.Param("key")
 
-	Error404 := "404 NOT Found"
-
 	var data []byte
 
 	err := cacheGroup.Get(c, key, groupcache.AllocatingByteSliceSink(&data))
 
 	if err != nil {
-		c.Data(http.StatusOK, "text/html", []byte(Error404))
-		return
+		c.Data(http.StatusNotFound, "text/html", []byte("404 NOT Found"))
 	}
 
 	var ettobj EntityObject
@@ -338,6 +362,6 @@ func HttpGroupCache(c *gin.Context) {
 		c.Data(http.StatusOK, eo_mime, eo_data)
 
 	} else {
-		c.Data(http.StatusOK, "text/html", []byte(Error404))
+		c.Data(http.StatusNotFound, "text/html", []byte("404 NOT Found"))
 	}
 }
