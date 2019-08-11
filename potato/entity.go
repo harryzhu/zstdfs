@@ -1,6 +1,7 @@
 package potato
 
 import (
+	"encoding/json"
 	//"context"
 	//"errors"
 	//"io"
@@ -37,6 +38,47 @@ func EntityDelete(key []byte) error {
 		if err := bdb_delete(key); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func EntityBan(key []byte) error {
+	if EntityExists(key) == false {
+		return nil
+	}
+
+	data, err := EntityGet(key)
+
+	if err != nil {
+		return err
+	}
+
+	var ettobj EntityObject
+	err = json.Unmarshal(data, &ettobj)
+
+	if err != nil {
+		return err
+	}
+
+	sb := &EntityObject{
+		Name: ettobj.Name,
+		Size: ettobj.Size,
+		Mime: ettobj.Mime,
+		Stat: -1,
+		Data: ettobj.Data,
+	}
+
+	byteEntityObject, err := json.Marshal(sb)
+
+	if err != nil {
+		return err
+	}
+
+	err = EntitySet(key, byteEntityObject)
+
+	if err != nil {
+		return err
 	}
 
 	return nil

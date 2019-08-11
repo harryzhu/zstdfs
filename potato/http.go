@@ -25,6 +25,7 @@ type EntityObject struct {
 	Name string
 	Mime string
 	Size string
+	Stat int
 	Data []byte
 }
 
@@ -37,6 +38,7 @@ type EntityResponse struct {
 
 var r = gin.Default()
 var (
+	addressHttp          string
 	HTTP_SITE_URL        string
 	HTTP_TEMP_UPLOAD_DIR string
 	FaviconByte          = []byte("")
@@ -55,7 +57,7 @@ func beforeStartHttpServer() {
 }
 
 func StartHttpServer() {
-	addressHttp := strings.Join([]string{cfg.Http.Ip, cfg.Http.Port}, ":")
+	addressHttp = strings.Join([]string{cfg.Http.Ip, cfg.Http.Port}, ":")
 	if isDebug == false {
 		gin.SetMode(gin.ReleaseMode)
 		gin.DisableConsoleColor()
@@ -64,10 +66,6 @@ func StartHttpServer() {
 		gin.DefaultWriter = io.MultiWriter(f)
 	} else {
 		gin.SetMode(gin.DebugMode)
-
-		logfile := cfg.Http.Log_file
-		f, _ := os.Create(logfile)
-		gin.DefaultWriter = io.MultiWriter(f)
 
 		logger.Info("in DebugMode, log will not flush to disk.")
 	}
@@ -130,6 +128,7 @@ func StartHttpServer() {
 		// POST
 		v1.POST("/uploads", HttpUpload)
 		v1.POST("/auth", HttpAuth)
+		v1.GET("/ban/k/:key", HttpBan)
 
 		// DELETE
 		v1.DELETE("/k/:key", HttpDelete)
@@ -202,6 +201,28 @@ func HttpDelete(c *gin.Context) {
 	})
 }
 
+func HttpBan(c *gin.Context) {
+	key := c.Param("key")
+	msg := "key should not be empty"
+	if len(key) > 0 {
+		err := EntityBan([]byte(key))
+		if err != nil {
+			msg = "cannot ban the key."
+		} else {
+			PeersMark("sync", "ban", key, "1")
+			msg = "ban successfully."
+		}
+		e := []byte("")
+		err = cacheGroup.Get(c, key, groupcache.TruncatingByteSliceSink(&e))
+
+		logger.Error("TruncatingByteSliceSink:", err)
+
+	}
+	c.JSON(200, gin.H{
+		"message": msg,
+	})
+}
+
 func HttpUpload(c *gin.Context) {
 	form, _ := c.MultipartForm()
 	files := form.File["uploads[]"]
@@ -221,6 +242,7 @@ func HttpUpload(c *gin.Context) {
 			fname := file.Filename
 			fsize := strconv.Itoa(len(fileData))
 			fmime := mime.TypeByExtension(path.Ext(ftemp))
+			fstat := 0
 			if fmime == "" {
 				fmime = "application/octet-stream"
 			}
@@ -229,6 +251,7 @@ func HttpUpload(c *gin.Context) {
 				Name: fname,
 				Size: fsize,
 				Mime: fmime,
+				Stat: fstat,
 				Data: fileData,
 			}
 
@@ -255,7 +278,6 @@ func HttpUpload(c *gin.Context) {
 
 				if err == nil {
 					err := EntitySet([]byte(sb_key), byteEntityObject)
-					//PeersMark("sync", "set", sb_key, "1")
 					if err != nil {
 						logger.Debug("Error while EntitySet: ", sb_key)
 					} else {
@@ -332,6 +354,8 @@ func HttpStats(c *gin.Context) {
 }
 
 func HttpGroupCache(c *gin.Context) {
+	c.Header("X-Potatofs-Node", addressHttp)
+
 	key := c.Param("key")
 
 	var data []byte
@@ -340,6 +364,7 @@ func HttpGroupCache(c *gin.Context) {
 
 	if err != nil {
 		c.Data(http.StatusNotFound, "text/html", []byte("404 NOT Found"))
+		return
 	}
 
 	var ettobj EntityObject
@@ -349,6 +374,11 @@ func HttpGroupCache(c *gin.Context) {
 	var eo_data []byte
 
 	if erru == nil {
+		if ettobj.Stat < 0 {
+			c.Data(http.StatusForbidden, "text/html", []byte("403 Forbidden"))
+			return
+		}
+
 		eo_name = ettobj.Name
 		eo_mime = ettobj.Mime
 		eo_size = ettobj.Size
@@ -357,7 +387,8 @@ func HttpGroupCache(c *gin.Context) {
 		if eo_mime == "" {
 			eo_mime = "application/octet-stream"
 		}
-		c.Header("X-PotatoFS-Name", eo_name)
+
+		c.Header("X-Potatofs-Name", eo_name)
 		c.Header("Content-Length", eo_size)
 		c.Data(http.StatusOK, eo_mime, eo_data)
 

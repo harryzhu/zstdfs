@@ -118,6 +118,18 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 						}
 					}
 				}
+			case "ban":
+				{
+					resp.Key = key
+					resp.Action = "none"
+					resp.ErrCode = 0
+					resp.Data = nil
+
+					err := EntityBan(key)
+					if err != nil {
+						resp.ErrCode = 404
+					}
+				}
 
 			}
 

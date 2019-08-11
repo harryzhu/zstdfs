@@ -13,7 +13,7 @@ import (
 )
 
 func EntityGetRoundRobin(key []byte) ([]byte, error) {
-	logger.Info("EntityGetRoundRobin:", string(key))
+	logger.Debug("EntityGetRoundRobin:", string(key))
 	var data []byte
 	var err_return error = errors.New("not exist")
 
@@ -25,7 +25,7 @@ func EntityGetRoundRobin(key []byte) ([]byte, error) {
 		if is_live == false {
 			continue
 		}
-		logger.Info("EntityGetRoundRobin:ip_port:", ip_port)
+		logger.Debug("EntityGetRoundRobin:ip_port:", ip_port)
 		conn, err := grpc.Dial(ip_port, grpc.WithInsecure(),
 			grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(grpcMAXMSGSIZE), grpc.MaxCallRecvMsgSize(grpcMAXMSGSIZE)))
 		if err != nil {
