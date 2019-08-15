@@ -26,6 +26,16 @@ func smokeTest() {
 		logger.Fatal("smokeTest: EntityGet data unzip failed: ", string(data))
 	}
 
+	cacheFree.Set([]byte(testKey), []byte(testVal), 60)
+	cache_get, err := cacheFree.Get([]byte(testKey))
+	if err != nil {
+		logger.Fatal("smokeTest: Cache Error: ", err)
+	} else {
+		logger.Info("smokeTest: Cache Get OK.", string(cache_get))
+	}
+	cache_affected := cacheFree.Del([]byte(testKey))
+	logger.Info("smokeTest: Cache Delete: ", cache_affected)
+
 	testMetaKey := ""
 	testMetaVal := []byte(testVal)
 	for _, p := range volumePeers {

@@ -1,6 +1,7 @@
 package potato
 
 import (
+	"github.com/coocood/freecache"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/groupcache"
 	log "github.com/sirupsen/logrus"
@@ -12,6 +13,7 @@ var (
 	cfg            Config
 	bdb            *badger.DB
 	ldb            *leveldb.DB
+	cacheFree      *freecache.Cache
 	cacheGroup     *groupcache.Group
 	cacheGroupName string = "gcentity"
 )
@@ -30,9 +32,10 @@ var (
 
 // Limits
 var (
-	grpcMAXMSGSIZE int   = 256 << 20
-	entityMaxSize  int   = 64 << 20
-	cacheSize      int64 = 1024 << 20
+	grpcMAXMSGSIZE  int   = 256 << 20
+	entityMaxSize   int   = 64 << 20
+	cacheSize       int64 = 1024 << 20
+	cacheExpiration int   = 3600
 )
 
 var (

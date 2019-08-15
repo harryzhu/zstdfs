@@ -7,6 +7,7 @@ import (
 	//"time"
 
 	//"github.com/BurntSushi/toml"
+	"github.com/coocood/freecache"
 	"github.com/dgraph-io/badger"
 	"github.com/golang/groupcache"
 
@@ -112,7 +113,9 @@ func useConfig() {
 	} else {
 		cacheSize = int64(cv_cache_size_mb * 1024 * 1024)
 	}
-	logger.Info("Limits: cache Size: ", cacheSize)
+	logger.Info("Limits: cache Size: ", int(cacheSize))
+
+	cacheFree = freecache.NewCache(int(cacheSize))
 
 	if cfg.Volume.Ip == "" || cfg.Volume.Port == "" {
 		logger.Fatal("Volume IP/Port cannot be empty.")
@@ -137,4 +140,5 @@ func useConfig() {
 	for _, vp := range volumePeers {
 		volumePeersLive[vp] = false
 	}
+
 }
