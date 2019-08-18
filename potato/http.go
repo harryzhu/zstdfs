@@ -329,7 +329,7 @@ func HttpFormFiles(c *gin.Context) {
 }
 
 func HttpMetaSyncList(c *gin.Context) {
-	listHtml := MetaScanList([]byte("sync/"), 1000)
+	listHtml := MetaScanList([]byte("sync/"), 100)
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
 }

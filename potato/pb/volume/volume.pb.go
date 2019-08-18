@@ -134,7 +134,7 @@ func init() {
 func init() { proto.RegisterFile("volume.proto", fileDescriptor_498b213ad3bcd5ad) }
 
 var fileDescriptor_498b213ad3bcd5ad = []byte{
-	// 226 bytes of a gzipped FileDescriptorProto
+	// 229 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xcb, 0xcf, 0x29,
 	0xcd, 0x4d, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x83, 0xf0, 0x94, 0xd8, 0xb9, 0x58,
 	0x5d, 0x73, 0x0b, 0x4a, 0x2a, 0x95, 0x4a, 0xb9, 0xd8, 0x7d, 0x53, 0x8b, 0x8b, 0x13, 0xd3, 0x53,
@@ -143,13 +143,13 @@ var fileDescriptor_498b213ad3bcd5ad = []byte{
 	0xc5, 0xe6, 0x98, 0x5c, 0x92, 0x99, 0x9f, 0x27, 0xc1, 0xac, 0xc0, 0xa8, 0xc1, 0x19, 0x04, 0xe5,
 	0x09, 0x49, 0x70, 0xb1, 0xbb, 0x16, 0x15, 0x39, 0xe7, 0xa7, 0xa4, 0x4a, 0xb0, 0x28, 0x30, 0x6a,
 	0xb0, 0x06, 0xc1, 0xb8, 0x20, 0x53, 0x42, 0x32, 0x73, 0x53, 0x25, 0x58, 0xc1, 0xea, 0xc1, 0x6c,
-	0xa3, 0xf5, 0x8c, 0x5c, 0xbc, 0x61, 0x60, 0xa7, 0x04, 0xa7, 0x16, 0x95, 0x65, 0x26, 0xa7, 0x0a,
+	0xa3, 0xfb, 0x8c, 0x5c, 0xbc, 0x61, 0x60, 0xa7, 0x04, 0xa7, 0x16, 0x95, 0x65, 0x26, 0xa7, 0x0a,
 	0x19, 0x72, 0x71, 0x7b, 0xa4, 0x26, 0xe6, 0x94, 0x64, 0x38, 0x67, 0xa4, 0x26, 0x67, 0x0b, 0xf1,
 	0xeb, 0x41, 0xdd, 0x0d, 0x75, 0x9d, 0x14, 0xba, 0x80, 0x12, 0x83, 0x90, 0x1e, 0x17, 0x47, 0x50,
-	0x6a, 0x62, 0x8a, 0x5b, 0x66, 0x4e, 0x2a, 0x51, 0xea, 0xad, 0xb9, 0x04, 0x83, 0x4b, 0x8a, 0x52,
-	0x13, 0x73, 0x83, 0x53, 0xf3, 0x52, 0x60, 0xbe, 0x26, 0x42, 0xa3, 0x06, 0xa3, 0x01, 0x63, 0x12,
-	0x1b, 0x38, 0x00, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x4d, 0x61, 0x7a, 0x48, 0x50, 0x01,
-	0x00, 0x00,
+	0x6a, 0x62, 0x8a, 0x5b, 0x66, 0x4e, 0x2a, 0xb1, 0xea, 0x3d, 0x48, 0x51, 0x6f, 0xcd, 0x25, 0x18,
+	0x5c, 0x52, 0x94, 0x9a, 0x98, 0x1b, 0x9c, 0x9a, 0x97, 0x02, 0x0b, 0x25, 0x22, 0x34, 0x6a, 0x30,
+	0x1a, 0x30, 0x26, 0xb1, 0x81, 0x03, 0xdc, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x94, 0x2a, 0x28,
+	0x1d, 0x80, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -166,6 +166,7 @@ const _ = grpc.SupportPackageIsVersion4
 type VolumeServiceClient interface {
 	HealthCheck(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	ReadFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	HeadFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	StreamSendMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSendMessageClient, error)
 }
 
@@ -189,6 +190,15 @@ func (c *volumeServiceClient) HealthCheck(ctx context.Context, in *Message, opts
 func (c *volumeServiceClient) ReadFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
 	out := new(Message)
 	err := c.cc.Invoke(ctx, "/volume.VolumeService/ReadFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *volumeServiceClient) HeadFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/volume.VolumeService/HeadFile", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +240,7 @@ func (x *volumeServiceStreamSendMessageClient) Recv() (*Message, error) {
 type VolumeServiceServer interface {
 	HealthCheck(context.Context, *Message) (*Message, error)
 	ReadFile(context.Context, *Message) (*Message, error)
+	HeadFile(context.Context, *Message) (*Message, error)
 	StreamSendMessage(VolumeService_StreamSendMessageServer) error
 }
 
@@ -242,6 +253,9 @@ func (*UnimplementedVolumeServiceServer) HealthCheck(ctx context.Context, req *M
 }
 func (*UnimplementedVolumeServiceServer) ReadFile(ctx context.Context, req *Message) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadFile not implemented")
+}
+func (*UnimplementedVolumeServiceServer) HeadFile(ctx context.Context, req *Message) (*Message, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HeadFile not implemented")
 }
 func (*UnimplementedVolumeServiceServer) StreamSendMessage(srv VolumeService_StreamSendMessageServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamSendMessage not implemented")
@@ -287,6 +301,24 @@ func _VolumeService_ReadFile_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VolumeService_HeadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VolumeServiceServer).HeadFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/volume.VolumeService/HeadFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VolumeServiceServer).HeadFile(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _VolumeService_StreamSendMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(VolumeServiceServer).StreamSendMessage(&volumeServiceStreamSendMessageServer{stream})
 }
@@ -324,6 +356,10 @@ var _VolumeService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReadFile",
 			Handler:    _VolumeService_ReadFile_Handler,
+		},
+		{
+			MethodName: "HeadFile",
+			Handler:    _VolumeService_HeadFile_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

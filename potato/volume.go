@@ -35,6 +35,48 @@ func (vs *VolumeService) ReadFile(ctx context.Context, MessageIn *pbv.Message) (
 	return nil, errors.New("ERROR")
 }
 
+func (vs *VolumeService) HeadFile(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
+
+	key := MessageIn.Key
+	action := MessageIn.Action
+	if key == nil || len(action) <= 0 {
+		return nil, errors.New("ERROR: key and action cannot be empty.")
+	}
+
+	f := &pbv.Message{}
+	f.Key = MessageIn.Key
+	f.Action = action
+	f.Time = TimeNowUnixString()
+
+	switch action {
+	case "exists":
+		{
+			f.Data = nil
+			if EntityExists(key) == true {
+				f.ErrCode = 200
+			} else {
+				f.ErrCode = 404
+			}
+		}
+	case "meta":
+		{
+			_, err := EntityGet(key)
+			if err != nil {
+				return nil, err
+			}
+			f.Data = nil
+			f.ErrCode = 0
+		}
+	default:
+		{
+			f.ErrCode = 500
+			f.Data = nil
+		}
+	}
+
+	return f, nil
+}
+
 func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMessageServer) error {
 	for {
 		in, err := stream.Recv()
@@ -53,8 +95,8 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 		data := in.Data
 		resp := &pbv.Message{Key: key, Action: action, ErrCode: 404, Data: nil, Time: timenano}
 
-		if IsEmpty(key) || IsEmptyString(action) {
-			logger.Warn("StreamSendMessage: key/action/errcode is invalid.", errcode)
+		if IsEmpty(key) || IsEmptyString(action) || IsEmptyString(timenano) {
+			logger.Warn("StreamSendMessage: key/action/timenano/errcode is invalid.", errcode)
 			continue
 		}
 

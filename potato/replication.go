@@ -82,7 +82,7 @@ func replicate(cat, ip_port string) error {
 	prefix := strings.Join([]string{cat, ip_port}, "/")
 	logger.Debug("sync: prefix length: ", len(prefix), ", prefix: ", prefix)
 
-	fileKeys, err := MetaScan([]byte(prefix), 100)
+	fileKeys, err := MetaScan([]byte(prefix), 400)
 	if err != nil {
 		logger.Debug("MetaScan Error.")
 		return err
@@ -192,6 +192,18 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 			}
 		case "set":
 			{
+				keyExistsMsg, err := client.HeadFile(ctx, &pbv.Message{Key: []byte(fileKey), Action: "exists"})
+				if err == nil {
+					logger.Debug("Sync/Set/ ErrCode: ", keyExistsMsg.ErrCode)
+					if keyExistsMsg.ErrCode == 200 {
+						logger.Debug("Sync/Set/ had been skipped on: ", ip_port, ", key: ", fk)
+						MetaDelete([]byte(fk))
+						continue
+					}
+				} else {
+					logger.Debug("Check if key exists, Error: ", err)
+				}
+
 				data, err := EntityGet([]byte(fileKey))
 				if err != nil || data == nil {
 					logger.Debug("Stream_02: EntityGet Error: ", fileKey)
@@ -219,9 +231,9 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 		}
 
 		if err := stream.Send(frequest); err != nil {
-			logger.Warn("Stream_02: Failed to send a filerequest: ", err)
+			logger.Warn("StreamSend: Failed to send a filerequest: ", err)
 		}
-		logger.Debug("Stream_02: Deleting: action: ", action, " key: ", fileKey)
+		logger.Debug("StreamSend: Deleting: action: ", action, " key: ", fileKey)
 
 	}
 
