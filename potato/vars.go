@@ -3,19 +3,16 @@ package potato
 import (
 	"github.com/coocood/freecache"
 	"github.com/dgraph-io/badger"
-	"github.com/golang/groupcache"
 	log "github.com/sirupsen/logrus"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
 var (
-	logger         = log.New()
-	cfg            Config
-	bdb            *badger.DB
-	ldb            *leveldb.DB
-	cacheFree      *freecache.Cache
-	cacheGroup     *groupcache.Group
-	cacheGroupName string = "gcentity"
+	logger    = log.New()
+	cfg       Config
+	bdb       *badger.DB
+	ldb       *leveldb.DB
+	cacheFree *freecache.Cache
 )
 
 // dynamic
@@ -39,6 +36,7 @@ var (
 )
 
 var (
-	bdbGetCounter uint64 = 0
-	bdbSetCounter uint64 = 0
+	bdbGetCounter   uint64 = 0
+	bdbSetCounter   uint64 = 0
+	cacheSetCounter uint64 = 0
 )

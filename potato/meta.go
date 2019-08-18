@@ -147,7 +147,8 @@ func metaKeyJoin(cat, action, rpcaddress, key string) string {
 	if len(cat) <= 0 || len(action) <= 0 || len(rpcaddress) <= 0 || len(key) <= 0 {
 		return ""
 	}
-	return strings.Join([]string{cat, action, rpcaddress, key}, "/")
+	//return strings.Join([]string{cat, action, rpcaddress, key, TimeNowString()}, "/")
+	return strings.Join([]string{cat, rpcaddress, key, TimeNowNanoString(), action}, "/")
 }
 
 func metaKeySplit(metakey string) []string {
@@ -156,7 +157,7 @@ func metaKeySplit(metakey string) []string {
 		return arr_metakey
 	}
 	arr_mk := strings.Split(metakey, "/")
-	if len(arr_mk) == 4 {
+	if len(arr_mk) == 5 {
 		return arr_mk
 	}
 	return arr_metakey

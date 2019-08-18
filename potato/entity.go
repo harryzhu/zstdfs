@@ -1,7 +1,7 @@
 package potato
 
 import (
-	"encoding/json"
+
 	//"context"
 	//"errors"
 	//"io"
@@ -43,47 +43,6 @@ func EntityDelete(key []byte) error {
 	return nil
 }
 
-func EntityBan(key []byte) error {
-	if EntityExists(key) == false {
-		return nil
-	}
-
-	data, err := EntityGet(key)
-
-	if err != nil {
-		return err
-	}
-
-	var ettobj EntityObject
-	err = json.Unmarshal(data, &ettobj)
-
-	if err != nil {
-		return err
-	}
-
-	sb := &EntityObject{
-		Name: ettobj.Name,
-		Size: ettobj.Size,
-		Mime: ettobj.Mime,
-		Stat: -1,
-		Data: ettobj.Data,
-	}
-
-	byteEntityObject, err := json.Marshal(sb)
-
-	if err != nil {
-		return err
-	}
-
-	err = EntitySet(key, byteEntityObject)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func EntityExists(key []byte) bool {
 	_, err := bdb_get(key)
 	if err != nil {
@@ -97,11 +56,18 @@ func EntityScan(prefix string) string {
 	listHtml := ""
 	href := strings.Join([]string{"<a href=\"", cfg.Http.Site_url, "/v1/k"}, "")
 	if len(keys) > 0 {
+		btns := ""
+
 		for _, v := range keys {
-			listHtml = strings.Join([]string{href, "/", v, "\">", v, "</a><br/>", listHtml}, "")
+			btns = strings.Join([]string{
+				"<td><a class=\"ett-btn\" href=\"", HTTP_SITE_URL, "/v1/del/k/", v, "\">Del</a></td>",
+				"<td><a class=\"ett-btn\" href=\"", HTTP_SITE_URL, "/v1/ban/k/", v, "\">Ban</a></td>",
+				"<td><a class=\"ett-btn\" href=\"", HTTP_SITE_URL, "/v1/pub/k/", v, "\">Pub</a></td>",
+			}, "")
+			listHtml = strings.Join([]string{"<tr><td>", href, "/", v, "\">", v, "</a></td>", btns, "</tr>", listHtml}, "")
 		}
 	}
-
+	listHtml = strings.Join([]string{"<table class=\"ett-list\">", listHtml, "</table>"}, "")
 	return listHtml
 }
 

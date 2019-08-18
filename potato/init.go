@@ -9,7 +9,6 @@ import (
 	//"github.com/BurntSushi/toml"
 	"github.com/coocood/freecache"
 	"github.com/dgraph-io/badger"
-	"github.com/golang/groupcache"
 
 	//log "github.com/sirupsen/logrus"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -25,7 +24,6 @@ func init() {
 
 	openBDB()
 	openLDB()
-	openCacheGroup()
 
 	smokeTest()
 }
@@ -62,24 +60,6 @@ func openLDB() {
 	if err != nil {
 		logger.Fatal("Error while opening ldb")
 	}
-
-}
-
-func openCacheGroup() {
-	cacheGroup = groupcache.NewGroup(cacheGroupName, cacheSize, groupcache.GetterFunc(
-		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
-			data, err := EntityGet([]byte(key))
-			if err != nil {
-				data, err = EntityGetRoundRobin([]byte(key))
-			}
-
-			if err != nil {
-				return err
-			}
-
-			dest.SetBytes(data)
-			return nil
-		}))
 
 }
 

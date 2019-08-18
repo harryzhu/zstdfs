@@ -26,12 +26,17 @@ func smokeTest() {
 		logger.Fatal("smokeTest: EntityGet data unzip failed: ", string(data))
 	}
 
+	err = EntityDelete([]byte(testKey))
+	if err != nil {
+		logger.Fatal("smokeTest: EntityDelete Failed.")
+	}
+
 	cacheFree.Set([]byte(testKey), []byte(testVal), 60)
-	cache_get, err := cacheFree.Get([]byte(testKey))
+	cget, err := cacheFree.Get([]byte(testKey))
 	if err != nil {
 		logger.Fatal("smokeTest: Cache Error: ", err)
 	} else {
-		logger.Info("smokeTest: Cache Get OK.", string(cache_get))
+		logger.Info("smokeTest: Cache Get OK.", string(cget))
 	}
 	cache_affected := cacheFree.Del([]byte(testKey))
 	logger.Info("smokeTest: Cache Delete: ", cache_affected)
@@ -43,7 +48,7 @@ func smokeTest() {
 			testMetaKey = metaKeyJoin("test", "get", p, ByteSHA256([]byte(testKey)))
 			logger.Info("smokeTest: MetaKeyJoin: ", testMetaKey)
 			logger.Info("smokeTest: MetaKeySplit: ", strings.Join(metaKeySplit(testMetaKey), ";"))
-			if len(metaKeySplit(testMetaKey)) != 4 {
+			if len(metaKeySplit(testMetaKey)) != 5 {
 				logger.Fatal("smokeTest: MetaKeySplit: Error.")
 			}
 

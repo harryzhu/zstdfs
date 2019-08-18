@@ -61,9 +61,7 @@ func RunReplicateParallel() error {
 		go func() {
 			defer wg_rep.Done()
 			//logger.Debug("Thread Start: replicate to: ", ip_port)
-			replicate("sync", "del", ip_port)
-			time.Sleep(50 * time.Millisecond)
-			replicate("sync", "set", ip_port)
+			replicate("sync", ip_port)
 			//logger.Debug("Thread End: ", ip_port)
 			time.Sleep(50 * time.Millisecond)
 
@@ -80,8 +78,8 @@ func RunReplicateParallel() error {
 	return nil
 }
 
-func replicate(cat, action, ip_port string) error {
-	prefix := strings.Join([]string{cat, action, ip_port}, "/")
+func replicate(cat, ip_port string) error {
+	prefix := strings.Join([]string{cat, ip_port}, "/")
 	logger.Debug("sync: prefix length: ", len(prefix), ", prefix: ", prefix)
 
 	fileKeys, err := MetaScan([]byte(prefix), 100)
@@ -145,9 +143,9 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 				continue
 			}
 
-			logger.Debug("runStreamSendMessage: Key: ", string(in.Key), string(in.Action), in.ErrCode, string(in.Data))
-			if in != nil && len(in.Key) > 0 && in.ErrCode == 0 {
-				pk := strings.Join([]string{prefix, string(in.Key)}, "/")
+			logger.Debug("runStreamSendMessage: Key: ", string(in.Key), string(in.Action), in.ErrCode)
+			if in != nil && len(in.Key) > 0 && len(in.Time) > 0 && len(in.Action) > 0 && in.ErrCode == 0 {
+				pk := strings.Join([]string{prefix, string(in.Key), in.Time, in.Action}, "/")
 
 				deleteKeys = append(deleteKeys, pk)
 
@@ -166,47 +164,64 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 
 	action := ""
 	fileKey := ""
+	timeNano := ""
 	frequest := &pbv.Message{}
 	for k, fk := range fileKeys {
 		logger.Debug("Sync Key Index:", k, ", ", fk)
 		arr_fk := strings.Split(fk, "/")
 
-		if len(arr_fk) == 4 {
-			action = arr_fk[1]
-			fileKey = arr_fk[3]
+		if len(arr_fk) == 5 {
+			action = arr_fk[4]
+			fileKey = arr_fk[2]
+			timeNano = arr_fk[3]
 		}
 
 		if len(action) <= 0 || len(fileKey) <= 0 {
 			continue
 		}
 
-		if action == "set" {
-			data, err := EntityGet([]byte(fileKey))
-			if err != nil || data == nil {
-				logger.Debug("Stream_02: EntityGet Error: ", fileKey)
-				continue
-			} else {
-				frequest.Key = []byte(fileKey)
-				frequest.Data = data
-				frequest.Action = action
-				frequest.ErrCode = 0
-				if err := stream.Send(frequest); err != nil {
-					logger.Warn("Stream_02: Failed to send a filerequest: ", err)
+		frequest.Key = []byte(fileKey)
+		frequest.Action = action
+		frequest.ErrCode = 0
+		frequest.Time = timeNano
+
+		switch action {
+		case "get":
+			{
+				frequest.Data = nil
+			}
+		case "set":
+			{
+				data, err := EntityGet([]byte(fileKey))
+				if err != nil || data == nil {
+					logger.Debug("Stream_02: EntityGet Error: ", fileKey)
+					continue
+				} else {
+					frequest.Data = data
 				}
-				logger.Debug("Stream_02: Sending: action: ", action, " key: ", fileKey)
+			}
+		case "del":
+			{
+				frequest.Data = nil
+			}
+		case "ban":
+			{
+				frequest.Data = nil
+			}
+		case "pub":
+			{
+				frequest.Data = nil
+			}
+		default:
+			{
+				continue
 			}
 		}
 
-		if action == "del" {
-			frequest.Key = []byte(fileKey)
-			frequest.Data = nil
-			frequest.Action = action
-			frequest.ErrCode = 0
-			if err := stream.Send(frequest); err != nil {
-				logger.Warn("Stream_02: Failed to send a filerequest: ", err)
-			}
-			logger.Debug("Stream_02: Deleting: action: ", action, " key: ", fileKey)
+		if err := stream.Send(frequest); err != nil {
+			logger.Warn("Stream_02: Failed to send a filerequest: ", err)
 		}
+		logger.Debug("Stream_02: Deleting: action: ", action, " key: ", fileKey)
 
 	}
 

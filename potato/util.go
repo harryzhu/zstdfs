@@ -4,7 +4,9 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/snappy"
 )
@@ -52,4 +54,20 @@ func IsOversize(b []byte) bool {
 		return true
 	}
 	return false
+}
+
+func TimeNowNanoString() string {
+	return strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+func TimeNowUnixString() string {
+	return strconv.FormatInt(time.Now().Unix(), 10)
+}
+
+func SecondFormatTimeString(s string) string {
+	t, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return ""
+	}
+	return time.Unix(t, 0).Format("2006-01-02 03:04:05")
 }

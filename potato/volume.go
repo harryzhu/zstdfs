@@ -15,7 +15,7 @@ import (
 type VolumeService struct{}
 
 func (vs *VolumeService) HealthCheck(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
-	return &pbv.Message{Key: []byte("healthcheck"), Data: []byte("OK"), Action: "ping", ErrCode: 0}, nil
+	return &pbv.Message{Key: []byte("healthcheck"), Data: []byte("OK"), Action: "ping", ErrCode: 0, Time: TimeNowUnixString()}, nil
 }
 
 func (vs *VolumeService) ReadFile(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
@@ -29,6 +29,7 @@ func (vs *VolumeService) ReadFile(ctx context.Context, MessageIn *pbv.Message) (
 		f.Data = data
 		f.Action = "get"
 		f.ErrCode = 0
+		f.Time = TimeNowUnixString()
 		return f, nil
 	}
 	return nil, errors.New("ERROR")
@@ -48,91 +49,78 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 		key := in.Key
 		action := in.Action
 		errcode := in.ErrCode
+		timenano := in.Time
 		data := in.Data
-		resp := &pbv.Message{}
+		resp := &pbv.Message{Key: key, Action: action, ErrCode: 404, Data: nil, Time: timenano}
 
-		logger.Info("StreamSendMessage: key: ", string(key))
-		if IsEmpty(key) || IsEmpty(data) || IsEmptyString(action) {
-			logger.Error("StreamSendMessage: key/action/errcode/data is invalid.", errcode)
-			resp.Key = []byte("")
-			resp.Action = "none"
-			resp.ErrCode = 400
-			resp.Data = []byte("error-empty")
-		} else {
-			logger.Info("StreamSendMessage: action: ", strings.ToLower(action))
-			switch action {
-			case "get":
-				{
-					resp.Key = key
-					resp.Action = "none"
-					resp.ErrCode = 404
-					resp.Data = nil
+		if IsEmpty(key) || IsEmptyString(action) {
+			logger.Warn("StreamSendMessage: key/action/errcode is invalid.", errcode)
+			continue
+		}
 
-					if EntityExists(key) == true {
-						data, err := EntityGet(key)
-						if err == nil {
-							resp.Key = key
-							resp.Action = "none"
-							resp.ErrCode = 0
-							resp.Data = data
-						}
+		logger.Debug("StreamSendMessage: action: ", strings.ToLower(action))
+
+		switch action {
+		case "get":
+			{
+				if EntityExists(key) == true {
+					data, err := EntityGet(key)
+					if err == nil {
+						resp.ErrCode = 0
+						resp.Data = data
 					}
 				}
-			case "set":
-				{
-					resp.Key = key
-					resp.Action = "none"
-					resp.ErrCode = 0
-					resp.Data = nil
+			}
+		case "set":
+			{
+				resp.ErrCode = 0
 
-					if EntityExists(key) == false {
-						err := EntitySet(key, data)
-						if err != nil {
-							logger.Error("vs:StreamSendMessage:Error EntitySet:", err)
-							resp.Key = key
-							resp.Action = "none"
-							resp.ErrCode = 400
-							resp.Data = []byte("error-set")
-						} else {
-							PeersMark("sync", "set", string(key), "1")
-						}
-					}
-
-				}
-			case "del":
-				{
-					resp.Key = key
-					resp.Action = "none"
-					resp.ErrCode = 0
-					resp.Data = nil
-
-					if EntityExists(key) == true {
-						err := EntityDelete(key)
-						if err != nil {
-							resp.Key = key
-							resp.Action = "none"
-							resp.ErrCode = 400
-							resp.Data = []byte("error-del")
-						} else {
-							PeersMark("sync", "del", string(key), "1")
-						}
-					}
-				}
-			case "ban":
-				{
-					resp.Key = key
-					resp.Action = "none"
-					resp.ErrCode = 0
-					resp.Data = nil
-
-					err := EntityBan(key)
+				if EntityExists(key) == false {
+					err := EntitySet(key, data)
 					if err != nil {
-						resp.ErrCode = 404
+						logger.Error("vs:StreamSendMessage:Error EntitySet:", err)
+						resp.ErrCode = 400
+					} else {
+						PeersMark("sync", "set", string(key), "1")
 					}
 				}
 
 			}
+		case "del":
+			{
+				resp.ErrCode = 0
 
+				if EntityExists(key) == true {
+					err := EntityDelete(key)
+					if err != nil {
+						resp.ErrCode = 400
+					} else {
+						PeersMark("sync", "del", string(key), "1")
+					}
+				}
+			}
+		case "ban":
+			{
+				resp.ErrCode = 0
+
+				err := FileBan(key)
+				if err != nil {
+					resp.ErrCode = 400
+				}
+			}
+		case "pub":
+			{
+				resp.ErrCode = 0
+
+				err := FilePub(key)
+				if err != nil {
+					resp.ErrCode = 400
+				}
+			}
+		default:
+			{
+				continue
+			}
 		}
 
 		if err := stream.Send(resp); err != nil {

@@ -39,6 +39,7 @@ type httpConfig struct {
 	Site_url               string
 	Log_file               string
 	Favicon_file           string
+	Static_dir             string
 	Temp_upload_dir        string
 	Cors_enabled           bool
 	Cors_allow_credentials bool

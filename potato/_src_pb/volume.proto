@@ -16,5 +16,6 @@ message Message{
 	bytes Data = 2;
 	string Action = 3;
 	int32 ErrCode = 4;
+	string Time = 5;
 }
 
