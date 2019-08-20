@@ -60,14 +60,20 @@ func RunReplicateParallel() error {
 		wg_rep.Add(1)
 		go func() {
 			defer wg_rep.Done()
+			t := time.AfterFunc(600*time.Second, func() {
+				logger.Debug("Timeout for replication: ", ip_port)
+			})
+
 			//logger.Debug("Thread Start: replicate to: ", ip_port)
 			replicate("sync", ip_port)
+
+			t.Stop()
 			//logger.Debug("Thread End: ", ip_port)
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 
 		}()
 
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 
 	}
 
@@ -103,12 +109,12 @@ func replicate(cat, ip_port string) error {
 
 	c := pbv.NewVolumeServiceClient(conn)
 
-	runStreamSendFile(c, ip_port, prefix, fileKeys)
+	runStreamSendMessage(c, ip_port, prefix, fileKeys)
 
 	return nil
 }
 
-func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix string, fileKeys []string) error {
+func runStreamSendMessage(client pbv.VolumeServiceClient, ip_port string, prefix string, fileKeys []string) error {
 	logger.Debug("Start Replication from: ", volumeSelf, " to ", ip_port, ", Prefix: ", prefix, " ..........")
 	fileKeys_len := len(fileKeys)
 	if fileKeys_len == 0 {
@@ -116,14 +122,14 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 	}
 	logger.Debug("fileKeys length: ", fileKeys_len)
 
-	ctx, _ := context.WithTimeout(context.Background(), 24*3600*time.Second)
-	//ctx, cancel() := context.WithTimeout(context.Background(), 24*3600*time.Second)
-	//defer cancel()
+	//ctx, _ := context.WithTimeout(context.Background(), 24*3600*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 365*24*time.Hour)
+	defer cancel()
 
 	stream, err := client.StreamSendMessage(ctx)
 	if err != nil {
-		logger.Warn("runStreamSendFile ERROR: ", err)
-		return err
+		logger.Warn("runStreamSendMessage ERROR: ", err)
+		return nil
 	}
 	var lock sync.Mutex
 	waitc := make(chan struct{})

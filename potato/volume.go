@@ -218,7 +218,7 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 	}
 }
 
-func StartNodeServer() {
+func StartVolumeServer() {
 	listening, err := net.Listen("tcp", volumeSelf)
 	if err != nil {
 		logger.Fatalf("Failed to listen: ", err)

@@ -29,7 +29,7 @@ func HealthCheck(ip_port string) error {
 
 	client := pbv.NewVolumeServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	nodeMessage, err := client.HealthCheck(ctx, &pbv.Message{ErrCode: 0, Action: "ping", Key: []byte("healthcheck"), Data: []byte("Ping")})

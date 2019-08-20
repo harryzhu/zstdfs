@@ -22,7 +22,7 @@ func main() {
 	}()
 
 	go func() {
-		potato.StartNodeServer()
+		potato.StartVolumeServer()
 	}()
 
 	go func() {
