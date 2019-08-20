@@ -29,10 +29,10 @@ var (
 
 // Limits
 var (
-	grpcMAXMSGSIZE  int   = 256 << 20
-	entityMaxSize   int   = 64 << 20
-	cacheSize       int64 = 1024 << 20
-	cacheExpiration int   = 3600
+	grpcMAXMSGSIZE  int = 256 << 20
+	entityMaxSize   int = 64 << 20
+	cacheSize       int = 1024 << 20
+	cacheExpiration int = 3600
 )
 
 var (

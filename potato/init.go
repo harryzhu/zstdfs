@@ -89,13 +89,13 @@ func useConfig() {
 
 	cv_cache_size_mb := cfg.Volume.Cache_size_mb
 	if cv_cache_size_mb <= 16 {
-		cacheSize = int64(entityMaxSize * 64)
+		cacheSize = 16 << 20
 	} else {
-		cacheSize = int64(cv_cache_size_mb * 1024 * 1024)
+		cacheSize = cv_cache_size_mb << 20
 	}
-	logger.Info("Limits: cache Size: ", int(cacheSize))
+	logger.Info("Limits: cache Size: ", cacheSize)
 
-	cacheFree = freecache.NewCache(int(cacheSize))
+	cacheFree = freecache.NewCache(cacheSize)
 
 	if cfg.Volume.Ip == "" || cfg.Volume.Port == "" {
 		logger.Fatal("Volume IP/Port cannot be empty.")

@@ -1,6 +1,7 @@
 package potato
 
 import (
+	"errors"
 	"sync/atomic"
 	//"github.com/coocood/freecache"
 )
@@ -19,9 +20,16 @@ func cache_get(key []byte) (val []byte, err error) {
 	return val, nil
 }
 
-func cache_del(key []byte) (tf bool) {
-	tf = cacheFree.Del(key)
-	return tf
+func cache_del(key []byte) (err error) {
+	if true == cacheFree.Del(key) {
+		return nil
+	}
+	_, err = cache_get(key)
+	if err == nil {
+		return errors.New("cannot delete the key.")
+	}
+
+	return nil
 }
 
 func CacheGet(key []byte) (val []byte, err error) {
@@ -43,4 +51,8 @@ func CacheGet(key []byte) (val []byte, err error) {
 	}
 
 	return nil, err
+}
+
+func cacheDelete(key []byte) error {
+	return cache_del(key)
 }

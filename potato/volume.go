@@ -1,6 +1,7 @@
 package potato
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net"
@@ -35,7 +36,7 @@ func (vs *VolumeService) ReadFile(ctx context.Context, MessageIn *pbv.Message) (
 	return nil, errors.New("ERROR")
 }
 
-func (vs *VolumeService) HeadFile(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
+func (vs *VolumeService) HandleFile(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
 
 	key := MessageIn.Key
 	action := MessageIn.Action
@@ -45,32 +46,77 @@ func (vs *VolumeService) HeadFile(ctx context.Context, MessageIn *pbv.Message) (
 
 	f := &pbv.Message{}
 	f.Key = MessageIn.Key
+	f.Data = nil
 	f.Action = action
 	f.Time = TimeNowUnixString()
 
 	switch action {
 	case "exists":
 		{
-			f.Data = nil
 			if EntityExists(key) == true {
 				f.ErrCode = 200
 			} else {
 				f.ErrCode = 404
 			}
 		}
-	case "meta":
+	case "del":
 		{
-			_, err := EntityGet(key)
+			f.ErrCode = 200
+
+			if EntityDelete(key) != nil {
+				f.ErrCode = 400
+			}
+			cacheDelete(key)
+		}
+	case "ban":
+		{
+			f.ErrCode = 200
+
+			if FileBan(key) != nil {
+				f.ErrCode = 400
+			}
+			cacheDelete(key)
+		}
+	case "pub":
+		{
+			f.ErrCode = 200
+
+			if FilePub(key) != nil {
+				f.ErrCode = 400
+			}
+			cacheDelete(key)
+		}
+	case "head":
+		{
+			f.ErrCode = 404
+
+			data, err := EntityGet(key)
 			if err != nil {
 				return nil, err
 			}
-			f.Data = nil
-			f.ErrCode = 0
+			var fileobj FileObject
+			erru := json.Unmarshal(data, &fileobj)
+			if erru == nil {
+				fileobj_meta := &FileObject{
+					Ver:  fileobj.Ver,
+					Stat: fileobj.Stat,
+					Csec: fileobj.Csec,
+					Msec: fileobj.Msec,
+					Name: fileobj.Name,
+					Size: fileobj.Size,
+					Mime: fileobj.Mime,
+				}
+
+				byteFileObjectMeta, err := json.Marshal(fileobj_meta)
+				if err == nil {
+					f.Data = byteFileObjectMeta
+					f.ErrCode = 0
+				}
+			}
 		}
 	default:
 		{
 			f.ErrCode = 500
-			f.Data = nil
 		}
 	}
 

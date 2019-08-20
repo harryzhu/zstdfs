@@ -192,7 +192,7 @@ func runStreamSendFile(client pbv.VolumeServiceClient, ip_port string, prefix st
 			}
 		case "set":
 			{
-				keyExistsMsg, err := client.HeadFile(ctx, &pbv.Message{Key: []byte(fileKey), Action: "exists"})
+				keyExistsMsg, err := client.HandleFile(ctx, &pbv.Message{Key: []byte(fileKey), Action: "exists"})
 				if err == nil {
 					logger.Debug("Sync/Set/ ErrCode: ", keyExistsMsg.ErrCode)
 					if keyExistsMsg.ErrCode == 200 {
