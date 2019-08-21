@@ -1,7 +1,7 @@
 package potato
 
 import (
-	"errors"
+	//"errors"
 	"time"
 
 	pbv "./pb/volume"
@@ -41,5 +41,5 @@ func HealthCheck(ip_port string) error {
 		return nil
 	}
 
-	return errors.New("ERROR")
+	return ErrInGeneral
 }

@@ -113,6 +113,7 @@ func StartHttpServer() {
 		v1.GET("/signin", HttpSignin)
 		v1.GET("/checker", HttpChecker)
 		v1.GET("/checker/:key", HttpChecker)
+		v1.GET("/head/:key", HttpHead)
 
 		// POST
 		v1.POST("/uploads", HttpUpload)
@@ -189,7 +190,8 @@ func HttpDelete(c *gin.Context) {
 			msg = "cannot delete the key."
 		} else {
 			PeersMark("sync", "del", key, "1")
-			cache_del([]byte(key))
+			cacheDelete([]byte(key))
+			EntityHandleRoundRobin([]byte(key), "del")
 			msg = "delete successfully."
 		}
 	}
@@ -207,7 +209,8 @@ func HttpBan(c *gin.Context) {
 			msg = "cannot ban the key."
 		} else {
 			PeersMark("sync", "ban", key, "1")
-			cache_del([]byte(key))
+			cacheDelete([]byte(key))
+			EntityHandleRoundRobin([]byte(key), "ban")
 			msg = "ban successfully."
 		}
 
@@ -226,6 +229,8 @@ func HttpPub(c *gin.Context) {
 			msg = "cannot pub the key."
 		} else {
 			PeersMark("sync", "pub", key, "1")
+			cacheDelete([]byte(key))
+			EntityHandleRoundRobin([]byte(key), "pub")
 			msg = "pub successfully."
 		}
 
@@ -419,5 +424,18 @@ func HttpGet(c *gin.Context) {
 
 	} else {
 		c.Data(http.StatusNotFound, "text/html", []byte("404 NOT Found"))
+	}
+}
+
+func HttpHead(c *gin.Context) {
+
+	key := c.Param("key")
+
+	data, err := FileHead([]byte(key))
+	if err != nil {
+		c.Data(http.StatusNotFound, "text/html", []byte("404 NOT Found"))
+
+	} else {
+		c.Data(http.StatusOK, "text/json", data)
 	}
 }

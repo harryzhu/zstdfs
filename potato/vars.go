@@ -1,6 +1,8 @@
 package potato
 
 import (
+	"errors"
+
 	"github.com/coocood/freecache"
 	"github.com/dgraph-io/badger"
 	log "github.com/sirupsen/logrus"
@@ -39,4 +41,12 @@ var (
 	bdbGetCounter   uint64 = 0
 	bdbSetCounter   uint64 = 0
 	cacheSetCounter uint64 = 0
+)
+
+// Error
+var (
+	ErrInGeneral   error = errors.New("error: in general.")
+	ErrKeyNotFound error = errors.New("error: key does not found.")
+	ErrKeyIsEmpty  error = errors.New("error: key can not be empty.")
+	ErrDelFailed   error = errors.New("error: delete failed.")
 )

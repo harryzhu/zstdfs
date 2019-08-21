@@ -2,7 +2,7 @@ package potato
 
 import (
 	//"context"
-	"errors"
+	//"errors"
 	//"io"
 	//"strings"
 	"time"
@@ -15,7 +15,7 @@ import (
 func EntityGetRoundRobin(key []byte) ([]byte, error) {
 	logger.Debug("EntityGetRoundRobin:", string(key))
 	var data []byte
-	var err_return error = errors.New("not exist")
+	var err_return error = ErrKeyNotFound
 
 	for ip_port, is_live := range volumePeersLive {
 		if err_return == nil {
@@ -47,4 +47,28 @@ func EntityGetRoundRobin(key []byte) ([]byte, error) {
 
 	}
 	return data, err_return
+}
+
+func EntityHandleRoundRobin(key []byte, action string) error {
+	for ip_port, is_live := range volumePeersLive {
+		if is_live == false {
+			continue
+		}
+		logger.Debug("EntityHandleRoundRobin:ip_port:", ip_port)
+		conn, err := grpc.Dial(ip_port, grpc.WithInsecure(),
+			grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(grpcMAXMSGSIZE), grpc.MaxCallRecvMsgSize(grpcMAXMSGSIZE)))
+		if err != nil {
+			continue
+		}
+		defer conn.Close()
+
+		client := pbv.NewVolumeServiceClient(conn)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		client.HandleFile(ctx, &pbv.Message{Key: key, Action: action})
+
+	}
+
+	return nil
 }

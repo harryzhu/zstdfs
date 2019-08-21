@@ -1,7 +1,7 @@
 package potato
 
 import (
-	"errors"
+	//"errors"
 	"strconv"
 	"strings"
 
@@ -10,7 +10,7 @@ import (
 
 func MetaGet(key []byte) ([]byte, error) {
 	if IsEmpty(key) {
-		return nil, errors.New("MetaGet Error: key cannot be empty.")
+		return nil, ErrKeyIsEmpty
 	}
 	data, err := ldb_get(key)
 	if err != nil {
@@ -20,8 +20,8 @@ func MetaGet(key []byte) ([]byte, error) {
 }
 
 func MetaSet(key []byte, val []byte) error {
-	if IsEmpty(key) || IsEmpty(key) {
-		return errors.New("MetaSet Error: key or val cannot be empty.")
+	if IsEmpty(key) || IsEmpty(val) {
+		return ErrKeyIsEmpty
 	}
 	if err := ldb_set(key, val); err != nil {
 		return err

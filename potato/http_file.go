@@ -2,6 +2,7 @@ package potato
 
 import (
 	"encoding/json"
+	//"errors"
 )
 
 type FileObject struct {
@@ -22,7 +23,7 @@ type FileResponse struct {
 	Size string
 }
 
-func (fo *FileObject) RestatFileObject(stat int) *FileObject {
+func (fo *FileObject) reStatFileObject(stat int) *FileObject {
 	if fo.Ver >= 0 {
 		fo.Ver += 1
 	} else {
@@ -51,7 +52,7 @@ func FileBan(key []byte) error {
 		return err
 	}
 
-	sb := filobj.RestatFileObject(-1)
+	sb := filobj.reStatFileObject(-1)
 
 	byteFileObject, err := json.Marshal(sb)
 
@@ -86,7 +87,7 @@ func FilePub(key []byte) error {
 		return err
 	}
 
-	sb := filobj.RestatFileObject(0)
+	sb := filobj.reStatFileObject(0)
 
 	byteFileObject, err := json.Marshal(sb)
 
@@ -101,4 +102,33 @@ func FilePub(key []byte) error {
 	}
 
 	return nil
+}
+
+func FileHead(key []byte) ([]byte, error) {
+	if EntityExists(key) == false {
+		return nil, ErrKeyNotFound
+	}
+
+	data, err := EntityGet(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var filobj FileObject
+	err = json.Unmarshal(data, &filobj)
+
+	if err != nil {
+		return nil, err
+	}
+
+	filobj.Data = nil
+
+	byteFileObject, err := json.Marshal(filobj)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return byteFileObject, nil
 }
