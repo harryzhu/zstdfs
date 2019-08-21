@@ -347,7 +347,8 @@ func HttpMetaList(c *gin.Context) {
 }
 
 func HttpList(c *gin.Context) {
-	listHtml := EntityScan("fd")
+	listHtml := EntityKeyScan(nil)
+
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
 	//c.HTML(http.StatusOK, "v1/list.tmpl", gin.H{"data": listHtml})

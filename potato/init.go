@@ -38,8 +38,8 @@ func openBDB() {
 	}
 	opts := badger.DefaultOptions
 	opts.Truncate = true
-	opts.MaxTableSize = 64 << 20  // 64MB
-	opts.LevelOneSize = 256 << 20 // 256MB
+	opts.MaxTableSize = 256 << 20  // 64MB
+	opts.LevelOneSize = 1024 << 20 // 256MB
 	opts.Dir = cfg.Volume.Db_data_dir
 	opts.ValueDir = cfg.Volume.Db_value_dir
 

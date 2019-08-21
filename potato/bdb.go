@@ -96,3 +96,31 @@ func bdb_scan() (keys []string) {
 	}
 	return keys
 }
+
+func bdb_key_scan(prefix []byte) (keys []string) {
+	err := bdb.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		opts.PrefetchSize = 100
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		klimit := 0
+
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			if klimit > 100 {
+				break
+			}
+			item := it.Item()
+			k := item.Key()
+			keys = append(keys, string(k))
+
+			klimit++
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+	return keys
+}
