@@ -53,8 +53,8 @@ func StartHttpServer() {
 		f, _ := os.Create(logfile)
 		gin.DefaultWriter = io.MultiWriter(f)
 	} else {
-		gin.SetMode(gin.DebugMode)
-
+		//gin.SetMode(gin.DebugMode)
+		gin.SetMode(gin.ReleaseMode)
 		logger.Info("in DebugMode, log will not flush to disk.")
 	}
 
@@ -94,7 +94,8 @@ func StartHttpServer() {
 
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	//r.Use(AuthRequired()
-	r.StaticFS("/static", http.Dir(HTTP_STATIC_DIR))
+	// r.Static("/static", HTTP_STATIC_DIR)
+	r.Static("/static", "./static")
 	r.Use(PageHtmlMiddleware)
 	r.LoadHTMLGlob("templates/**/*.tmpl")
 	r.Use(gin.Recovery())
