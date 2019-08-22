@@ -2,7 +2,7 @@ package potato
 
 import (
 	"encoding/json"
-	"errors"
+	//"errors"
 	"io"
 	"net"
 	"strings"
@@ -33,7 +33,7 @@ func (vs *VolumeService) ReadFile(ctx context.Context, MessageIn *pbv.Message) (
 		f.Time = TimeNowUnixString()
 		return f, nil
 	}
-	return nil, errors.New("ERROR")
+	return nil, ErrInGeneral
 }
 
 func (vs *VolumeService) HandleFile(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
@@ -41,7 +41,7 @@ func (vs *VolumeService) HandleFile(ctx context.Context, MessageIn *pbv.Message)
 	key := MessageIn.Key
 	action := MessageIn.Action
 	if key == nil || len(action) <= 0 {
-		return nil, errors.New("ERROR: key and action cannot be empty.")
+		return nil, ErrKeyIsEmpty
 	}
 
 	f := &pbv.Message{}
