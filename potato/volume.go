@@ -146,8 +146,6 @@ func (vs *VolumeService) StreamSendMessage(stream pbv.VolumeService_StreamSendMe
 			continue
 		}
 
-		logger.Debug("StreamSendMessage: action: ", strings.ToLower(action))
-
 		switch action {
 		case "get":
 			{
