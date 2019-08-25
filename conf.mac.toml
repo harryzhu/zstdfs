@@ -11,6 +11,7 @@ peers = ["127.0.0.1:8864","127.0.0.1:7749","127.0.0.1:6636"]
 is_master = true
 db_data_dir = "/Volumes/HDD2/4/d"
 db_value_dir = "/Volumes/HDD2/4/v"
+db_syncwrites = false
 meta_dir = "/Volumes/HDD2/4/meta"
 max_size_mb = 32
 cache_size_mb = 1024

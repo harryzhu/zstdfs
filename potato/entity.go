@@ -44,11 +44,10 @@ func EntityDelete(key []byte) error {
 }
 
 func EntityExists(key []byte) bool {
-	_, err := bdb_get(key)
-	if err != nil {
-		return false
+	if true == bdb_exists(key) {
+		return true
 	}
-	return true
+	return false
 }
 
 func EntityKeyScan(prefix []byte) string {

@@ -36,7 +36,9 @@ func openBDB() {
 	if _, err := os.Stat(cfg.Volume.Db_value_dir); err != nil {
 		logger.Fatal("cannot find the value dir: ", cfg.Volume.Db_value_dir)
 	}
+
 	opts := badger.DefaultOptions
+	opts.SyncWrites = isBDBSyncWrites
 	opts.Truncate = true
 	opts.MaxTableSize = 256 << 20  // 64MB
 	opts.LevelOneSize = 1024 << 20 // 256MB
@@ -120,5 +122,10 @@ func useConfig() {
 	for _, vp := range volumePeers {
 		volumePeersLive[vp] = false
 	}
+
+	if cfg.Volume.Db_syncwrites == false {
+		isBDBSyncWrites = false
+	}
+	logger.Info("Volume isSyncWrites: ", isBDBSyncWrites)
 
 }

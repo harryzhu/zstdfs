@@ -5,7 +5,8 @@ import (
 	//"errors"
 	"io"
 	"net"
-	"strings"
+
+	//"strings"
 
 	pbv "./pb/volume"
 	"golang.org/x/net/context"

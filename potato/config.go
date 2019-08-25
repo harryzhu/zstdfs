@@ -28,6 +28,7 @@ type volumeConfig struct {
 	Is_master     bool
 	Db_data_dir   string
 	Db_value_dir  string
+	Db_syncwrites bool
 	Meta_dir      string
 	Max_size_mb   int
 	Cache_size_mb int

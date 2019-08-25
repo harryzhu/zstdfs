@@ -21,12 +21,14 @@ var (
 var (
 	isDebug               bool = true
 	isBDBValueLogGCNeeded bool = true
+	isBDBSyncWrites       bool = true
 	isReplicationNeeded   bool = true
 	isMaster              bool = true
-	volumeSelf            string
-	volumePeers           []string
-	volumePeersLength     int = 0
-	volumePeersLive       map[string]bool
+
+	volumeSelf        string
+	volumePeers       []string
+	volumePeersLength int = 0
+	volumePeersLive   map[string]bool
 )
 
 // Limits

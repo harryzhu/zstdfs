@@ -44,10 +44,28 @@ func bdb_get(key []byte) ([]byte, error) {
 		return nil
 	})
 	if err != nil {
-		logger.Debug("the key does not exist: ", string(key), " ,Error: ", err)
+		logger.Debug("bdb_get: the key does not exist: ", string(key), " ,Error: ", err)
 		return nil, err
 	}
 	return Unzip(valCopy), nil
+}
+
+func bdb_exists(key []byte) bool {
+	if IsEmpty(key) {
+		return false
+	}
+
+	err := bdb.View(func(txn *badger.Txn) error {
+		_, err := txn.Get(key)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func bdb_delete(key []byte) error {
