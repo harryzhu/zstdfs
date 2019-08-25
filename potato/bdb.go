@@ -1,7 +1,7 @@
 package potato
 
 import (
-	"errors"
+	//"errors"
 	"sync/atomic"
 
 	"github.com/dgraph-io/badger"
@@ -9,7 +9,7 @@ import (
 
 func bdb_set(key []byte, data []byte) error {
 	if IsEmpty(key) || IsEmpty(data) || IsOversize(data) {
-		return errors.New("bdb_set: entity key or data is invalid/oversize.")
+		return ErrKeyIsEmpty
 	}
 
 	data_zipped := Zip(data)
@@ -26,7 +26,7 @@ func bdb_set(key []byte, data []byte) error {
 
 func bdb_get(key []byte) ([]byte, error) {
 	if IsEmpty(key) {
-		return nil, errors.New("bdb_get: entity key should not be empty.")
+		return nil, ErrKeyIsEmpty
 	}
 
 	atomic.AddUint64(&bdbGetCounter, 1)
@@ -70,7 +70,7 @@ func bdb_exists(key []byte) bool {
 
 func bdb_delete(key []byte) error {
 	if IsEmpty(key) {
-		return errors.New("bdb_delete: entity key should not be empty.")
+		return ErrKeyIsEmpty
 	}
 
 	err := bdb.Update(func(txn *badger.Txn) error {
