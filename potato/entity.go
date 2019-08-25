@@ -50,8 +50,8 @@ func EntityExists(key []byte) bool {
 	return false
 }
 
-func EntityKeyScan(prefix []byte) string {
-	keys := bdb_key_scan(prefix)
+func EntityKeyScan(prefix []byte, pageNum int) string {
+	keys := bdb_key_scan(prefix, pageNum)
 	listHtml := ""
 	href := strings.Join([]string{"<a href=\"", cfg.Http.Site_url, "/v1/k"}, "")
 	if len(keys) > 0 {

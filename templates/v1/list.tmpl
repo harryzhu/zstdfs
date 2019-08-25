@@ -1,0 +1,11 @@
+{{ define "v1/list.tmpl" }}
+Stats:<br/>
+{{ $curPage := 0 }}
+{{ if lt .pagenum 10 }}
+<a href="/v1/list/{{ $curPage }}">{{ $curPage }}</a>
+{{ $curPage = $curPage  }}
+{{ end }}
+<hr/>
+{{ .data }}
+
+{{ end }}

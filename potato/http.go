@@ -99,16 +99,18 @@ func StartHttpServer() {
 	r.Use(PageHtmlMiddleware)
 	r.LoadHTMLGlob("templates/**/*.tmpl")
 	r.Use(gin.Recovery())
+	r.NoRoute(NoResponse)
 	r.GET("/", HttpDefaultHome)
 	v1 := r.Group("/v1")
 	{
+
 		v1.GET("/", HttpHome)
 		v1.GET("/ping", HttpPing)
 		v1.GET("/k/:key", HttpGet)
 		v1.GET("/form-uploads.html", HttpFormFiles)
 		v1.GET("/meta-sync-list.html", HttpMetaSyncList)
 		v1.GET("/meta-list.html", HttpMetaList)
-		v1.GET("/list", HttpList)
+		v1.GET("/list/:pagenum", HttpList)
 		v1.GET("/list-checker", HttpListWithChecker)
 		v1.GET("/stats", HttpStats)
 		v1.GET("/signin", HttpSignin)
@@ -137,6 +139,13 @@ func PageHtmlMiddleware(c *gin.Context) {
 	c.Header("X-Potatofs-Node", addressHttp)
 	c.Next()
 
+}
+
+func NoResponse(c *gin.Context) {
+	c.JSON(http.StatusNotFound, gin.H{
+		"status": 404,
+		"error":  "404, Not Found.",
+	})
 }
 
 func HttpFavicon(c *gin.Context) {
@@ -347,11 +356,40 @@ func HttpMetaList(c *gin.Context) {
 }
 
 func HttpList(c *gin.Context) {
-	listHtml := EntityKeyScan(nil)
+	pageNum := 0
+	pageNumString := c.Param("pagenum")
+
+	if len(pageNumString) > 0 {
+		pnum, err := strconv.Atoi(pageNumString)
+		if err == nil {
+			pageNum = pnum
+		}
+	}
+
+	pageHtml := ""
+	pageTotal := 5
+	curPage := 0
+	curPageString := ""
+
+	if pageNum > 5 {
+		pageTotal = pageNum
+	}
+	for curPage = pageTotal - 5; curPage < pageTotal+5; curPage++ {
+		curPageString = strconv.Itoa(curPage)
+		if curPage == pageNum {
+			pageHtml = strings.Join([]string{pageHtml, curPageString, "&nbsp;&nbsp;"}, "")
+		} else {
+			pageHtml = strings.Join([]string{pageHtml, "<a href=\"", HTTP_SITE_URL, "/v1/list/", curPageString, "\">", curPageString, "</a>&nbsp;&nbsp;"}, "")
+		}
+	}
+
+	listHtml := EntityKeyScan(nil, pageNum)
+
+	listHtml = strings.Join([]string{pageHtml, listHtml}, "<hr/>")
 
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, listHtml)
-	//c.HTML(http.StatusOK, "v1/list.tmpl", gin.H{"data": listHtml})
+	//c.HTML(http.StatusOK, "v1/list.tmpl", gin.H{"pagenum": pageNum, "data": listHtml})
 }
 
 func HttpListWithChecker(c *gin.Context) {
