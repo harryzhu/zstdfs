@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	//"github.com/cespare/xxhash"
 	"github.com/golang/snappy"
 )
 

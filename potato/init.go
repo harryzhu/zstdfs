@@ -3,6 +3,7 @@ package potato
 import (
 	"os"
 	"strings"
+
 	//"time"
 
 	//"github.com/BurntSushi/toml"
@@ -94,9 +95,11 @@ func useConfig() {
 	} else {
 		cacheSize = cv_cache_size_mb << 20
 	}
-	maxCacheValueLen = cacheSize/1024 - freecache.ENTRY_HDR_SIZE - 64
-	logger.Info("Limits: cache Size: ", cacheSize)
-	logger.Info("Limits: max Cache Value Size(1/1024 of cache size): ", maxCacheValueLen)
+	maxCacheValueLen = cacheSize/1024 - freecache.ENTRY_HDR_SIZE
+	// base on the manual test, when cache_size_mb = 1024, if maxCacheValueLen > (cacheSize/1024 - freecache.ENTRY_HDR_SIZE)-2,
+	// freecache consider it as LargeEntry and will not cache it.
+	logger.Info("Limits: cache Size: ", cacheSize, ", ENTRY_HDR_SIZE: ", freecache.ENTRY_HDR_SIZE)
+	logger.Info("Limits: max Cache Value Size(1/1024 of cache size): ", maxCacheValueLen-2, " bytes(or ", (maxCacheValueLen-2)/1024, " kb).")
 
 	cacheFree = freecache.NewCache(cacheSize)
 
