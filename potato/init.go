@@ -3,7 +3,6 @@ package potato
 import (
 	"os"
 	"strings"
-
 	//"time"
 
 	//"github.com/BurntSushi/toml"
@@ -95,7 +94,9 @@ func useConfig() {
 	} else {
 		cacheSize = cv_cache_size_mb << 20
 	}
+	maxCacheValueLen = cacheSize/1024 - freecache.ENTRY_HDR_SIZE - 64
 	logger.Info("Limits: cache Size: ", cacheSize)
+	logger.Info("Limits: max Cache Value Size(1/1024 of cache size): ", maxCacheValueLen)
 
 	cacheFree = freecache.NewCache(cacheSize)
 

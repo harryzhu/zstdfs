@@ -13,7 +13,7 @@ db_data_dir = "/home/ops/dev/data/pfs/d"
 db_value_dir = "/home/ops/dev/data/pfs/v"
 meta_dir = "/home/ops/dev/data/pfs/meta"
 max_size_mb = 32
-cache_size_mb = 1024
+cache_size_mb = 2048
 
 [http]
 ip = "172.16.32.45"

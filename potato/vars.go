@@ -45,6 +45,10 @@ var (
 	cacheSetCounter uint64 = 0
 )
 
+var (
+	maxCacheValueLen int = 0
+)
+
 // Error
 var (
 	ErrInGeneral   error = errors.New("error: in general.")

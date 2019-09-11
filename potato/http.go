@@ -408,6 +408,10 @@ func HttpStats(c *gin.Context) {
 	stats["DBGetCounter"] = strconv.FormatUint(atomic.LoadUint64(&bdbGetCounter), 10)
 	stats["DBSetCounter"] = strconv.FormatUint(atomic.LoadUint64(&bdbSetCounter), 10)
 
+	v := make([]byte, maxCacheValueLen+1024)
+	cache_set([]byte("ok"), v)
+	f, _ := cache_get([]byte("ok"))
+	logger.Info("llll:", len(f))
 	c.Header("Content-Type", "text/html")
 	c.HTML(http.StatusOK, "v1/stats.tmpl", gin.H{"Stats": stats})
 
