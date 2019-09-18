@@ -1,8 +1,8 @@
 package main
 
 import (
-	//"net/http"
-	// _ "net/http/pprof"
+	"net/http"
+	_ "net/http/pprof"
 
 	"sync"
 
@@ -10,9 +10,13 @@ import (
 	"github.com/robfig/cron"
 )
 
+func startProfile() {
+	http.ListenAndServe(":6060", nil)
+}
+
 func main() {
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(4)
 	go func() {
 		cronVolume := cron.New()
 		//cronVolume.AddFunc("* */8 * * * *", func() { potato.BdbCompaction() })
@@ -27,6 +31,10 @@ func main() {
 
 	go func() {
 		potato.StartHttpServer()
+	}()
+
+	go func() {
+		startProfile()
 	}()
 
 	potato.OnReady()

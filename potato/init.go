@@ -26,6 +26,7 @@ func init() {
 	openLDB()
 
 	smokeTest()
+
 }
 
 func openBDB() {
@@ -90,16 +91,27 @@ func useConfig() {
 	logger.Info("Limits: rpc Message Max Size: ", grpcMAXMSGSIZE)
 
 	cv_cache_size_mb := cfg.Volume.Cache_size_mb
+	cv_cache_max_entity_size_byte := cfg.Volume.Cache_max_entity_size_byte
+
 	if cv_cache_size_mb <= 16 {
 		cacheSize = 16 << 20
 	} else {
 		cacheSize = cv_cache_size_mb << 20
 	}
-	maxCacheValueLen = cacheSize/1024 - freecache.ENTRY_HDR_SIZE
-	// base on the manual test, when cache_size_mb = 1024, if maxCacheValueLen > (cacheSize/1024 - freecache.ENTRY_HDR_SIZE)-2,
+	maxCacheValueLen = cacheSize/1024 - freecache.ENTRY_HDR_SIZE - 64 - 1
+
+	if cv_cache_max_entity_size_byte <= maxCacheValueLen {
+		logger.Info("max cache value size: HARD LIMIT(1/1024 of cache size - 81): ", maxCacheValueLen)
+		logger.Info("Config setting: volume.cache_max_entity_size_byte: ", cv_cache_max_entity_size_byte, " <= ", maxCacheValueLen)
+		maxCacheValueLen = cv_cache_max_entity_size_byte
+	} else {
+		logger.Warn("Config setting: volume.cache_max_entity_size_byte should be <= ", maxCacheValueLen)
+	}
+
+	// base on the manual test, when cache_size_mb = 1024, if maxCacheValueLen > (cacheSize/1024 - freecache.ENTRY_HDR_SIZE - KEY_LENGTH) - 1,
 	// freecache consider it as LargeEntry and will not cache it.
 	logger.Info("Limits: cache Size: ", cacheSize, ", ENTRY_HDR_SIZE: ", freecache.ENTRY_HDR_SIZE)
-	logger.Info("Limits: max Cache Value Size(1/1024 of cache size): ", maxCacheValueLen-2, " bytes(or ", (maxCacheValueLen-2)/1024, " kb).")
+	logger.Info("Limits: max Cache Value Size: ", maxCacheValueLen, " bytes(or ", maxCacheValueLen/1024, " kb).")
 
 	cacheFree = freecache.NewCache(cacheSize)
 

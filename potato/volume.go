@@ -67,7 +67,7 @@ func (vs *VolumeService) HandleFile(ctx context.Context, MessageIn *pbv.Message)
 			if EntityDelete(key) != nil {
 				f.ErrCode = 400
 			}
-			cacheDelete(key)
+			CacheDelete(key)
 		}
 	case "ban":
 		{
@@ -76,7 +76,7 @@ func (vs *VolumeService) HandleFile(ctx context.Context, MessageIn *pbv.Message)
 			if FileBan(key) != nil {
 				f.ErrCode = 400
 			}
-			cacheDelete(key)
+			CacheDelete(key)
 		}
 	case "pub":
 		{
@@ -85,7 +85,7 @@ func (vs *VolumeService) HandleFile(ctx context.Context, MessageIn *pbv.Message)
 			if FilePub(key) != nil {
 				f.ErrCode = 400
 			}
-			cacheDelete(key)
+			CacheDelete(key)
 		}
 	case "head":
 		{

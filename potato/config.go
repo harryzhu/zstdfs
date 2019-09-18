@@ -17,21 +17,23 @@ type Config struct {
 }
 
 type globalConfig struct {
-	Is_debug  bool
-	Log_level string
+	Is_debug     bool
+	Log_level    string
+	Profile_path string
 }
 
 type volumeConfig struct {
-	Ip            string
-	Port          string
-	Peers         []string
-	Is_master     bool
-	Db_data_dir   string
-	Db_value_dir  string
-	Db_syncwrites bool
-	Meta_dir      string
-	Max_size_mb   int
-	Cache_size_mb int
+	Ip                         string
+	Port                       string
+	Peers                      []string
+	Is_master                  bool
+	Db_data_dir                string
+	Db_value_dir               string
+	Db_syncwrites              bool
+	Meta_dir                   string
+	Max_size_mb                int
+	Cache_size_mb              int
+	Cache_max_entity_size_byte int
 }
 
 type httpConfig struct {
@@ -92,5 +94,14 @@ func loadConfigFromFile() error {
 
 		logger.SetLevel(log.DebugLevel)
 	}
+
+	_, err = os.Stat(cfg.Global.Profile_path)
+	if err != nil {
+		logger.Fatal("the Profile_path(cfg.Global.Profile_path) does not exist: ", cfg.Global.Profile_path)
+	} else {
+		profilePath = cfg.Global.Profile_path
+		logger.Info("Profiling path: ", profilePath)
+	}
+
 	return nil
 }

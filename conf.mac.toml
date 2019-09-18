@@ -3,6 +3,7 @@ welcome = "Thanks for using potato file system."
 [global]
 is_debug = true
 log_level = "DEBUG"
+profile_path = "/Users/harry/pprof"
 
 [volume]
 ip = "127.0.0.1"
@@ -15,6 +16,8 @@ db_syncwrites = false
 meta_dir = "/Volumes/HDD3/4/meta"
 max_size_mb = 32
 cache_size_mb = 1024
+# cache_max_entity_size_byte should be less than (cache_size_mb * 1024 *1024) /1024
+cache_max_entity_size_byte = 524288
 
 [http]
 ip = "127.0.0.1"

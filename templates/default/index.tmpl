@@ -1,4 +1,27 @@
 {{ define "default/index.tmpl" }}
-<a href="/v1">/v1/</a><br/>
+<a href="/v1">/v1</a><br/>
+<a href="http://127.0.0.1:6060/debug/pprof/">http://127.0.0.1:6060/debug/pprof/</a><br/>
+<p>
+in the command line, run:<br/>
+<br/>
+go tool pprof http://127.0.0.1:6060/debug/pprof/profile<br/>
+<br/>
+after 30 seconds, go into the pprof interactive mode, run:<br/>
+<br/>
+web<br/>
+<br/>
+then the browser will open the svg graph.<br/>
+<br/>
+others:<br/>
+go tool pprof profile /Users/harry/pprof/pprof.samples.cpu.004.pb.gz<br/>
+go tool pprof http://127.0.0.1:6060/debug/pprof/heap<br/>
+go tool pprof http://127.0.0.1:6060/debug/pprof/goroutine<br/>
+<br/>
+after 30 seconds, go into the pprof interactive mode, run:<br/>
+<br/>
+web<br/>
+<br/>
+then the browser will open the svg graph.<br/>
 
+</p>
 {{ end }}

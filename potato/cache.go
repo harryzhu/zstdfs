@@ -40,19 +40,23 @@ func CacheGet(key []byte) (val []byte, err error) {
 
 	val, err = EntityGet([]byte(key))
 	if err == nil {
-		cache_set(key, val)
+		if len(val) < maxCacheValueLen {
+			cache_set(key, val)
+		}
 		return val, nil
 	}
 
 	val, err = EntityGetRoundRobin([]byte(key))
 	if err == nil {
-		cache_set(key, val)
+		if len(val) < maxCacheValueLen {
+			cache_set(key, val)
+		}
 		return val, nil
 	}
 
 	return nil, err
 }
 
-func cacheDelete(key []byte) error {
+func CacheDelete(key []byte) error {
 	return cache_del(key)
 }

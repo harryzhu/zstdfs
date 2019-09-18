@@ -200,7 +200,7 @@ func HttpDelete(c *gin.Context) {
 			msg = "cannot delete the key."
 		} else {
 			PeersMark("sync", "del", key, "1")
-			cacheDelete([]byte(key))
+			CacheDelete([]byte(key))
 			EntityHandleRoundRobin([]byte(key), "del")
 			msg = "delete successfully."
 		}
@@ -219,7 +219,7 @@ func HttpBan(c *gin.Context) {
 			msg = "cannot ban the key."
 		} else {
 			PeersMark("sync", "ban", key, "1")
-			cacheDelete([]byte(key))
+			CacheDelete([]byte(key))
 			EntityHandleRoundRobin([]byte(key), "ban")
 			msg = "ban successfully."
 		}
@@ -239,7 +239,7 @@ func HttpPub(c *gin.Context) {
 			msg = "cannot pub the key."
 		} else {
 			PeersMark("sync", "pub", key, "1")
-			cacheDelete([]byte(key))
+			CacheDelete([]byte(key))
 			EntityHandleRoundRobin([]byte(key), "pub")
 			msg = "pub successfully."
 		}
@@ -408,9 +408,10 @@ func HttpStats(c *gin.Context) {
 	stats["DBGetCounter"] = strconv.FormatUint(atomic.LoadUint64(&bdbGetCounter), 10)
 	stats["DBSetCounter"] = strconv.FormatUint(atomic.LoadUint64(&bdbSetCounter), 10)
 
-	v := make([]byte, maxCacheValueLen-2)
-	cache_set([]byte("ok"), v)
-	f, _ := cache_get([]byte("ok"))
+	k := []byte(ByteSHA256([]byte("ok")))
+	v := make([]byte, maxCacheValueLen)
+	cache_set(k, v)
+	f, _ := cache_get(k)
 	logger.Info("llll:", len(f))
 	s64 := ByteSHA256([]byte("ddd"))
 	logger.Info("xxhash:", len(s64))

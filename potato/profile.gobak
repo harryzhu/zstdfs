@@ -1,0 +1,36 @@
+package potato
+
+import (
+	"os"
+	"path/filepath"
+	"runtime/pprof"
+)
+
+func stopCPUProfile() {
+	pprof.StopCPUProfile()
+}
+
+func startCPUProfile() {
+	cpu_profile := filepath.Join(profilePath, "potatofs_profile_cpu.prof")
+	f_cpu, err := os.Create(cpu_profile)
+	if err != nil {
+		logger.Fatal(os.Stderr, "Can not create cpu profile output file: %s",
+			err)
+	}
+	if err := pprof.StartCPUProfile(f_cpu); err != nil {
+		logger.Fatal(os.Stderr, "Can not start cpu profile: %s", err)
+		f_cpu.Close()
+	}
+}
+
+func StartProfile() error {
+
+	startCPUProfile()
+	return nil
+}
+
+func StopProfile() error {
+
+	stopCPUProfile()
+	return nil
+}
