@@ -53,8 +53,8 @@ func StartHttpServer() {
 		f, _ := os.Create(logfile)
 		gin.DefaultWriter = io.MultiWriter(f)
 	} else {
-		//gin.SetMode(gin.DebugMode)
-		gin.SetMode(gin.ReleaseMode)
+		gin.SetMode(gin.DebugMode)
+		//gin.SetMode(gin.ReleaseMode)
 		logger.Info("in DebugMode, log will not flush to disk.")
 	}
 

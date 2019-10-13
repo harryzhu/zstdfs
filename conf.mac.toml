@@ -23,6 +23,7 @@ cache_max_entity_size_byte = 524288
 ip = "127.0.0.1"
 port = "8874"
 site_url = "http://dev-mac.bigfaceai.com"
+#site_url = "http://127.0.0.1:8874"
 static_dir = "./static"
 temp_upload_dir = "/Volumes/HDD3/4/temp"
 log_file = "/Volumes/HDD3/4/access.log"

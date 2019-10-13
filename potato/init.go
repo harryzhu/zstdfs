@@ -38,7 +38,7 @@ func openBDB() {
 		logger.Fatal("cannot find the value dir: ", cfg.Volume.Db_value_dir)
 	}
 
-	opts := badger.DefaultOptions
+	opts := badger.DefaultOptions(cfg.Volume.Db_data_dir)
 	opts.SyncWrites = isBDBSyncWrites
 	opts.Truncate = true
 	opts.MaxTableSize = 256 << 20  // 64MB
