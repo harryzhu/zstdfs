@@ -1,0 +1,15 @@
+welcome = "Thanks for using potato file system."
+
+[global]
+is_debug = true
+log_level = "DEBUG"
+profile_path = "/Users/harry/pprof"
+
+[volume]
+self = "127.0.0.1:8864"
+peers = ["127.0.0.1:8864","127.0.0.1:7749","127.0.0.1:6636"]
+data_dir = "/Volumes/HDD3/8864/data"
+meta_dir = "/Volumes/HDD3/8864/meta"
+is_syncwrites = false
+max_size_mb = 32
+

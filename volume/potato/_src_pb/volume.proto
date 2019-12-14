@@ -1,0 +1,23 @@
+syntax = "proto3";
+package volume;
+
+service VolumeService {
+	rpc HealthCheck(Message) returns (Message){}
+	rpc GetFile(Message) returns (Message){}
+	rpc SetFile(Message) returns (Message){}
+	rpc DelFile(Message) returns (Message){}
+	rpc StreamGetMessage(stream Message) returns (stream Message){}
+	rpc StreamSetMessage(stream Message) returns (stream Message){}
+	rpc StreamDelMessage(stream Message) returns (stream Message){}
+}
+
+message Empty{
+	
+}
+
+message Message{
+	bytes Key = 1;
+	uint32 ErrCode = 2;
+	bytes Data = 3;
+}
+

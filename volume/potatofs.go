@@ -20,21 +20,13 @@ func main() {
 	go func() {
 		cronVolume := cron.New()
 		//cronVolume.AddFunc("* */8 * * * *", func() { potato.BdbCompaction() })
-		cronVolume.AddFunc("*/5 * * * * *", func() { potato.Heartbeat() })
-		cronVolume.AddFunc("*/3 * * * * *", func() { potato.RunReplicateParallel() })
+		//cronVolume.AddFunc("*/5 * * * * *", func() { potato.Heartbeat() })
+		//cronVolume.AddFunc("*/3 * * * * *", func() { potato.RunReplicateParallel() })
 		cronVolume.Start()
 	}()
 
 	go func() {
 		potato.StartVolumeServer()
-	}()
-
-	go func() {
-		potato.StartHttpServer()
-	}()
-
-	go func() {
-		startProfile()
 	}()
 
 	potato.OnReady()

@@ -1,4 +1,5 @@
 data/
+_archive/
 .DS_Store
 conf.toml
 *.log

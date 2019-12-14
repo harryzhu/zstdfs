@@ -1,9 +1,6 @@
 package potato
 
 import (
-	//"errors"
-	"sync/atomic"
-
 	"github.com/dgraph-io/badger"
 )
 
@@ -20,7 +17,7 @@ func bdb_set(key []byte, data []byte) error {
 		logger.Debug("failed to set key: ", string(key), ", Error: ", err)
 		return err
 	}
-	atomic.AddUint64(&bdbSetCounter, 1)
+
 	return nil
 }
 
@@ -29,7 +26,6 @@ func bdb_get(key []byte) ([]byte, error) {
 		return nil, ErrKeyIsEmpty
 	}
 
-	atomic.AddUint64(&bdbGetCounter, 1)
 	var valCopy []byte
 	err := bdb.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)

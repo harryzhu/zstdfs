@@ -3,7 +3,8 @@ package potato
 import (
 	"os"
 	"strings"
-	"time"
+
+	//"time"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/sirupsen/logrus"
@@ -13,7 +14,6 @@ type Config struct {
 	Welcome string
 	Global  globalConfig `toml:"global"`
 	Volume  volumeConfig `toml:"volume"`
-	Http    httpConfig   `toml:"http"`
 }
 
 type globalConfig struct {
@@ -23,34 +23,12 @@ type globalConfig struct {
 }
 
 type volumeConfig struct {
-	Ip                         string
-	Port                       string
-	Peers                      []string
-	Is_master                  bool
-	Db_data_dir                string
-	Db_value_dir               string
-	Db_syncwrites              bool
-	Meta_dir                   string
-	Max_size_mb                int
-	Cache_size_mb              int
-	Cache_max_entity_size_byte int
-}
-
-type httpConfig struct {
-	Ip                     string
-	Port                   string
-	Site_url               string
-	Log_file               string
-	Favicon_file           string
-	Static_dir             string
-	Temp_upload_dir        string
-	Cors_enabled           bool
-	Cors_allow_credentials bool
-	Cors_allow_origins     []string
-	Cors_allow_methods     []string
-	Cors_allow_headers     []string
-	Cors_expose_headers    []string
-	Cors_maxage_hours      time.Duration
+	Self          string
+	Peers         []string
+	Data_dir      string
+	Meta_dir      string
+	Is_syncwrites bool
+	Max_size_mb   int
 }
 
 func loadConfigFromFile() error {
