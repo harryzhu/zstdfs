@@ -1,5 +1,9 @@
 package potato
 
+import (
+	"strings"
+)
+
 type Entity struct {
 	Key  []byte
 	Data []byte
@@ -9,7 +13,11 @@ type Entity struct {
 func EntitySet(key []byte, data []byte) error {
 	if err := bdb_set(key, data); err != nil {
 		return err
+	} else {
+		mval := strings.Join([]string{"set", TimeNowNanoString()}, "/")
+		PeersMark("sync", "set", string(key), mval)
 	}
+
 	return nil
 }
 
@@ -25,6 +33,11 @@ func EntityDelete(key []byte) error {
 	if EntityExists(key) == true {
 		if err := bdb_delete(key); err != nil {
 			return err
+		} else {
+			mkey := metaKeyJoin("sync", volumeSelf, string(key))
+			mval := strings.Join([]string{"del", TimeNowNanoString()}, "/")
+			logger.Debug(mkey, ":", mval)
+			MetaSet([]byte(mkey), []byte(mval))
 		}
 	}
 

@@ -118,21 +118,21 @@ func init() {
 func init() { proto.RegisterFile("volume.proto", fileDescriptor_498b213ad3bcd5ad) }
 
 var fileDescriptor_498b213ad3bcd5ad = []byte{
-	// 213 bytes of a gzipped FileDescriptorProto
+	// 224 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xcb, 0xcf, 0x29,
 	0xcd, 0x4d, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x83, 0xf0, 0x94, 0xd8, 0xb9, 0x58,
 	0x5d, 0x73, 0x0b, 0x4a, 0x2a, 0x95, 0x3c, 0xb9, 0xd8, 0x7d, 0x53, 0x8b, 0x8b, 0x13, 0xd3, 0x53,
 	0x85, 0x04, 0xb8, 0x98, 0xbd, 0x53, 0x2b, 0x25, 0x18, 0x15, 0x18, 0x35, 0x78, 0x82, 0x40, 0x4c,
 	0x21, 0x09, 0x2e, 0x76, 0xd7, 0xa2, 0x22, 0xe7, 0xfc, 0x94, 0x54, 0x09, 0x26, 0x05, 0x46, 0x0d,
 	0xde, 0x20, 0x18, 0x57, 0x48, 0x88, 0x8b, 0xc5, 0x25, 0xb1, 0x24, 0x51, 0x82, 0x19, 0xac, 0x18,
-	0xcc, 0x36, 0x6a, 0x66, 0xe6, 0xe2, 0x0d, 0x03, 0x1b, 0x1f, 0x9c, 0x5a, 0x54, 0x96, 0x99, 0x9c,
-	0x2a, 0x64, 0xc8, 0xc5, 0xed, 0x91, 0x9a, 0x98, 0x53, 0x92, 0xe1, 0x9c, 0x91, 0x9a, 0x9c, 0x2d,
-	0xc4, 0xaf, 0x07, 0x75, 0x0b, 0xd4, 0x46, 0x29, 0x74, 0x01, 0x25, 0x06, 0x21, 0x5d, 0x2e, 0x76,
-	0xf7, 0xd4, 0x12, 0xb7, 0xcc, 0x9c, 0x54, 0x62, 0x95, 0x07, 0x93, 0xa6, 0xdc, 0x25, 0x35, 0x87,
-	0x68, 0xe5, 0x56, 0x5c, 0x02, 0xc1, 0x25, 0x45, 0xa9, 0x89, 0xb9, 0xee, 0xa9, 0x25, 0xb0, 0x50,
-	0x22, 0x42, 0x9f, 0x06, 0xa3, 0x01, 0x23, 0x42, 0x6f, 0x30, 0x05, 0x7a, 0x5d, 0x52, 0x73, 0x48,
-	0xd4, 0x9b, 0xc4, 0x06, 0x8e, 0x68, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6f, 0x19, 0x88,
-	0xbb, 0xf8, 0x01, 0x00, 0x00,
+	0xcc, 0x36, 0x7a, 0xc7, 0xcc, 0xc5, 0x1b, 0x06, 0x36, 0x3e, 0x38, 0xb5, 0xa8, 0x2c, 0x33, 0x39,
+	0x55, 0xc8, 0x90, 0x8b, 0xdb, 0x23, 0x35, 0x31, 0xa7, 0x24, 0xc3, 0x39, 0x23, 0x35, 0x39, 0x5b,
+	0x88, 0x5f, 0x0f, 0xea, 0x16, 0xa8, 0x8d, 0x52, 0xe8, 0x02, 0x4a, 0x0c, 0x42, 0xba, 0x5c, 0xec,
+	0xee, 0xa9, 0x25, 0x6e, 0x99, 0x39, 0xa9, 0xc4, 0x2a, 0x0f, 0x26, 0x4d, 0xb9, 0x4b, 0x6a, 0x0e,
+	0x29, 0xca, 0x9d, 0x12, 0xf3, 0x88, 0x56, 0x6e, 0xc5, 0x25, 0x10, 0x5c, 0x52, 0x94, 0x9a, 0x98,
+	0xeb, 0x9e, 0x5a, 0x02, 0x0b, 0x54, 0x22, 0xf4, 0x69, 0x30, 0x1a, 0x30, 0x22, 0xf4, 0x06, 0x53,
+	0xa0, 0xd7, 0x25, 0x35, 0x87, 0x6c, 0xbd, 0x4e, 0x89, 0x79, 0x24, 0xea, 0x4d, 0x62, 0x03, 0xa7,
+	0x29, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6c, 0xfe, 0xdd, 0xe5, 0x63, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -151,9 +151,11 @@ type VolumeServiceClient interface {
 	GetFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	SetFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	DelFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	BanFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	StreamGetMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamGetMessageClient, error)
 	StreamSetMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamSetMessageClient, error)
 	StreamDelMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamDelMessageClient, error)
+	StreamBanMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamBanMessageClient, error)
 }
 
 type volumeServiceClient struct {
@@ -194,6 +196,15 @@ func (c *volumeServiceClient) SetFile(ctx context.Context, in *Message, opts ...
 func (c *volumeServiceClient) DelFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
 	out := new(Message)
 	err := c.cc.Invoke(ctx, "/volume.VolumeService/DelFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *volumeServiceClient) BanFile(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/volume.VolumeService/BanFile", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -293,15 +304,48 @@ func (x *volumeServiceStreamDelMessageClient) Recv() (*Message, error) {
 	return m, nil
 }
 
+func (c *volumeServiceClient) StreamBanMessage(ctx context.Context, opts ...grpc.CallOption) (VolumeService_StreamBanMessageClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_VolumeService_serviceDesc.Streams[3], "/volume.VolumeService/StreamBanMessage", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &volumeServiceStreamBanMessageClient{stream}
+	return x, nil
+}
+
+type VolumeService_StreamBanMessageClient interface {
+	Send(*Message) error
+	Recv() (*Message, error)
+	grpc.ClientStream
+}
+
+type volumeServiceStreamBanMessageClient struct {
+	grpc.ClientStream
+}
+
+func (x *volumeServiceStreamBanMessageClient) Send(m *Message) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *volumeServiceStreamBanMessageClient) Recv() (*Message, error) {
+	m := new(Message)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // VolumeServiceServer is the server API for VolumeService service.
 type VolumeServiceServer interface {
 	HealthCheck(context.Context, *Message) (*Message, error)
 	GetFile(context.Context, *Message) (*Message, error)
 	SetFile(context.Context, *Message) (*Message, error)
 	DelFile(context.Context, *Message) (*Message, error)
+	BanFile(context.Context, *Message) (*Message, error)
 	StreamGetMessage(VolumeService_StreamGetMessageServer) error
 	StreamSetMessage(VolumeService_StreamSetMessageServer) error
 	StreamDelMessage(VolumeService_StreamDelMessageServer) error
+	StreamBanMessage(VolumeService_StreamBanMessageServer) error
 }
 
 // UnimplementedVolumeServiceServer can be embedded to have forward compatible implementations.
@@ -320,6 +364,9 @@ func (*UnimplementedVolumeServiceServer) SetFile(ctx context.Context, req *Messa
 func (*UnimplementedVolumeServiceServer) DelFile(ctx context.Context, req *Message) (*Message, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelFile not implemented")
 }
+func (*UnimplementedVolumeServiceServer) BanFile(ctx context.Context, req *Message) (*Message, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BanFile not implemented")
+}
 func (*UnimplementedVolumeServiceServer) StreamGetMessage(srv VolumeService_StreamGetMessageServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamGetMessage not implemented")
 }
@@ -328,6 +375,9 @@ func (*UnimplementedVolumeServiceServer) StreamSetMessage(srv VolumeService_Stre
 }
 func (*UnimplementedVolumeServiceServer) StreamDelMessage(srv VolumeService_StreamDelMessageServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamDelMessage not implemented")
+}
+func (*UnimplementedVolumeServiceServer) StreamBanMessage(srv VolumeService_StreamBanMessageServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamBanMessage not implemented")
 }
 
 func RegisterVolumeServiceServer(s *grpc.Server, srv VolumeServiceServer) {
@@ -402,6 +452,24 @@ func _VolumeService_DelFile_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VolumeServiceServer).DelFile(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VolumeService_BanFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VolumeServiceServer).BanFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/volume.VolumeService/BanFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VolumeServiceServer).BanFile(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -484,6 +552,32 @@ func (x *volumeServiceStreamDelMessageServer) Recv() (*Message, error) {
 	return m, nil
 }
 
+func _VolumeService_StreamBanMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(VolumeServiceServer).StreamBanMessage(&volumeServiceStreamBanMessageServer{stream})
+}
+
+type VolumeService_StreamBanMessageServer interface {
+	Send(*Message) error
+	Recv() (*Message, error)
+	grpc.ServerStream
+}
+
+type volumeServiceStreamBanMessageServer struct {
+	grpc.ServerStream
+}
+
+func (x *volumeServiceStreamBanMessageServer) Send(m *Message) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *volumeServiceStreamBanMessageServer) Recv() (*Message, error) {
+	m := new(Message)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _VolumeService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "volume.VolumeService",
 	HandlerType: (*VolumeServiceServer)(nil),
@@ -504,6 +598,10 @@ var _VolumeService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "DelFile",
 			Handler:    _VolumeService_DelFile_Handler,
 		},
+		{
+			MethodName: "BanFile",
+			Handler:    _VolumeService_BanFile_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -521,6 +619,12 @@ var _VolumeService_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamDelMessage",
 			Handler:       _VolumeService_StreamDelMessage_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "StreamBanMessage",
+			Handler:       _VolumeService_StreamBanMessage_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

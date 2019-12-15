@@ -16,6 +16,8 @@ import (
 
 type VolumeService struct{}
 
+var MessageDefault = &pbv.Message{}
+
 func (vs *VolumeService) HealthCheck(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
 	return &pbv.Message{}, nil
 }
@@ -35,6 +37,11 @@ func (vs *VolumeService) DelFile(ctx context.Context, MessageIn *pbv.Message) (*
 	return f, nil
 }
 
+func (vs *VolumeService) BanFile(ctx context.Context, MessageIn *pbv.Message) (*pbv.Message, error) {
+	f := &pbv.Message{}
+	return f, nil
+}
+
 func (vs *VolumeService) StreamSetMessage(stream pbv.VolumeService_StreamSetMessageServer) error {
 	for {
 		in, err := stream.Recv()
@@ -47,10 +54,13 @@ func (vs *VolumeService) StreamSetMessage(stream pbv.VolumeService_StreamSetMess
 		}
 
 		if in.Key == nil || in.Data == nil {
-			logger.Warn("StreamSetMessage: key/data is invalid.")
+			//logger.Warn("StreamSetMessage: key/data is invalid.")
 			continue
 		}
-		resp := &pbv.Message{Key: in.Key, ErrCode: 0, Data: nil}
+		resp := MessageDefault
+		resp.Key = in.Key
+		resp.ErrCode = 0
+		resp.Data = nil
 
 		if EntityExists(in.Key) == false {
 			err := EntitySet(in.Key, in.Data)
@@ -74,6 +84,10 @@ func (vs *VolumeService) StreamGetMessage(stream pbv.VolumeService_StreamGetMess
 }
 
 func (vs *VolumeService) StreamDelMessage(stream pbv.VolumeService_StreamDelMessageServer) error {
+	return nil
+}
+
+func (vs *VolumeService) StreamBanMessage(stream pbv.VolumeService_StreamBanMessageServer) error {
 	return nil
 }
 

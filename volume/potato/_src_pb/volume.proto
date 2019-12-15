@@ -6,9 +6,11 @@ service VolumeService {
 	rpc GetFile(Message) returns (Message){}
 	rpc SetFile(Message) returns (Message){}
 	rpc DelFile(Message) returns (Message){}
+	rpc BanFile(Message) returns (Message){}
 	rpc StreamGetMessage(stream Message) returns (stream Message){}
 	rpc StreamSetMessage(stream Message) returns (stream Message){}
 	rpc StreamDelMessage(stream Message) returns (stream Message){}
+	rpc StreamBanMessage(stream Message) returns (stream Message){}
 }
 
 message Empty{
