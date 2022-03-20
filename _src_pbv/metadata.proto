@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package pb;
+option go_package=".;pb";
+
+message Empty{
+	
+}
+
+service VolumeService {
+	rpc StreamSendMessage(stream Message) returns (stream Message){}
+	rpc GetMessage(Message) returns (Message){}
+}
+
+message Message {
+	bytes key = 1;
+	bytes meta = 2;
+	bytes data = 3;
+}
+
