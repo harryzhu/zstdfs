@@ -1,0 +1,19 @@
+{{ render "header.html" . }}
+
+<video
+    id="vplayer"
+    class="video-js vjs-default-skin vjs-big-play-centered vjs-16-9"
+    width=768
+    height=1024
+    controls
+    preload="auto"
+    loop="loop"
+    data-setup='{}'>
+  <source src="{{ .video_src }}" type="{{ .video_mime }}"></source>
+  <p class="vjs-no-js">
+    To view this video please enable JavaScript, and consider upgrading to a
+    web browser.
+  </p>
+</video>
+
+{{ render "footer.html" . }}

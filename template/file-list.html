@@ -1,0 +1,14 @@
+{{ render "header.html" . }}
+<body>
+	<div class="buckets">
+		<h2><a href="/buckets">Buckets</a> > <a href="/buckets/{{ .bucket }}">{{ .bucket }}</a> > <a href="/buckets/{{ .bucket }}/{{ .group }}/1">{{ .group }}</a> | PAGE: <a href="/buckets/{{ .bucket }}/{{ .group }}/{{ .pageprev }}">Prev</a>  <a href="/buckets/{{ .bucket }}/{{ .group }}/{{ .pagenext }}">Next</a></h2>
+		<ul class="bucket-list">
+			{{ range $idx, $li := .nav_list }}
+			{{ if $li }}
+			<li class="item"><a class="btn-secondary btn-download" href="/{{ $li.api_party }}/{{ $li.bucket }}/{{ $li.group }}/{{ $li.fkey }}" download> Download </a> | <a class="btn-secondary btn-play"  href="/play/v/{{ $li.bucket }}/{{ $li.group }}/{{ $li.fkey }}"> Play </a> | <a href="/{{ $li.api_party }}/{{ $li.bucket }}/{{ $li.group }}/{{ $li.fkey }}">{{ $li.fkey }}</a></li>
+			{{ end }}
+			{{ end }}
+		</ul>
+	</div>
+
+{{ render "footer.html" . }}

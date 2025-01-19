@@ -1,0 +1,12 @@
+{{ render "header.html" . }}
+<body>
+	<div class="buckets">
+		<h2><a href="/buckets">Buckets</a> > <a href="/buckets/{{ .bucket }}">{{ .bucket }}</a></h2>
+		<ul class="bucket-list">
+			{{ range $idx, $li := .nav_list }}
+			<li class="item"><a href="/{{ $li.api_party }}/{{ $li.bucket }}/{{ $li.group }}/1">{{ $li.group }}</a></li>
+			{{ end }}
+		</ul>
+	</div>
+
+{{ render "footer.html" . }}

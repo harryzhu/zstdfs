@@ -1,15 +1,16 @@
 .DS_Store
-potatofs
+data
+www
+dist
 *.db
 *.gobak
-data
 *.log
 *.zip
+*.zst.zip
 *.gz
 *.tar
 *.rar
 *.exe
 *.json
 *.txt
-logs
 

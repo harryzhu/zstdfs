@@ -1,0 +1,31 @@
+{{ render "header.html" .}}
+<div class="upload">
+	<form action="{{ .form_action }}" method="POST" enctype="multipart/form-data" class="upload-form">
+		<label class="fuser">User:<input type="text" required pattern="[^_]{1}[a-z0-9\-_\.]{2,64}" value="{{ .ck_fuser }}" name="fuser" id="fuser" size="20" minlength="2" maxlength="64"></label>
+		<label class="fgroup">Group:<input type="text" required pattern="[a-z0-9\-_\.]{2,64}" value="{{ .ck_fgroup }}" name="fgroup" id="fgroup" size="20" minlength="2" maxlength="64"></label>
+		<label class="fprefix">Prefix:<input type="text" pattern="[a-z0-9\-_\.\/]{0,64}" value="{{ .ck_fprefix }}" name="fprefix" id="fprefix" size="40" minlength="0" maxlength="64"></label>
+		<label class="file">MaxSize:{{ .form_max_upload_size_mb }}MB:<input type="file" id="file" name="file" required></label>
+
+		<label class="submit"><input type="submit" name="submit" id="submit" value="Upload"></label>
+	</form>
+</div>
+
+<hr/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+<h2>Stats api</h2>
+<ul>
+	
+	
+	<li><a href="/_stats/_buckets">Bucket List</a></li>
+	<li><a href="/_stats/_meta/">Meta</a></li>
+	<li><a href="/_stats/_system/1">_system keys (paged)</a></li>
+	<li>/_stats/_groups/{bucket:string}  :  groups of Bucket</li>
+	<li>/_stats/_keys/{bucket:string}    :  all keys of Bucket</a></li>
+	<li>/_stats/_keys/{bucket:string}/{prefix:string}    :  all keys with prefix of Bucket</li>
+</ul>
+
+{{ render "footer.html" .}}
