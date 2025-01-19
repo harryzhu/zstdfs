@@ -3,10 +3,13 @@ module zstdfs
 go 1.23.4
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/kataras/iris/v12 v12.2.11
 	github.com/klauspost/compress v1.17.7
 	github.com/spf13/cobra v1.8.1
+	github.com/zeebo/blake3 v0.2.4
 	go.etcd.io/bbolt v1.3.11
+	template v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -17,7 +20,6 @@ require (
 	github.com/Shopify/goreferrer v0.0.0-20220729165902-8cddb4f5de06 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -46,7 +48,6 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/yosssi/ace v0.0.5 // indirect
-	github.com/zeebo/blake3 v0.2.4 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0 // indirect
 	golang.org/x/net v0.24.0 // indirect

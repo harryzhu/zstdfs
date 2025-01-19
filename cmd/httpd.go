@@ -22,6 +22,7 @@ func BeforeStart() {
 	if MaxUploadSize <= 0 {
 		DebugWarn("MaxUploadSize", "<=0, you cannot upload any files")
 	}
+
 }
 
 func StartHTTPServer() {
@@ -31,10 +32,11 @@ func StartHTTPServer() {
 	app.OnErrorCode(iris.StatusNotFound, notFound)
 	app.OnErrorCode(iris.StatusInternalServerError, internalServerError)
 
-	tmpl := iris.HTML("./template", ".html")
+	tmpl := iris.HTML(embeddedFS, ".html")
 
+	tmpl.RootDir("template")
 	tmpl.Delims("{{", "}}")
-	tmpl.Reload(true)
+	tmpl.Reload(IsDebug)
 	app.RegisterView(tmpl)
 
 	homeAPI := app.Party("/")
@@ -233,21 +235,6 @@ func getFiles(ctx iris.Context) {
 	ctx.Header("Content-Type", mimeType)
 	ctx.Write(b)
 }
-
-// func downloadFiles(ctx iris.Context) {
-// 	bucket := ctx.Params().Get("bucket")
-// 	fname := ctx.Params().Get("fname")
-
-// 	b := dbGet(bucket, fname)
-// 	blen := len(b)
-// 	if blen == 0 {
-// 		ctx.NotFound()
-// 		return
-// 	}
-
-// 	ctx.Header("Content-Type", "application/force-download")
-// 	ctx.Write(b)
-// }
 
 func playVideos(ctx iris.Context) {
 	rand.Seed(time.Now().Unix())
