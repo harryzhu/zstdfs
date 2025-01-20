@@ -3,13 +3,11 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"mime"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/basicauth"
@@ -77,6 +75,7 @@ func StartHTTPServer() {
 		}),
 	}
 	app.HandleDir("/static", iris.Dir(StaticDir), StaticOptions)
+	app.HandleDir("/assets", iris.Dir("www/assets"), iris.DirOptions{ShowList: false})
 
 	adminAPI := app.Party("/admin")
 
@@ -128,7 +127,6 @@ func listBuckets(ctx iris.Context) {
 	var navList []map[string]string
 	buckets := getAllBuckets()
 
-	navList = make([]map[string]string, 1)
 	for _, bkt := range buckets {
 		if bkt != "" && strings.HasPrefix(bkt, "_") != true {
 			gb := make(map[string]string, 1)
@@ -147,8 +145,6 @@ func listGroups(ctx iris.Context) {
 	bucket := ctx.Params().Get("bucket")
 
 	groups := getAllGroups(bucket)
-
-	navList = make([]map[string]string, 1)
 	for _, grp := range groups {
 		if grp != "" {
 			gb := make(map[string]string, 1)
@@ -192,7 +188,6 @@ func listFiles(ctx iris.Context) {
 	}
 
 	files := getAllFiles(bucket, group, pagenum)
-	navList = make([]map[string]string, 1)
 	for _, f := range files {
 		if f != "" {
 			gb := make(map[string]string, 1)
@@ -213,20 +208,30 @@ func listFiles(ctx iris.Context) {
 }
 
 func getFiles(ctx iris.Context) {
+	var b []byte
+	var fsrc string
 	bucket := ctx.Params().Get("bucket")
 	fname := ctx.Params().Get("fname")
 
-	b := dbGet(bucket, fname)
-	blen := len(b)
-	if blen == 0 {
-		ctx.NotFound()
-		return
+	fkey := strings.Join([]string{"www", "temp", bucket, fname}, "/")
+	MakeDirs(filepath.Dir(fkey))
+	_, err := os.Stat(fkey)
+	if err != nil {
+		b = dbGet(bucket, fname)
+		if b == nil {
+			ctx.NotFound()
+			return
+		}
+		ioutil.WriteFile(fkey, b, os.ModePerm)
+		fsrc = "from db"
+	} else {
+		b, _ = ioutil.ReadFile(fkey)
+		fsrc = "from disk cache"
 	}
 
 	fext := filepath.Ext(fname)
-	flen := strconv.Itoa(blen)
 
-	DebugInfo("getFiles", fext, ",size:", flen)
+	DebugInfo("getFiles", filepath.Base(fname), " : <= ", fsrc)
 	mimeType := "text/plain"
 
 	if fext != "" {
@@ -237,47 +242,18 @@ func getFiles(ctx iris.Context) {
 }
 
 func playVideos(ctx iris.Context) {
-	rand.Seed(time.Now().Unix())
-	randClean := rand.Intn(100)
-	DebugInfo("playVideos:randClean", randClean)
-	if randClean%10 == 0 {
-		DebugInfo("playVideos:randClean", "run temp dir clean")
-		go func() {
-			filepath.Walk("www/temp/", func(path string, finfo os.FileInfo, err error) error {
-				if finfo.IsDir() {
-					return nil
-				}
-
-				if strings.HasPrefix(finfo.Name(), ".") {
-					return nil
-				}
-
-				tNow := time.Now()
-				tAge := tNow.Sub(finfo.ModTime()).Seconds()
-
-				if tAge > 1800.0 {
-					os.Remove(path)
-					DebugInfo("playVideos:remove expired file", tAge, ": ", path)
-				}
-				return nil
-			})
-		}()
-	}
-
-	//
-
 	bucket := ctx.Params().Get("bucket")
 	fname := ctx.Params().Get("fname")
-	b := dbGet(bucket, fname)
-	blen := len(b)
-	if blen == 0 {
-		ctx.NotFound()
-		return
-	}
+
 	fkey := strings.Join([]string{"www", "temp", bucket, fname}, "/")
 	MakeDirs(filepath.Dir(fkey))
 	_, err := os.Stat(fkey)
 	if err != nil {
+		b := dbGet(bucket, fname)
+		if len(b) == 0 {
+			ctx.NotFound()
+			return
+		}
 		ioutil.WriteFile(fkey, b, os.ModePerm)
 	}
 

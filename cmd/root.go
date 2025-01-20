@@ -65,7 +65,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&IsDebug, "debug", "", true, "print debug info")
+	rootCmd.PersistentFlags().BoolVarP(&IsDebug, "debug", "", false, "if print debug info")
 	rootCmd.PersistentFlags().IntVar(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
 	rootCmd.PersistentFlags().BoolVar(&IsIgnoreError, "ignore-error", false, "if stop when error")
 	rootCmd.PersistentFlags().BoolVar(&IsDatabaseReadOnly, "readonly", false, "if set database in ReadOnly mode")

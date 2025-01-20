@@ -6,9 +6,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/klauspost/compress/zstd"
@@ -209,4 +211,37 @@ func Int2Int64(n int) int64 {
 	m, err := strconv.ParseInt(s, 10, 64)
 	PrintError("Int2Int64", err)
 	return m
+}
+
+func CleanExpires(fpath string, expireSecond float64) error {
+	if fpath == "" {
+		DebugWarn("CleanExpires", "path cannot be empty")
+		return nil
+	}
+	if strings.HasPrefix(fpath, "/") || strings.Contains(fpath, ":") {
+		DebugWarn("CleanExpires", "path cannot start with / or contain :, should be a relative path")
+		return nil
+	}
+	fpath = strings.Trim(fpath, "/")
+	DebugInfo("CleanExpires:path", fpath)
+
+	filepath.Walk(fpath, func(path string, finfo os.FileInfo, err error) error {
+		if finfo.IsDir() {
+			return nil
+		}
+
+		if strings.HasPrefix(finfo.Name(), ".") {
+			return nil
+		}
+
+		tNow := time.Now()
+		tAge := tNow.Sub(finfo.ModTime()).Seconds()
+
+		if tAge > expireSecond {
+			os.Remove(path)
+			DebugInfo("CleanExpires:remove expired file", tAge, ": ", path)
+		}
+		return nil
+	})
+	return nil
 }

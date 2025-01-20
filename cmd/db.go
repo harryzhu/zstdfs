@@ -32,12 +32,17 @@ func init() {
 	MakeDirs("www/uploads")
 	MakeDirs("www/export")
 	MakeDirs("www/temp")
-	MakeDirs("www/static/assets")
+	MakeDirs("www/assets")
+	MakeDirs("www/static")
 	//
-	DefaultBase64Asset("www/static/assets/video-js.min.css", videojsmincss)
-	DefaultBase64Asset("www/static/assets/video.min.js", videominjs)
-	DefaultBase64Asset("www/static/assets/style.css", stylecss)
-	DefaultBase64Asset("www/static/assets/favicon.png", faviconpng)
+	DefaultBase64Asset("www/assets/video-js.min.css", videojsmincss)
+	DefaultBase64Asset("www/assets/video.min.js", videominjs)
+	DefaultBase64Asset("www/assets/style.css", stylecss)
+	DefaultBase64Asset("www/assets/favicon.png", faviconpng)
+	DefaultBase64Asset("www/assets/video-bg.png", videobgpng)
+	//
+	// for memory
+	videojsmincss, videominjs, stylecss, faviconpng, videobgpng = "", "", "", "", ""
 	//
 	MaxUploadSize = Int2Int64(MaxUploadSizeMB * MB)
 }
@@ -260,10 +265,11 @@ func getAllBuckets() []string {
 func getAllGroups(bkt string) []string {
 	var groups []string
 	db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket([]byte(bkt)).Cursor()
-		if c == nil {
+		b := tx.Bucket([]byte(bkt))
+		if b == nil {
 			return nil
 		}
+		c := b.Cursor()
 
 		prefix := []byte("")
 		m := make(map[string]int, 1)
@@ -292,10 +298,12 @@ func getAllGroups(bkt string) []string {
 func getAllKeys(bkt string, pre string) []string {
 	var keys []string
 	db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket([]byte(bkt)).Cursor()
-		if c == nil {
+		b := tx.Bucket([]byte(bkt))
+		if b == nil {
 			return nil
 		}
+		c := b.Cursor()
+
 		prefix := []byte(pre)
 
 		for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
@@ -309,10 +317,12 @@ func getAllKeys(bkt string, pre string) []string {
 func getAllFiles(bkt string, grp string, pageNum int) []string {
 	var files []string
 	db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket([]byte(bkt)).Cursor()
-		if c == nil {
+		b := tx.Bucket([]byte(bkt))
+		if b == nil {
 			return nil
 		}
+		c := b.Cursor()
+
 		prefix := []byte(grp)
 
 		min := (pageNum - 1) * PageSize

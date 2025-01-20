@@ -9,7 +9,6 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/zeebo/blake3 v0.2.4
 	go.etcd.io/bbolt v1.3.11
-	template v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -38,6 +37,7 @@ require (
 	github.com/mailgun/raymond/v2 v2.0.48 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/closestmatch v2.1.0+incompatible // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect

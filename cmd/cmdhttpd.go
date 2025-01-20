@@ -34,9 +34,13 @@ var httpdCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		wg := sync.WaitGroup{}
-		wg.Add(1)
+		wg.Add(2)
 		go func() {
 			StartHTTPServer()
+		}()
+
+		go func() {
+			StartCron()
 		}()
 		wg.Wait()
 	},

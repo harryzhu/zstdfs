@@ -1,51 +1,38 @@
 import base64
 
 asset_go_out="cmd/httpd_asset.go"
-template_dir="template"
+template_dir="cmd/template"
 
 rn="\r\n\r\n"
 pkg="package cmd"
-css=""
-js=""
-favicon=""
-stylecss=""
 
-# css
-video_js_min_css=""
-with open(template_dir+"/video-js.min.css","r") as f:
-	video_js_min_css=str(base64.b64encode(f.read().encode('utf-8')),'utf-8')
-	f.close()
-css="".join([pkg,rn,"var videojsmincss string=`",video_js_min_css,"`"])
 
-# js
-video_min_js=""
-with open(template_dir+"/video.min.js","r") as f:
-	video_min_js=str(base64.b64encode(f.read().encode('utf-8')),'utf-8')
-	f.close()
-js="".join([rn,"var videominjs string=`",video_min_js,"`"])
+def fbase64(fpath: str = "") -> str:
+	with open(fpath,"rb") as f:
+		s=str(base64.b64encode(f.read()),'utf-8')
+		f.close()
+	return s
 
-# style.css
-style_css=""
-with open(template_dir+"/style.css","r") as f:
-	style_css=str(base64.b64encode(f.read().encode('utf-8')),'utf-8')
-	f.close()
-stylecss="".join([rn,"var stylecss string=`",style_css,"`"])
+#
+b64_video_js_min_css=fbase64(template_dir+"/video-js.min.css")
+videojsmincss="".join([pkg,rn,"var videojsmincss string=`",b64_video_js_min_css,"`"])
+#
+b64_video_min_js=fbase64(template_dir+"/video.min.js")
+videominjs="".join([rn,"var videominjs string=`",b64_video_min_js,"`"])
+#
+b64_style_css=fbase64(template_dir+"/style.css")
+stylecss="".join([rn,"var stylecss string=`",b64_style_css,"`"])
+#
+b64_favicon_png=fbase64(template_dir+"/favicon.png")
+faviconpng="".join([rn,"var faviconpng string=`",b64_favicon_png,"`"])
+#
+b64_video_bg_png=fbase64(template_dir+"/video-bg.png")
+videobgpng="".join([rn,"var videobgpng string=`",b64_video_bg_png,"`"])
 
-# favicon
-favicon_png=""
-with open(template_dir+"/favicon.png","rb") as f:
-	favicon_png=str(base64.b64encode(f.read()), 'utf-8')
-	f.close()
-favicon="".join([rn,"var faviconpng string=`",favicon_png,"`"])
-
-# write go
 with open(asset_go_out,"w") as f:
-	f.write(css)
+	f.write(videojsmincss)
+	f.write(videominjs)
 	f.write(stylecss)
-	f.write(js)
-	f.write(favicon)
+	f.write(faviconpng)
+	f.write(videobgpng)
 	f.close()
-
-
-
-
