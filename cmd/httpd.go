@@ -16,9 +16,12 @@ import (
 var MaxUploadSize int64
 
 func BeforeStart() {
-	DebugInfo("MaxUploadSize", MaxUploadSize)
 	if MaxUploadSize <= 0 {
 		DebugWarn("MaxUploadSize", "<=0, you cannot upload any files")
+	}
+	if DiskCacheExpires < 300 {
+		DiskCacheExpires = 300
+		DebugWarn("DiskCacheExpires", "cannot < 300, will use 300 instead")
 	}
 
 }
@@ -215,6 +218,7 @@ func getFiles(ctx iris.Context) {
 
 	fkey := strings.Join([]string{"www", "temp", bucket, fname}, "/")
 	MakeDirs(filepath.Dir(fkey))
+
 	_, err := os.Stat(fkey)
 	if err != nil {
 		b = dbGet(bucket, fname)
@@ -223,20 +227,22 @@ func getFiles(ctx iris.Context) {
 			return
 		}
 		ioutil.WriteFile(fkey, b, os.ModePerm)
-		fsrc = "from db"
+		fsrc = "db"
 	} else {
 		b, _ = ioutil.ReadFile(fkey)
-		fsrc = "from disk cache"
+		fsrc = "disk"
 	}
 
 	fext := filepath.Ext(fname)
 
-	DebugInfo("getFiles", filepath.Base(fname), " : <= ", fsrc)
+	DebugInfo("getFiles", filepath.Base(fname), " : <= from ", fsrc)
 	mimeType := "text/plain"
 
 	if fext != "" {
 		mimeType = mime.TypeByExtension(fext)
 	}
+	ctx.Header("X-Fetch-From", fsrc)
+	ctx.Header("X-Powered-By", "zstdfs")
 	ctx.Header("Content-Type", mimeType)
 	ctx.Write(b)
 }

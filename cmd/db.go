@@ -24,6 +24,8 @@ const PageSize int = 1000
 var db *bolt.DB
 
 func init() {
+
+	//defer pprof.StopCPUProfile()
 	MakeDirs("data")
 	MakeDirs("data/_sync")
 	MakeDirs("data/logs")

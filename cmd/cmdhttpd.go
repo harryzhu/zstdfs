@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	Host          string
-	Port          int
-	UploadDir     string
-	StaticDir     string
-	AdminUser     string
-	AdminPassword string
+	Host             string
+	Port             int
+	UploadDir        string
+	StaticDir        string
+	AdminUser        string
+	AdminPassword    string
+	DiskCacheExpires float64
 )
 
 // httpdCmd represents the httpd command
@@ -55,7 +56,7 @@ func init() {
 	httpdCmd.PersistentFlags().StringVar(&AdminUser, "admin-user", "", "for /admin/*")
 	httpdCmd.PersistentFlags().StringVar(&AdminPassword, "admin-password", "", "for /admin/*")
 	httpdCmd.PersistentFlags().IntVar(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
-
+	httpdCmd.PersistentFlags().Float64Var(&DiskCacheExpires, "disk-cache-expires", 1800, "db will cache data into disk, default: 1800 seconds, minimium: 300")
 	httpdCmd.MarkFlagsRequiredTogether("host", "port", "upload-dir")
 
 }

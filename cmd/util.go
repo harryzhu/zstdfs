@@ -82,12 +82,13 @@ func PrintPflags() error {
 
 	// httpd
 	flaghttpd := map[string]any{
-		"Host":          Host,
-		"Port":          Port,
-		"UploadDir":     UploadDir,
-		"StaticDir":     StaticDir,
-		"AdminUser":     AdminUser,
-		"AdminPassword": AdminPassword,
+		"Host":             Host,
+		"Port":             Port,
+		"UploadDir":        UploadDir,
+		"StaticDir":        StaticDir,
+		"DiskCacheExpires": DiskCacheExpires,
+		"AdminUser":        AdminUser,
+		"AdminPassword":    AdminPassword,
 	}
 	Pflags["httpd"] = flaghttpd
 
@@ -225,6 +226,7 @@ func CleanExpires(fpath string, expireSecond float64) error {
 	fpath = strings.Trim(fpath, "/")
 	DebugInfo("CleanExpires:path", fpath)
 
+	tNow := time.Now()
 	filepath.Walk(fpath, func(path string, finfo os.FileInfo, err error) error {
 		if finfo.IsDir() {
 			return nil
@@ -234,7 +236,6 @@ func CleanExpires(fpath string, expireSecond float64) error {
 			return nil
 		}
 
-		tNow := time.Now()
 		tAge := tNow.Sub(finfo.ModTime()).Seconds()
 
 		if tAge > expireSecond {
