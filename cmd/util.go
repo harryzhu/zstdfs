@@ -207,6 +207,18 @@ func DefaultBase64Asset(fpath string, b64 string) {
 	}
 }
 
+func DefaultAsset(dest string, src string) {
+	_, err := os.Stat(dest)
+	if err != nil {
+		b, err := embeddedFS.ReadFile(src)
+		if err != nil {
+			DebugWarn("DefaultAsset", err)
+		} else {
+			ioutil.WriteFile(dest, b, os.ModePerm)
+		}
+	}
+}
+
 func Int2Int64(n int) int64 {
 	s := strconv.Itoa(n)
 	m, err := strconv.ParseInt(s, 10, 64)

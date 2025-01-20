@@ -37,14 +37,11 @@ func init() {
 	MakeDirs("www/assets")
 	MakeDirs("www/static")
 	//
-	DefaultBase64Asset("www/assets/video-js.min.css", videojsmincss)
-	DefaultBase64Asset("www/assets/video.min.js", videominjs)
-	DefaultBase64Asset("www/assets/style.css", stylecss)
-	DefaultBase64Asset("www/assets/favicon.png", faviconpng)
-	DefaultBase64Asset("www/assets/video-bg.png", videobgpng)
-	//
-	// for memory
-	videojsmincss, videominjs, stylecss, faviconpng, videobgpng = "", "", "", "", ""
+	DefaultAsset("www/assets/video-js.min.css", "template/video-js.min.css")
+	DefaultAsset("www/assets/video.min.js", "template/video.min.js")
+	DefaultAsset("www/assets/style.css", "template/style.css")
+	DefaultAsset("www/assets/favicon.png", "template/favicon.png")
+	DefaultAsset("www/assets/video-bg.png", "template/video-bg.png")
 	//
 	MaxUploadSize = Int2Int64(MaxUploadSizeMB * MB)
 }

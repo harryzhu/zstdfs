@@ -1,3 +1,5 @@
+rm -f cmd/template/.DS_Store
+
 go build -o dist/macos_arm/zstdfs -ldflags "-w -s" main.go
 zip dist/macos_arm/zstdfs_macos_arm.zip dist/macos_arm/zstdfs
 
