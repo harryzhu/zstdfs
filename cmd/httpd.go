@@ -316,7 +316,7 @@ func uploadFile(ctx iris.Context) {
 			res = fmt.Sprintf("OK: File: (%s) was uploaded:<br/><br/><br/><a href=\"/z/%s\">%s</a>",
 				fileHeader.Filename, insertKey, "/z/"+insertKey)
 			res = strings.Join([]string{res, fmt.Sprintf(" | <a href=\"/z/%s\" download>[Download]</a>",
-				"/z/"+insertKey)}, "")
+				insertKey)}, "")
 
 			res = strings.Join([]string{res, fmt.Sprintf("For Video Play:<br/><a href=\"/play/v/%s\">%s</a>",
 				insertKey, "/play/v/"+insertKey)}, "<br/><br/>")
