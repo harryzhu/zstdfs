@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -197,14 +196,6 @@ func MakeDirs(dpath string) error {
 		PrintError("MakeDirs:MkdirAll", err)
 	}
 	return nil
-}
-
-func DefaultBase64Asset(fpath string, b64 string) {
-	_, err := os.Stat(fpath)
-	if err != nil {
-		d64, _ := base64.StdEncoding.DecodeString(b64)
-		ioutil.WriteFile(fpath, []byte(d64), os.ModePerm)
-	}
 }
 
 func DefaultAsset(dest string, src string) {
