@@ -198,6 +198,11 @@ func MakeDirs(dpath string) error {
 	return nil
 }
 
+func ToUnixSlash(s string) string {
+	// for windows
+	return strings.ReplaceAll(s, "\\", "/")
+}
+
 func DefaultAsset(dest string, src string) {
 	_, err := os.Stat(dest)
 	if err != nil {

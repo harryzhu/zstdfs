@@ -59,7 +59,6 @@ func StartHTTPServer() {
 	zstdAPI := app.Party("/z")
 	{
 		zstdAPI.Use(iris.Compression)
-
 		zstdAPI.Get("/{bucket:string}/{fname:path}", getFiles)
 	}
 
@@ -243,6 +242,7 @@ func getFiles(ctx iris.Context) {
 	}
 	ctx.Header("X-Fetch-From", fsrc)
 	ctx.Header("X-Powered-By", "zstdfs")
+	ctx.Header("Cache-Control", "public, max-age=86400")
 	ctx.Header("Content-Type", mimeType)
 	ctx.Write(b)
 }

@@ -94,6 +94,9 @@ func dbSave(user, group, key string, data []byte) string {
 	user = strings.ToLower(user)
 	group = strings.ToLower(group)
 
+	// for windows
+	key = ToUnixSlash(key)
+
 	gkey := JoinKey([]string{group, key})
 	fullKey := JoinKey([]string{user, gkey})
 
@@ -123,6 +126,7 @@ func dbSave(user, group, key string, data []byte) string {
 		DebugWarn("dbSave:Update:SKIP", "key exists")
 	} else {
 		if err := bkt.Put([]byte(gkey), fbinK); err == nil {
+			DebugInfo("dbSave:PUT", gkey)
 			isNewPut = true
 		}
 	}
@@ -441,11 +445,16 @@ func ImportFiles(dpath, ext, user, group string) error {
 	var relPath string
 	var fdata []byte
 	var ignoreFiles []string
+	// for windows
+	dpath = ToUnixSlash(dpath)
 
 	filepath.Walk(dpath, func(path string, finfo os.FileInfo, err error) error {
 		if finfo.IsDir() {
 			return nil
 		}
+		// for windows
+		path = ToUnixSlash(path)
+
 		if ImportIsIgnoreDotFile {
 			if strings.HasPrefix(finfo.Name(), ".") {
 				ignoreFiles = append(ignoreFiles, "IGNORE:dot-file: "+path)
@@ -469,8 +478,10 @@ func ImportFiles(dpath, ext, user, group string) error {
 			return nil
 		}
 
-		relPath = strings.TrimPrefix(path, dpath)
-		relPath = strings.Trim(relPath, "/")
+		relPath, err = filepath.Rel(dpath, path)
+		PrintError("ImportFiles:relPath", err)
+		relPath = ToUnixSlash(relPath)
+
 		if filepath.Base(relPath) != filepath.Base(path) {
 			if IsIgnoreError {
 				PrintError("ImportFiles:filepath.Base", ErrFileNameNotMatch)
