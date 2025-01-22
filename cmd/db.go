@@ -44,6 +44,8 @@ func init() {
 	DefaultAsset("www/assets/video-bg.png", "template/video-bg.png")
 	//
 	MaxUploadSize = Int2Int64(MaxUploadSizeMB * MB)
+	//
+
 }
 
 func openBolt() {
@@ -108,13 +110,6 @@ func dbSave(user, group, key string, data []byte) string {
 	}
 	defer tx.Rollback()
 
-	// Fbin
-	fbin := tx.Bucket([]byte(FbinBucket))
-	fbinK := SumBlake3(data)
-	if fbin.Get(fbinK) == nil {
-		fbin.Put(fbinK, ZstdBytes(data))
-	}
-
 	bkt, err := tx.CreateBucketIfNotExists([]byte(user))
 	if err != nil {
 		FatalError("dbSave:CreateBucketIfNotExists", err)
@@ -124,12 +119,22 @@ func dbSave(user, group, key string, data []byte) string {
 	if bkt.Get([]byte(gkey)) != nil {
 		isNewPut = false
 		DebugWarn("dbSave:Update:SKIP", "key exists")
-	} else {
-		if err := bkt.Put([]byte(gkey), fbinK); err == nil {
-			DebugInfo("dbSave:PUT", gkey)
-			isNewPut = true
-		}
+		return fullKey
 	}
+	// Fbin
+	fbin := tx.Bucket([]byte(FbinBucket))
+	fbinK := SumBlake3(data)
+	if fbin.Get(fbinK) == nil {
+		fbin.Put(fbinK, ZstdBytes(data))
+	}
+
+	if err := bkt.Put([]byte(gkey), fbinK); err != nil {
+		FatalError("dbSave:PUT", err)
+		return ""
+	}
+
+	DebugInfo("dbSave:PUT:ok", gkey)
+	isNewPut = true
 
 	if err := tx.Commit(); err != nil {
 		FatalError("dbSave:Commit", err)
@@ -390,24 +395,25 @@ func exportFiles(dpath string) {
 			DebugInfo("exportFiles:Bucket", bucket)
 			db.View(func(tx *bolt.Tx) error {
 				c := tx.Bucket([]byte(bucket)).Cursor()
+				fbin := tx.Bucket([]byte(FbinBucket))
 
 				prefix := []byte("")
+				var i int
 
 				for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
+
+					PrintSpinner(strconv.Itoa(i))
 
 					exportPath := strings.Join([]string{dpath, bucket, string(k)}, "/")
 					DebugInfo("exportFiles:exportPath", exportPath)
 					MakeDirs(filepath.Dir(exportPath))
-					DebugInfo("exportFiles:Size:", strconv.Itoa(len(v)))
-					ioutil.WriteFile(exportPath, UnZstdBytes(v), os.ModePerm)
-					finfo, err := os.Stat(exportPath)
-
-					if IsIgnoreError {
-						PrintError("exportFiles:os.Stat", err)
-					} else {
-						FatalError("exportFiles:os.Stat", err)
+					fbinVal := fbin.Get(v)
+					if fbinVal != nil {
+						ioutil.WriteFile(exportPath, UnZstdBytes(fbinVal), os.ModePerm)
 					}
 
+					finfo, err := os.Stat(exportPath)
+					FatalError("exportFiles:os.Stat", err)
 					if finfo.Size() == 0 {
 						if IsIgnoreError {
 							PrintError("exportFiles:size", ErrFileSizeZero)
@@ -419,6 +425,8 @@ func exportFiles(dpath string) {
 					if err != nil || finfo.Size() == 0 {
 						notExportFiles = append(notExportFiles, strings.Join([]string{"EXPORT ERROR:", bucket, string(k)}, ":"))
 					}
+
+					i++
 				}
 
 				return nil
@@ -445,6 +453,7 @@ func ImportFiles(dpath, ext, user, group string) error {
 	var relPath string
 	var fdata []byte
 	var ignoreFiles []string
+	var readyFiles []string
 	// for windows
 	dpath = ToUnixSlash(dpath)
 
@@ -478,24 +487,8 @@ func ImportFiles(dpath, ext, user, group string) error {
 			return nil
 		}
 
-		relPath, err = filepath.Rel(dpath, path)
-		PrintError("ImportFiles:relPath", err)
-		relPath = ToUnixSlash(relPath)
+		readyFiles = append(readyFiles, path)
 
-		if filepath.Base(relPath) != filepath.Base(path) {
-			if IsIgnoreError {
-				PrintError("ImportFiles:filepath.Base", ErrFileNameNotMatch)
-			} else {
-				FatalError("ImportFiles:filepath.Base", ErrFileNameNotMatch)
-			}
-		}
-		fdata, err = ioutil.ReadFile(path)
-		if err != nil {
-			PrintError("ImportFiles:ReadFile", err)
-			return nil
-		}
-		k := dbSave(user, group, relPath, fdata)
-		DebugInfo("Saved", strings.Join([]string{path, relPath, k}, "=>"))
 		return nil
 	})
 
@@ -505,5 +498,99 @@ func ImportFiles(dpath, ext, user, group string) error {
 		PrintError("ImportFiles:write log", err)
 	}
 
+	fcount := len(readyFiles)
+
+	if fcount == 0 {
+		DebugInfo("ImportFiles", "no files will be imported")
+		return nil
+	}
+
+	fmt.Println("ImportFiles:count:", fcount)
+
+	// batch fbin for turbo
+	var batchSize int = 500
+	if fcount <= batchSize {
+		batchSize = fcount
+	}
+
+	var epoch int = fcount/batchSize + 1
+	var epochFiles []string
+
+	fmt.Println("ImportFiles:epoch:", epoch)
+	for i := 0; i < epoch; i++ {
+		PrintSpinner(strconv.Itoa(i))
+
+		idFrom := i * batchSize
+		idTo := i*batchSize + batchSize
+		if idTo > fcount {
+			idTo = fcount
+		}
+		epochFiles = readyFiles[idFrom:idTo]
+		if len(epochFiles) > 0 {
+			fbinBatchSave(epochFiles, dpath)
+		}
+		DebugWarn("-----", i, "-----", len(epochFiles), "-----")
+
+	}
+
+	//
+	var err error
+	for i, fpath := range readyFiles {
+		PrintSpinner(strconv.Itoa(i))
+		relPath, err = filepath.Rel(dpath, fpath)
+		PrintError("ImportFiles:relPath", err)
+		relPath = ToUnixSlash(relPath)
+
+		fdata, err = ioutil.ReadFile(fpath)
+		if err != nil {
+			PrintError("ImportFiles:ReadFile", err)
+			continue
+		}
+
+		k := dbSave(user, group, relPath, fdata)
+		DebugInfo("Saved", strings.Join([]string{fpath, relPath, k}, "=>"))
+	}
+
+	return nil
+}
+
+func fbinBatchSave(files []string, dpath string) error {
+	tx, err := db.Begin(true)
+	if err != nil {
+		FatalError("fbinBatchSave:db.Begin", err)
+		return nil
+	}
+	defer tx.Rollback()
+
+	fbin := tx.Bucket([]byte(FbinBucket))
+	for _, fpath := range files {
+		relPath, err := filepath.Rel(dpath, fpath)
+		PrintError("fbinBatchSave:relPath", err)
+		relPath = ToUnixSlash(relPath)
+
+		if filepath.Base(relPath) != filepath.Base(fpath) {
+			FatalError("fbinBatchSave:filepath.Base", ErrFileNameNotMatch)
+		}
+
+		fdata, err := ioutil.ReadFile(fpath)
+		if err != nil {
+			PrintError("fbinBatchSave:ReadFile", err)
+			continue
+		}
+		if fdata == nil {
+			DebugWarn("fbinBatchSave", "filesize is 0, SKIP")
+			continue
+		}
+		// Fbin
+		fbinK := SumBlake3(fdata)
+		if fbin.Get(fbinK) == nil {
+			fbin.Put(fbinK, ZstdBytes(fdata))
+		}
+
+	}
+
+	if err := tx.Commit(); err != nil {
+		FatalError("fbinBatchSave:Commit", err)
+	}
 	return nil
 }

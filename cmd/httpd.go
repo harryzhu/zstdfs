@@ -93,6 +93,8 @@ func StartHTTPServer() {
 
 		adminAPI.Post("/upload", uploadFile)
 		adminAPI.Get("/edit", editFiles)
+		adminAPI.Delete("/delete/{bucket:string}/{fname:path}", deleteFiles)
+
 	}
 
 	sysAPI := app.Party("/_stats")
@@ -362,6 +364,29 @@ func editFiles(ctx iris.Context) {
 		"ck_fgroup":               ckfgroup,
 		"ck_fprefix":              ckfprefix,
 	})
+}
+
+func deleteFiles(ctx iris.Context) {
+	bucket := ctx.Params().Get("bucket")
+	fname := ctx.Params().Get("fname")
+
+	fkey := strings.Join([]string{"www", "temp", bucket, fname}, "/")
+
+	DebugInfo("[deleteFiles]", fkey)
+
+	_, err := os.Stat(fkey)
+	if err == nil {
+		os.Remove(fkey)
+	}
+
+	err = dbDelete(bucket, fname)
+	ctx.Header("Content-Type", "text/plain;charset=utf-8")
+	if err != nil {
+		ctx.Writef("Error: %s", err.Error())
+	} else {
+		ctx.Writef("OK: [ %s ] was removed", bucket+"/"+fname)
+	}
+
 }
 
 func sysAllBuckets(ctx iris.Context) {

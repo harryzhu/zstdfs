@@ -18,7 +18,12 @@ import (
 
 func FatalError(prefix string, err error) {
 	if err != nil {
-		log.Fatalln(Red("ERROR:"), Red(prefix), err)
+		if IsIgnoreError == false {
+			log.Fatalln(Red("ERROR:"), Red(prefix), err)
+		} else {
+			log.Println(Red("ERROR:"), Red(prefix), err)
+		}
+
 	}
 }
 
@@ -47,6 +52,17 @@ func DebugWarn(prefix string, args ...any) {
 		log.Println(Yellow("WARN:"), Yellow(prefix), Yellow(strings.Join(info, "")))
 	}
 }
+
+func PrintlnInfo(prefix string, args ...any) {
+
+	var info []string
+	for _, arg := range args {
+		info = append(info, fmt.Sprintf("%v", arg))
+	}
+	log.Printf("INFO: %v: %v\n", prefix, strings.Join(info, ""))
+
+}
+
 func IsAnyEmpty(args ...string) bool {
 	for _, arg := range args {
 		if arg == "" {
@@ -196,6 +212,13 @@ func MakeDirs(dpath string) error {
 		PrintError("MakeDirs:MkdirAll", err)
 	}
 	return nil
+}
+
+func PrintSpinner(s string) {
+	if IsDebug == false {
+		fmt.Printf("... %5.30s\r", s)
+	}
+
 }
 
 func ToUnixSlash(s string) string {

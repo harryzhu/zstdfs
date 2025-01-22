@@ -22,7 +22,7 @@ var (
 // httpdCmd represents the httpd command
 var httpdCmd = &cobra.Command{
 	Use:              "httpd",
-	Short:            "httpd --host= --port= --upload-dir -- static-dir= --admin-user= --admin-password=",
+	Short:            "httpd --host= --port= --upload-dir -- static-dir= --max-upload-size-mb= --disk-cache-expires= --admin-user= --admin-password= ",
 	Long:             ``,
 	TraverseChildren: true,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -39,6 +39,22 @@ var httpdCmd = &cobra.Command{
 		go func() {
 			StartHTTPServer()
 		}()
+
+		// go func() {
+		// 	for {
+		// 		for k, v := range <-chanKV {
+		// 			if v != nil && k != "" {
+		// 				DebugInfo("chaaaaaan", k, len(v))
+		// 			}
+		// 		}
+		// 	}
+		// }()
+
+		// go func() {
+		// 	for {
+		// 		PutChanKV("kkkkk", []byte("vvv"))
+		// 	}
+		// }()
 
 		go func() {
 			StartCron()
@@ -57,6 +73,7 @@ func init() {
 	httpdCmd.PersistentFlags().StringVar(&AdminPassword, "admin-password", "", "for /admin/*")
 	httpdCmd.PersistentFlags().IntVar(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
 	httpdCmd.PersistentFlags().Float64Var(&DiskCacheExpires, "disk-cache-expires", 1800, "db will cache data into disk, default: 1800 seconds, minimium: 300")
+
 	httpdCmd.MarkFlagsRequiredTogether("host", "port", "upload-dir")
 
 }
