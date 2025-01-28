@@ -416,10 +416,10 @@ func updateUserPass() error {
 		userpass[AdminUser] = AdminPassword
 	}
 
-	DebugInfo("updateUserPass:", "===========")
-	for k, v := range userpass {
-		DebugInfo("updateUserPass:", k, ":", v)
-	}
+	// DebugInfo("updateUserPass:", "===========")
+	// for k, v := range userpass {
+	// 	DebugInfo("updateUserPass:", k, ":", v)
+	// }
 
 	return nil
 }
