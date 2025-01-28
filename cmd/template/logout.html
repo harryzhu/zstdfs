@@ -1,0 +1,17 @@
+Log Out
+
+<script type="text/javascript">
+	try{
+		xmlhttp = new XMLHttpRequest();
+		xmlhttp.open("GET","{{ .send }}",false,"_logout","_logout");
+		xmlhttp.setRequestHeader("Authorization","Basic YXNkc2E6")
+		xmlhttp.send();
+
+		window.location = "{{ .redirect }}";
+	}catch(e) {
+		alert("there was an error");
+	}
+
+	
+
+</script>

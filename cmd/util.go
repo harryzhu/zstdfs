@@ -1,11 +1,17 @@
 package cmd
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -49,7 +55,7 @@ func DebugWarn(prefix string, args ...any) {
 		for _, arg := range args {
 			info = append(info, fmt.Sprintf("%v", arg))
 		}
-		log.Println(Yellow("WARN:"), Yellow(prefix), Yellow(strings.Join(info, "")))
+		log.Println(Yellow("WARN:"), Yellow(prefix+":"), Yellow(strings.Join(info, "")))
 	}
 }
 
@@ -125,18 +131,22 @@ func PrintPflags() error {
 
 	// put
 	flagput := map[string]any{
-		"PutUser":  PutUser,
-		"PutGroup": PutGroup,
-		"PutKey":   PutKey,
-		"PutFile":  PutFile,
+		"PutEndpoint": PutEndpoint,
+		"PutUser":     PutUser,
+		"PutGroup":    PutGroup,
+		"PutPrefix":   PutPrefix,
+		"PutFile":     PutFile,
+		"PutAuth":     PutAuth,
 	}
 	Pflags["put"] = flagput
 
 	// delete
 	flagdelete := map[string]any{
-		"DeleteUser":  DeleteUser,
-		"DeleteGroup": DeleteGroup,
-		"DeleteKey":   DeleteKey,
+		"DeleteEndpoint": DeleteEndpoint,
+		"DeleteUser":     DeleteUser,
+		"DeleteGroup":    DeleteGroup,
+		"DeleteKey":      DeleteKey,
+		"DeleteAuth":     DeleteAuth,
 	}
 	Pflags["delete"] = flagdelete
 
@@ -169,13 +179,23 @@ func SumBlake3(b []byte) []byte {
 }
 
 func Normalize(s string) string {
-	ban := []string{`\`, `:`, `*`, `?`, `<`, `>`, `|`, `"`, `^`}
+	// RFC1123
+	ban := []string{`\`, `:`, `*`, `?`, `<`, `>`, `|`, `^`}
 	for _, v := range ban {
 		s = strings.ReplaceAll(s, v, "")
 	}
+	s = strings.ReplaceAll(s, "/.", "/")
+	s = strings.ReplaceAll(s, "./", "/")
+	s = strings.ReplaceAll(s, "./.", "/")
 	s = strings.Trim(s, " ")
 	s = strings.Trim(s, "/")
-	s = strings.ReplaceAll(s, " ", "")
+	s = strings.Trim(s, "/")
+	s = strings.Trim(s, ".")
+
+	manySpaces := regexp.MustCompile(`[\s]{2,}`)
+	s = manySpaces.ReplaceAllString(s, " ")
+
+	s = strings.ReplaceAll(s, " ", "-")
 	s = strings.ReplaceAll(s, "&", "-")
 
 	DebugInfo("Normalize", s)
@@ -185,9 +205,9 @@ func Normalize(s string) string {
 func JoinKey(s []string) string {
 	var s2 []string
 	for _, v := range s {
-		s2 = append(s2, Normalize(v))
+		s2 = append(s2, v)
 	}
-	return strings.ToLower(strings.Join(s2, "/"))
+	return strings.Join(s2, "/")
 }
 
 func ZstdBytes(rawin []byte) []byte {
@@ -276,4 +296,71 @@ func CleanExpires(fpath string, expireSecond float64) error {
 		return nil
 	})
 	return nil
+}
+
+func GetEnv(k string, defaultVal string) string {
+	ev := os.Getenv(k)
+	if ev == "" {
+		return defaultVal
+	}
+	return ev
+}
+
+func SHA256String(s string) string {
+	h := sha256.New()
+	h.Write([]byte(s))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func aesEncHex(src []byte) string {
+	return hexByte2Str(EncryptAES(src))
+}
+
+func aesDecHex(enc string) string {
+	return string(DecryptAES(hexStr2Byte(enc)))
+}
+
+func hexByte2Str(b []byte) string {
+	return hex.EncodeToString(b)
+}
+
+func hexStr2Byte(s string) []byte {
+	decoded, err := hex.DecodeString(s)
+	if err != nil {
+		PrintError("hexStr2Byte", err)
+	}
+
+	return decoded
+}
+
+func EncryptAES(plaintext []byte) (encrypted []byte) {
+	block, _ := aes.NewCipher(aesKey)
+	blockSize := block.BlockSize()
+	plaintext = pkcs5Padding(plaintext, blockSize)
+	blockMode := cipher.NewCBCEncrypter(block, aesKey[:blockSize])
+	encrypted = make([]byte, len(plaintext))
+	blockMode.CryptBlocks(encrypted, plaintext)
+
+	return encrypted
+}
+
+func DecryptAES(encrypted []byte) (decrypted []byte) {
+	block, _ := aes.NewCipher(aesKey)
+	blockSize := block.BlockSize()
+	blockMode := cipher.NewCBCDecrypter(block, aesKey[:blockSize])
+	decrypted = make([]byte, len(encrypted))
+	blockMode.CryptBlocks(decrypted, encrypted)
+	decrypted = pkcs5UnPadding(decrypted)
+	return decrypted
+}
+
+func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
+func pkcs5UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
 }

@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+
+	//"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,36 +18,19 @@ import (
 
 const SystemBucket string = "_system"
 const MetaBucket string = "_meta"
-const FbinBucket string = "_fbin"
+
+// const FbinBucket string = "_fbin"
+const UserBucket string = "_user"
+const aesKeyDefault string = "thisis32bitlongpassphrasedefault"
 
 const PageSize int = 1000
 
-var db *bolt.DB
-
-func init() {
-
-	//defer pprof.StopCPUProfile()
-	MakeDirs("data")
-	MakeDirs("data/_sync")
-	MakeDirs("data/logs")
-	//
-	MakeDirs("www")
-	MakeDirs("www/uploads")
-	MakeDirs("www/export")
-	MakeDirs("www/temp")
-	MakeDirs("www/assets")
-	MakeDirs("www/static")
-	//
-	DefaultAsset("www/assets/video-js.min.css", "template/video-js.min.css")
-	DefaultAsset("www/assets/video.min.js", "template/video.min.js")
-	DefaultAsset("www/assets/style.css", "template/style.css")
-	DefaultAsset("www/assets/favicon.png", "template/favicon.png")
-	DefaultAsset("www/assets/video-bg.png", "template/video-bg.png")
-	//
-	MaxUploadSize = Int2Int64(MaxUploadSizeMB * MB)
-	//
-
-}
+var (
+	db          *bolt.DB
+	userpass    map[string]string = make(map[string]string)
+	currentUser string
+	aesKey      []byte
+)
 
 func openBolt() {
 	var err error
@@ -55,11 +39,11 @@ func openBolt() {
 		Timeout:  3 * time.Second,
 		ReadOnly: IsDatabaseReadOnly,
 	})
+	FatalError("openBolt", err)
+
 	if IsDatabaseReadOnly {
 		DebugWarn("openBolt", "db is in ReadOnly mode")
 	}
-
-	FatalError("openBolt", err)
 
 	db.Update(func(tx *bolt.Tx) error {
 		_, err = tx.CreateBucketIfNotExists([]byte(SystemBucket))
@@ -74,23 +58,27 @@ func openBolt() {
 			return err
 		}
 
-		_, err = tx.CreateBucketIfNotExists([]byte(FbinBucket))
+		_, err = tx.CreateBucketIfNotExists([]byte(UserBucket))
 		if err != nil {
 			FatalError("OpenBolt:CreateBucketIfNotExists", err)
 			return err
 		}
+
 		return nil
 	})
+
+	updateUserPass()
+	openBadger()
 }
 
 func dbSave(user, group, key string, data []byte) string {
 	if IsAnyEmpty(user, group, key) || IsAnyNil(data) || len(data) == 0 {
-		return ""
+		return EmptyVal
 	}
 
 	if strings.HasPrefix(user, "_") {
 		DebugWarn("dbSave:param invalid", "param --user could not be start with _")
-		return ""
+		return EmptyVal
 	}
 
 	user = strings.ToLower(user)
@@ -102,118 +90,61 @@ func dbSave(user, group, key string, data []byte) string {
 	gkey := JoinKey([]string{group, key})
 	fullKey := JoinKey([]string{user, gkey})
 
-	isNewPut := false
-
 	tx, err := db.Begin(true)
 	if err != nil {
-		return ""
+		return EmptyVal
 	}
 	defer tx.Rollback()
 
-	bkt, err := tx.CreateBucketIfNotExists([]byte(user))
+	bktUser, err := tx.CreateBucketIfNotExists([]byte(user))
 	if err != nil {
 		FatalError("dbSave:CreateBucketIfNotExists", err)
-		return ""
+		return EmptyVal
 	}
 
-	if bkt.Get([]byte(gkey)) != nil {
-		isNewPut = false
+	if bktUser.Get([]byte(gkey)) != nil {
 		DebugWarn("dbSave:Update:SKIP", "key exists")
 		return fullKey
 	}
 	// Fbin
-	fbin := tx.Bucket([]byte(FbinBucket))
-	fbinK := SumBlake3(data)
-	if fbin.Get(fbinK) == nil {
-		fbin.Put(fbinK, ZstdBytes(data))
+	// bktFbin := tx.Bucket([]byte(FbinBucket))
+	// fbinK := SumBlake3(data)
+	// if bktFbin.Get(fbinK) == nil {
+	// 	bktFbin.Put(fbinK, ZstdBytes(data))
+	// }
+	fbinK := fbinSave(data)
+	if fbinK == nil {
+		DebugWarn("dbSave:fbinSave", "can not save into badger")
+		return EmptyVal
 	}
 
-	if err := bkt.Put([]byte(gkey), fbinK); err != nil {
+	if err := bktUser.Put([]byte(gkey), fbinK); err != nil {
 		FatalError("dbSave:PUT", err)
-		return ""
+		return EmptyVal
 	}
 
-	DebugInfo("dbSave:PUT:ok", gkey)
-	isNewPut = true
+	var idstr string
+	// update system auto_increment_id
+	bktSystem := tx.Bucket([]byte(SystemBucket))
+	id, _ := bktSystem.NextSequence() //uint64
+	idstr = strconv.FormatUint(id, 10)
+	bktSystem.Put([]byte(idstr), []byte(fullKey))
+	// update max increment_id
+	bktMeta := tx.Bucket([]byte(MetaBucket))
+	bktMeta.Put([]byte("meta/current_increment_id"), []byte(idstr))
 
 	if err := tx.Commit(); err != nil {
 		FatalError("dbSave:Commit", err)
-		return ""
-	}
-
-	if isNewPut {
-		dbUpdateSys(fullKey)
+		return EmptyVal
 	}
 
 	return fullKey
 }
 
-func dbUpdateMeta(k, v string) error {
-	db.Update(func(tx *bolt.Tx) error {
-		bkt := tx.Bucket([]byte(MetaBucket))
-		err := bkt.Put([]byte(k), []byte(v))
-		PrintError("dbUpdateMeta", err)
-		return err
-	})
-	return nil
-}
-
-func dbUpdateSys(k string) error {
-	var idstr string
-	db.Update(func(tx *bolt.Tx) error {
-		bkt := tx.Bucket([]byte(SystemBucket))
-
-		id, _ := bkt.NextSequence() //uint64
-		idstr = strconv.FormatUint(id, 10)
-		err := bkt.Put([]byte(idstr), []byte(k))
-		PrintError("dbUpdateSys", err)
-
-		return err
-	})
-
-	dbUpdateMeta("meta/current_increment_id", idstr)
-	return nil
-}
-func dbPagedSys(pageNum int) []string {
-	var res []string
-
-	if pageNum < 1 {
-		pageNum = 1
-	}
-	db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket([]byte(SystemBucket)).Cursor()
-
-		prefix := []byte("")
-		min := (pageNum - 1) * PageSize
-		max := min + PageSize
-
-		for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
-			intk, _ := strconv.Atoi(string(k))
-			if intk > min && intk <= max {
-				res = append(res, fmt.Sprintf("%s:%s", k, v))
-			}
-		}
-
-		return nil
-	})
-	pageFile := fmt.Sprintf("data/_sync/%d.json", pageNum)
-	DebugInfo("dbPagedSys:pageFile", pageFile)
-	_, err := os.Stat(pageFile)
-	if err != nil {
-		bres, err := json.Marshal(res)
-		PrintError("dbPagedSys:json.Marshal", err)
-
-		err = ioutil.WriteFile(pageFile, bres, os.ModePerm)
-		PrintError("dbPagedSys:WriteFile", err)
-	}
-
-	return res
-}
-
 func dbGet(bkt, key string) []byte {
 	var fbinK []byte
 	var fdata []byte
-	err := db.View(func(tx *bolt.Tx) error {
+	db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bkt))
 		if b == nil {
 			return ErrNotExist
@@ -221,18 +152,11 @@ func dbGet(bkt, key string) []byte {
 		fbinK = b.Get([]byte(key))
 		return nil
 	})
-	PrintError("dbGet", err)
-
-	db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(FbinBucket))
-		fdata = b.Get(fbinK)
-		return nil
-	})
-
-	if fdata == nil {
-		return nil
+	if fbinK != nil {
+		fdata = fbinGet(fbinK)
 	}
-	return UnZstdBytes(fdata)
+
+	return fdata
 }
 
 func dbDelete(bkt, key string) error {
@@ -253,6 +177,60 @@ func dbDelete(bkt, key string) error {
 		DebugInfo("dbDelete", "OK")
 	}
 
+	return err
+}
+
+func dbUserAdd(name, pass string) error {
+	if IsAnyEmpty(name, pass) {
+		DebugWarn("addUser", "name/password cannot be empty")
+		return ErrParamEmpty
+	}
+	name = strings.ToLower(name)
+	if AdminUser == name {
+		DebugWarn("addUser", "name cannot be same as admin")
+		return ErrParamInvalid
+	}
+
+	if len(name) <= 2 {
+		DebugWarn("addUser", "name should be more than 2 letters")
+		return ErrParamInvalid
+	}
+
+	err := db.Update(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket([]byte(UserBucket))
+		if bkt.Get([]byte(name)) != nil {
+			DebugWarn("addUser", "name exists")
+			return ErrParamInvalid
+		}
+		encpass := aesEncHex([]byte(pass))
+		err := bkt.Put([]byte(name), []byte(encpass))
+		PrintError("addUser", err)
+		return err
+	})
+
+	return err
+}
+
+func dbUserDelete(name string) error {
+	if IsAnyEmpty(name) {
+		DebugWarn("deleteUser", "name cannot be empty")
+		return ErrParamEmpty
+	}
+
+	if AdminUser == name {
+		DebugWarn("deleteUser", "admin cannot be removed")
+	}
+
+	err := db.Update(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket([]byte(UserBucket))
+		if bkt.Get([]byte(name)) == nil {
+			DebugWarn("deleteUser", "user does not exist: ", name)
+			return ErrNotExist
+		}
+		err := bkt.Delete([]byte(name))
+		PrintError("deleteUser", err)
+		return err
+	})
 	return err
 }
 
@@ -382,215 +360,66 @@ func getMeta(prefix string) (kvs []map[string]string) {
 	return kvs
 }
 
-func exportFiles(dpath string) {
-	MakeDirs(dpath)
-	buckets := getAllBuckets()
-	var notExportFiles []string
+func getSystemPaged(pageNum int) []string {
+	var res []string
 
-	if len(buckets) > 0 {
-		for _, bucket := range buckets {
-			if bucket == "" || strings.HasPrefix(bucket, "_") {
-				continue
-			}
-			DebugInfo("exportFiles:Bucket", bucket)
-			db.View(func(tx *bolt.Tx) error {
-				c := tx.Bucket([]byte(bucket)).Cursor()
-				fbin := tx.Bucket([]byte(FbinBucket))
-
-				prefix := []byte("")
-				var i int
-
-				for k, v := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = c.Next() {
-
-					PrintSpinner(strconv.Itoa(i))
-
-					exportPath := strings.Join([]string{dpath, bucket, string(k)}, "/")
-					DebugInfo("exportFiles:exportPath", exportPath)
-					MakeDirs(filepath.Dir(exportPath))
-					fbinVal := fbin.Get(v)
-					if fbinVal != nil {
-						ioutil.WriteFile(exportPath, UnZstdBytes(fbinVal), os.ModePerm)
-					}
-
-					finfo, err := os.Stat(exportPath)
-					FatalError("exportFiles:os.Stat", err)
-					if finfo.Size() == 0 {
-						if IsIgnoreError {
-							PrintError("exportFiles:size", ErrFileSizeZero)
-						} else {
-							FatalError("exportFiles:size", ErrFileSizeZero)
-						}
-					}
-
-					if err != nil || finfo.Size() == 0 {
-						notExportFiles = append(notExportFiles, strings.Join([]string{"EXPORT ERROR:", bucket, string(k)}, ":"))
-					}
-
-					i++
-				}
-
-				return nil
-			})
-		}
+	if pageNum < 1 {
+		pageNum = 1
 	}
+	db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket([]byte(SystemBucket)).Cursor()
 
-	if len(notExportFiles) > 0 {
-		err := ioutil.WriteFile("data/logs/export_error_files-"+GetXxhash([]byte(dpath))+".log", []byte(strings.Join(notExportFiles, "\r\n")), os.ModePerm)
-		PrintError("ExportFiles:write log", err)
-	}
-}
+		prefix := []byte("")
+		min := (pageNum - 1) * PageSize
+		max := min + PageSize
 
-func ImportFiles(dpath, ext, user, group string) error {
-	DebugInfo("ImportFiles:dir", dpath)
-	DebugInfo("ImportFiles:ext", ext)
-	DebugInfo("ImportFiles:user", user)
-	DebugInfo("ImportFiles:group", group)
-	DebugInfo("ImportFiles:max-upload-size", MaxUploadSize)
-	if dpath == "" || ext == "" || user == "" || group == "" {
-		DebugWarn("ImportFiles:Param", "dpath, ext, user, group cannot be empty")
-		return nil
-	}
-	var relPath string
-	var fdata []byte
-	var ignoreFiles []string
-	var readyFiles []string
-	// for windows
-	dpath = ToUnixSlash(dpath)
-
-	filepath.Walk(dpath, func(path string, finfo os.FileInfo, err error) error {
-		if finfo.IsDir() {
-			return nil
-		}
-		// for windows
-		path = ToUnixSlash(path)
-
-		if ImportIsIgnoreDotFile {
-			if strings.HasPrefix(finfo.Name(), ".") {
-				ignoreFiles = append(ignoreFiles, "IGNORE:dot-file: "+path)
-				return nil
+		for k, v := c.Seek(prefix); k != nil; k, v = c.Next() {
+			intk, _ := strconv.Atoi(string(k))
+			if intk > min && intk <= max {
+				res = append(res, fmt.Sprintf("%s:%s", k, v))
 			}
 		}
-
-		if ext != "*" {
-			if filepath.Ext(strings.ToLower(finfo.Name())) != strings.ToLower(ext) {
-				return nil
-			}
-		}
-
-		if finfo.Size() > MaxUploadSize {
-			ignoreFiles = append(ignoreFiles, "IGNORE:oversize: "+path)
-			return nil
-		}
-
-		if finfo.Size() == 0 {
-			ignoreFiles = append(ignoreFiles, "IGNORE:0 size: "+path)
-			return nil
-		}
-
-		readyFiles = append(readyFiles, path)
 
 		return nil
 	})
+	pageFile := fmt.Sprintf("data/_sync/%d.json", pageNum)
+	DebugInfo("dbPagedSys:pageFile", pageFile)
+	_, err := os.Stat(pageFile)
+	if err != nil {
+		bres, err := json.Marshal(res)
+		PrintError("dbPagedSys:json.Marshal", err)
 
-	if len(ignoreFiles) > 0 {
-		loghash := strings.Join([]string{dpath, ext, user, group}, ":")
-		err := ioutil.WriteFile("data/logs/import_ignore_files-"+GetXxhash([]byte(loghash))+".log", []byte(strings.Join(ignoreFiles, "\r\n")), os.ModePerm)
-		PrintError("ImportFiles:write log", err)
+		err = ioutil.WriteFile(pageFile, bres, os.ModePerm)
+		PrintError("dbPagedSys:WriteFile", err)
 	}
 
-	fcount := len(readyFiles)
-
-	if fcount == 0 {
-		DebugInfo("ImportFiles", "no files will be imported")
-		return nil
-	}
-
-	fmt.Println("ImportFiles:count:", fcount)
-
-	// batch fbin for turbo
-	var batchSize int = 500
-	if fcount <= batchSize {
-		batchSize = fcount
-	}
-
-	var epoch int = fcount/batchSize + 1
-	var epochFiles []string
-
-	fmt.Println("ImportFiles:epoch:", epoch)
-	for i := 0; i < epoch; i++ {
-		PrintSpinner(strconv.Itoa(i))
-
-		idFrom := i * batchSize
-		idTo := i*batchSize + batchSize
-		if idTo > fcount {
-			idTo = fcount
-		}
-		epochFiles = readyFiles[idFrom:idTo]
-		if len(epochFiles) > 0 {
-			fbinBatchSave(epochFiles, dpath)
-		}
-		DebugWarn("-----", i, "-----", len(epochFiles), "-----")
-
-	}
-
-	//
-	var err error
-	for i, fpath := range readyFiles {
-		PrintSpinner(strconv.Itoa(i))
-		relPath, err = filepath.Rel(dpath, fpath)
-		PrintError("ImportFiles:relPath", err)
-		relPath = ToUnixSlash(relPath)
-
-		fdata, err = ioutil.ReadFile(fpath)
-		if err != nil {
-			PrintError("ImportFiles:ReadFile", err)
-			continue
-		}
-
-		k := dbSave(user, group, relPath, fdata)
-		DebugInfo("Saved", strings.Join([]string{fpath, relPath, k}, "=>"))
-	}
-
-	return nil
+	return res
 }
 
-func fbinBatchSave(files []string, dpath string) error {
-	tx, err := db.Begin(true)
-	if err != nil {
-		FatalError("fbinBatchSave:db.Begin", err)
+func updateUserPass() error {
+	userpassReset := make(map[string]string)
+	userpass = userpassReset
+
+	db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket([]byte(UserBucket)).Cursor()
+		if c == nil {
+			return nil
+		}
+		pre := []byte("")
+		for k, v := c.Seek(pre); k != nil && v != nil; k, v = c.Next() {
+			dec := aesDecHex(string(v))
+			userpass[string(k)] = dec
+		}
 		return nil
-	}
-	defer tx.Rollback()
-
-	fbin := tx.Bucket([]byte(FbinBucket))
-	for _, fpath := range files {
-		relPath, err := filepath.Rel(dpath, fpath)
-		PrintError("fbinBatchSave:relPath", err)
-		relPath = ToUnixSlash(relPath)
-
-		if filepath.Base(relPath) != filepath.Base(fpath) {
-			FatalError("fbinBatchSave:filepath.Base", ErrFileNameNotMatch)
-		}
-
-		fdata, err := ioutil.ReadFile(fpath)
-		if err != nil {
-			PrintError("fbinBatchSave:ReadFile", err)
-			continue
-		}
-		if fdata == nil {
-			DebugWarn("fbinBatchSave", "filesize is 0, SKIP")
-			continue
-		}
-		// Fbin
-		fbinK := SumBlake3(fdata)
-		if fbin.Get(fbinK) == nil {
-			fbin.Put(fbinK, ZstdBytes(fdata))
-		}
-
+	})
+	if AdminUser != "" && AdminPassword != "" {
+		userpass[AdminUser] = AdminPassword
 	}
 
-	if err := tx.Commit(); err != nil {
-		FatalError("fbinBatchSave:Commit", err)
+	DebugInfo("updateUserPass:", "===========")
+	for k, v := range userpass {
+		DebugInfo("updateUserPass:", k, ":", v)
 	}
+
 	return nil
 }

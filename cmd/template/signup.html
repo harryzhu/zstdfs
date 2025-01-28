@@ -1,0 +1,19 @@
+{{ render "header.html" .}}
+
+
+
+<h2>New User SignUp:</h2>
+<div class="user">
+	<form action="/user/edit" method="POST" enctype="multipart/form-data" class="user-form">
+		<label class="useraddname">Name:<input type="text" required pattern="[^_\.]{1}[a-z0-9\-_\.]{2,64}"  name="useraddname" id="useraddname" size="20" minlength="2" maxlength="64" placeholder="length:2-64"></label>
+		<label class="useraddpassword">Password:<input type="password" required pattern=".{6,64}" name="useraddpassword" id="useraddpassword" size="20" minlength="6" maxlength="64" placeholder="length:6-64"></label>
+
+		<label class="submit"><input type="submit" name="submit" id="submit" value="SignUp"></label>
+	</form>
+	<hr/>
+</div>
+
+
+
+
+{{ render "footer.html" .}}

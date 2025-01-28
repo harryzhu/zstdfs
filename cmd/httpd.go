@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	//"context"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -9,11 +10,17 @@ import (
 	"strconv"
 	"strings"
 
+	//"time"
+
 	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/middleware/basicauth"
+	//"github.com/kataras/iris/v12/middleware/basicauth"
 )
 
+const AdminUser string = "super"
+
 var MaxUploadSize int64
+
+//var app *iris.Application
 
 func BeforeStart() {
 	if MaxUploadSize <= 0 {
@@ -30,8 +37,7 @@ func StartHTTPServer() {
 	BeforeStart()
 
 	app := iris.New()
-	app.OnErrorCode(iris.StatusNotFound, notFound)
-	app.OnErrorCode(iris.StatusInternalServerError, internalServerError)
+	//app.IsDebug = IsDebug
 
 	tmpl := iris.HTML(embeddedFS, ".html")
 
@@ -80,38 +86,58 @@ func StartHTTPServer() {
 	app.HandleDir("/assets", iris.Dir("www/assets"), iris.DirOptions{ShowList: false})
 
 	adminAPI := app.Party("/admin")
-
 	{
-		if AdminUser != "" && AdminPassword != "" {
-			auth := basicauth.Default(map[string]string{
-				AdminUser: AdminPassword,
-			})
-			adminAPI.Use(auth)
-		}
 
+		adminAPI.Use(updateBasicAuthUserList)
 		adminAPI.Use(iris.Compression)
 
 		adminAPI.Post("/upload", uploadFile)
 		adminAPI.Get("/edit", editFiles)
 		adminAPI.Delete("/delete/{bucket:string}/{fname:path}", deleteFiles)
-
+		adminAPI.Get("/super", superAdmin)
 	}
 
-	sysAPI := app.Party("/_stats")
+	userAPI := app.Party("/user")
+	{
+		userAPI.Use(iris.Compression)
+
+		userAPI.Get("/signup", userSignup)
+		userAPI.Post("/edit", userAdd)
+		userAPI.Post("/delete", userDelete)
+		userAPI.Get("/logout", userLogout)
+	}
+
+	systemAPI := app.Party("/_stats")
 
 	{
-		sysAPI.Use(iris.Compression)
-		sysAPI.HandleDir("/_sync", iris.Dir("data/_sync"), StaticOptions)
+		systemAPI.Use(iris.Compression)
+		systemAPI.HandleDir("/_sync", iris.Dir("data/_sync"), StaticOptions)
 
-		sysAPI.Get("/_buckets", sysAllBuckets)
-		sysAPI.Get("/_groups/{bucket:string}", sysAllGroups)
-		sysAPI.Get("/_keys/{bucket:string}", sysAllBucketKeys)
-		sysAPI.Get("/_keys/{bucket:string}/{prefix:string}", sysAllBucketPrefixKeys)
-		sysAPI.Get("/_system/{pagenum:int}", sysPagedKvs)
-		sysAPI.Get("/_meta/", sysMeta)
+		systemAPI.Get("/_buckets", systemAllBuckets)
+		systemAPI.Get("/_groups/{bucket:string}", systemAllGroups)
+		systemAPI.Get("/_keys/{bucket:string}", systemAllBucketKeys)
+		systemAPI.Get("/_keys/{bucket:string}/{prefix:string}", systemAllBucketPrefixKeys)
+		systemAPI.Get("/_system/{pagenum:int}", systemPagedKvs)
+		systemAPI.Get("/_meta/", systemMeta)
 	}
 
-	app.Listen(fmt.Sprintf("%s:%d", Host, Port))
+	app.Listen(fmt.Sprintf("%s:%d", Host, Port), iris.WithDynamicHandler)
+
+}
+
+func updateBasicAuthUserList(ctx iris.Context) {
+	updateUserPass()
+	userlogin, userpswd, ok := ctx.Request().BasicAuth()
+
+	if ok && userlogin != "" && userpass[userlogin] == userpswd {
+		ctx.Next()
+	} else {
+		DebugWarn("updateBasicAuthUserList", "user login required:", userlogin, ":", ok)
+		ctx.ResponseWriter().Header().Add("WWW-Authenticate", `Basic realm="zstdfs", charset="UTF-8"`)
+		ctx.ResponseWriter().Header().Set("Content-Type", "text/html")
+		ctx.ResponseWriter().WriteHeader(401)
+		ctx.StopWithError(401, ErrUnauthorized)
+	}
 
 }
 
@@ -342,9 +368,11 @@ func uploadFile(ctx iris.Context) {
 }
 
 func editFiles(ctx iris.Context) {
-	ckfuser := ""
-	if ctx.GetCookie("ck_fuser") != "" {
-		ckfuser = ctx.GetCookie("ck_fuser")
+	userlogin, _, _ := ctx.Request().BasicAuth()
+
+	if userlogin == "" {
+		DebugWarn("editFiles", "user login required")
+		return
 	}
 
 	ckfgroup := ""
@@ -360,10 +388,28 @@ func editFiles(ctx iris.Context) {
 	ctx.View("upload-form.html", iris.Map{
 		"form_action":             "/admin/upload",
 		"form_max_upload_size_mb": strconv.Itoa(MaxUploadSizeMB),
-		"ck_fuser":                ckfuser,
+		"ck_fuser":                userlogin,
 		"ck_fgroup":               ckfgroup,
 		"ck_fprefix":              ckfprefix,
 	})
+}
+
+func superAdmin(ctx iris.Context) {
+	isadmin := false
+	userlogin, _, _ := ctx.Request().BasicAuth()
+
+	if userlogin == "" {
+		DebugWarn("superAdmin", "user login required")
+	}
+
+	if userlogin == AdminUser {
+		isadmin = true
+	}
+
+	ctx.View("super-admin.html", iris.Map{
+		"isadmin": isadmin,
+	})
+
 }
 
 func deleteFiles(ctx iris.Context) {
@@ -389,20 +435,20 @@ func deleteFiles(ctx iris.Context) {
 
 }
 
-func sysAllBuckets(ctx iris.Context) {
+func systemAllBuckets(ctx iris.Context) {
 	buckets := getAllBuckets()
 
 	ctx.JSON(buckets)
 }
 
-func sysAllGroups(ctx iris.Context) {
+func systemAllGroups(ctx iris.Context) {
 	bkt := ctx.Params().Get("bucket")
 	groups := getAllGroups(bkt)
 
 	ctx.JSON(groups)
 }
 
-func sysAllBucketKeys(ctx iris.Context) {
+func systemAllBucketKeys(ctx iris.Context) {
 	bkt := ctx.Params().Get("bucket")
 	if bkt == "" {
 		ctx.Writef("Error: %s can not be empty", "param bucket cannot be empty")
@@ -412,7 +458,7 @@ func sysAllBucketKeys(ctx iris.Context) {
 	ctx.JSON(getAllKeys(bkt, ""))
 }
 
-func sysAllBucketPrefixKeys(ctx iris.Context) {
+func systemAllBucketPrefixKeys(ctx iris.Context) {
 	bkt := ctx.Params().Get("bucket")
 	pre := ctx.Params().Get("prefix")
 	if IsAnyEmpty(bkt, pre) {
@@ -423,14 +469,14 @@ func sysAllBucketPrefixKeys(ctx iris.Context) {
 	ctx.JSON(getAllKeys(bkt, pre))
 }
 
-func sysPagedKvs(ctx iris.Context) {
+func systemPagedKvs(ctx iris.Context) {
 	pagenum, err := strconv.Atoi(ctx.Params().Get("pagenum"))
-	PrintError("sysPagedKvs:pagenum", err)
-	kvs := dbPagedSys(pagenum)
+	PrintError("systemPagedKvs:pagenum", err)
+	kvs := getSystemPaged(pagenum)
 	ctx.JSON(kvs)
 }
 
-func sysMeta(ctx iris.Context) {
+func systemMeta(ctx iris.Context) {
 	kvs := getMeta("")
 	ctx.JSON(kvs)
 }

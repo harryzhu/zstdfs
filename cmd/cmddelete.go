@@ -21,9 +21,9 @@ var (
 var deleteCmd = &cobra.Command{
 	Use:              "delete",
 	TraverseChildren: true,
-	Short:            "delete --endpoint= --user= --group= --key= --auth=admin:123",
+	Short:            "delete --endpoint= --user= --group= --key= --auth=",
 	Long: `e.g.: 
-	./zstdfs delete --user=harry --group=web02 --key=bootstrap/v3.5/bs.min.css,
+	./zstdfs delete --endpoint=http://localhost:8080/admin/delete --user=harry --group=web02 --key=bootstrap/v3.5/bs.min.css --auth=admin:123,
 	will delete the key[web02/bootstrap/v3.5/bs.min.css] from the bucket[harry].
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -35,9 +35,17 @@ var deleteCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fkey := strings.Join([]string{DeleteGroup, DeleteKey}, "/")
-		DebugInfo("DeleteCmd:Key", DeleteUser, "/", fkey)
-		clientDeleteFile(DeleteUser, fkey, DeleteEndpoint, DeleteAuth)
+		deleteURL := strings.Join([]string{DeleteEndpoint, DeleteUser, DeleteGroup, DeleteKey}, "/")
+		DebugInfo("DeleteCmd:url", deleteURL)
+		formParams := map[string]string{}
+
+		authUserPass := strings.Split(DeleteAuth, ":")
+		if authUserPass[0] == DeleteUser || authUserPass[0] == AdminUser {
+			clientDo("DELETE", deleteURL, DeleteAuth, "", formParams)
+		} else {
+			DebugWarn("DeleteCmd", "user cannot delete files of others:", authUserPass[0], " <=> ", DeleteUser)
+		}
+
 	},
 }
 
