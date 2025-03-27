@@ -1,24 +1,32 @@
 package cmd
 
 import (
-	"errors"
+	"database/sql"
+	//"fmt"
+	badger "github.com/dgraph-io/badger/v4"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+const KB int = 1 << 10
 const MB int = 1 << 20
 const GB int = 1 << 30
-const EmptyVal string = ""
+const TB int = 1 << 40
+
+const ADMIN string = "_admin"
+const AdminBucket string = ADMIN
+
+const DiskCacheExpires float64 = 86400
 
 var (
-	ErrParamEmpty       error = errors.New("args could not be empty")
-	ErrParamInvalid     error = errors.New("args invalid")
-	ErrNotExist         error = errors.New("does not exist")
-	ErrBucketKeyEmpty   error = errors.New("bucket and key cannot be empty")
-	ErrFileSizeZero     error = errors.New("filesize is 0")
-	ErrFileNameNotMatch error = errors.New("basename of path and relPath are different")
-	ErrUnauthorized     error = errors.New("unauthorized")
-	ErrAESInvalid       error = errors.New("aes encrypt and decrypt error")
-)
-
-var (
-	basicAuthFailures int = 0
+	Params     map[string]any
+	sqldb      *sql.DB
+	mgodb      *mongo.Database
+	bgrdb      *badger.DB
+	DATA_DIR   string
+	TEMP_DIR   string
+	CACHE_DIR  string
+	ASSET_DIR  string
+	STATIC_DIR string
+	//
+	FunctionCacheExpires int64 = 300
 )

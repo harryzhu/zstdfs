@@ -10,42 +10,24 @@ import (
 )
 
 var (
-	IsDebug            bool
-	IsIgnoreError      bool
-	IsDatabaseReadOnly bool
-	DataDir            string
-	MaxUploadSizeMB    int
-
-	Pflags map[string]map[string]any = make(map[string]map[string]any)
+	IsDebug         bool
+	MaxUploadSizeMB int
+	CacheTimeout    int64
+	Host            string
+	Port            string
+	SampleFile      string
+	UploadDir       string
+	StaticDir       string
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:              "zstdfs",
-	Short:            "--debug=true|false",
-	TraverseChildren: true,
-	Long: `1)zstdfs httpd [flags] is a http server for uploading and accessing files.
-all files will be compressed by zstd algorithm, zstd is effective for ascii files,
-e.g.: .css, .js, .txt, .md, .html, .py ...
-for image/video/binary-files, you could put them in a static folder(via subcommand httpd flag
---static-folder=/path/to/your/folder), then url is: http://host:port/static/your-file-path.
-2)zstdfs import [flags]: batch import specified files into zstdfs from a folder.
-3)zstdfs export [flags]: export all files from zstdfs into a local folder.
-4)zstdfs put [flags]: put a single file into zstdfs.
-5)zstdfs delete [flags]: delete a single file from zstdfs.
-6)readonly mode: you can use --readonly to protect the database from any update.
------
-if you want to run subcommand [export/import/put/delete], please stop subcommand [httpd] server first.
------
-1)url: http://host:port/z/{bucket}/{group}/... is for files stored in database;
-2)url: http://host:port/static/... is for non-ascii files stored in the disk;
------
-if you want to run subcommand [export/import/put/delete], please stop subcommand [httpd] server first.
-`,
-
+	Use:   "zstdfs",
+	Short: "A brief description of your application",
+	Long:  ``,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		DebugInfo("zstdfs", "Thanks for choosing zstdfs!")
-		PrintPflags()
+
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -62,11 +44,16 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+	//
+	BeforeStart()
 }
 
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&IsDebug, "debug", false, "if print debug info")
 	rootCmd.PersistentFlags().IntVar(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
-	rootCmd.PersistentFlags().BoolVar(&IsIgnoreError, "ignore-error", false, "if stop when error")
-	rootCmd.PersistentFlags().BoolVar(&IsDatabaseReadOnly, "readonly", false, "if set database in ReadOnly mode")
+	rootCmd.PersistentFlags().StringVar(&Host, "host", "0.0.0.0", "host, default: 0.0.0.0")
+	rootCmd.PersistentFlags().StringVar(&Port, "port", "9090", "port, default: 9090")
+	rootCmd.PersistentFlags().StringVar(&UploadDir, "upload-dir", "", "Upload Dir")
+	rootCmd.PersistentFlags().StringVar(&StaticDir, "static-dir", "", "Static Dir")
+	rootCmd.PersistentFlags().Int64Var(&CacheTimeout, "cache-timeout", 300, "function data cache expires seconds")
 }

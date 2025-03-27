@@ -9,12 +9,30 @@
 	<script src="/assets/video.min.js"></script>
 	<style type="text/css">
 		html,body{
-			background-color: #f9f9ff;
+			background-color: #f5f7fd;
 			font-size: 18px;
 			font-family: Helvetica;
 		}
 		body{
 			padding: 10px;
+		}
+		.navbar{
+			height: 60px;
+			width: 100%;
+			margin-bottom: 10px;
+		}
+		.menu{
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+		.menu li{
+			margin: 0;
+			padding: 0;
+			list-style: none;
+			display: inline-block;
+			padding: 5px;
+			border: none!important;
 		}
 		hr{
 			border: none;
@@ -54,11 +72,48 @@
 			list-style: none;
 			border-bottom: 1px solid #dededd;
 		}
+
+		.item-keyname{
+			min-width: 420px;
+			word-break:break-all;
+			word-wrap:break-word;
+		}
+
+		ul.tags{
+			margin: 0;
+			padding: 0;
+			font-size: 13px;
+			list-style: none;
+		}
+
+		ul.tags li{
+			margin: 2px;
+			padding: 1px 3px;
+			border: 1px solid #00b800;
+			background-color: #00b800;
+			border-radius: 6px;
+			list-style: none;
+			display: inline-block;
+		}
+
+		ul.tags li,
+		ul.tags li a{
+			text-decoration: none;
+			color: #fff!important;
+		}
+		ul.tags li a:hover{
+			color: #blue!important;
+		}
+
+		.item-dir a{
+			color: #ff6801!important;
+		}
 		label{
 			display: inline-block;
 			margin-top: 5px;
 			width: 99.99%;
 		}
+
 		input[type=text],
 		input[type=password]{
 			border: 1px solid #ccc;
@@ -71,6 +126,118 @@
 			border: 1px solid #1772f6;
 			outline:none;
 		}
+
+		.dot-col{
+			width: 14px!important;
+		}
+
+		.dot-col-dir{
+			color:#f5f7fd;
+		}
+
+		.dot-col-file{
+			color:#f5f7fd;
+			font-size: 20px!important;
+		}
+
+		.dot-black{
+			color:#111;
+		}
+
+		.dot-red{
+			color:#ff0007;
+		}
+
+		.dot-green{
+			color:#00b800;
+		}
+
+		.dot-blue{
+			color:#2655fe;
+		}
+
+		.dot-purple{
+			color:#c28bbf;
+		}
+
+		.dot-gold{
+			color:#feb306;
+		}
+
+		.dot-orange{
+			color:#ff6a00;
+		}
+
+		a.btn-download,
+		a.btn-play{
+			text-decoration: none;
+			font-size: 15px;
+			display: inline-block;
+			padding: 2px;
+		}
+
+		a.btn-play{
+			color:#fd0239;
+		}
+
+		.meta{
+			color: #ababaa;
+			font-size: 16px;
+		}
+
+		.meta-tags{
+			max-width: 480px;
+		}
+
+		.meta-size{
+			width: 80px;
+		}
+
+		.meta-mtime{
+			width: 140px;
+			text-align: center;
+		}
+
+		table.statistics{
+			max-width: 240px!important;
+			border: none;
+			padding: 0;
+			margin: 0;
+			overflow: hidden;
+			word-break: break-all;
+		}
+
+		table.tbl-tag-filter{
+			width: 680px!important;
+			border: none;
+			padding: 0;
+			margin: 0;
+		}
+
+		table.tbl-tag-filter h2{
+			min-width: 300px;
+		}
+
+		td.tag-filter-tag-contains{
+			width: 120px!important;
+		}
+
+		.ftagsubmit{
+			height: 20px;
+			border: none;
+			padding: 0;
+			margin: 0;
+			font-size: 18px;
+		}
+
+
+		.no-border{
+			border: none;
+		}
+
+		.meta-action{
+			width: 80px;
+		}
 		table{
 			width: 100%;
 			border-spacing: 0;
@@ -80,7 +247,7 @@
 		}
 		td{
 			padding: 5px;
-			border: 1px solid #dededd;
+			border-bottom: 1px solid #ccc;
 		}
 		tr.dir{
 			background-color: #f0f5f7;
@@ -92,6 +259,8 @@
 		td.dir{
 
 		}
+
+
 		#submit{
 			background-color: #1772f6;
 			color: #fff;
@@ -109,8 +278,80 @@
 			vertical-align: top;
 			border: none;
 		}
+
+		.tags-list{
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.tags-list li.tag-item{
+			margin: 2px;
+			padding: 2px 4px;
+			list-style: none;
+			display: inline-block;
+			border: 1px solid #05acd7;
+			border-radius: 6px;
+		}
+		.top-tags{
+			border: 1px solid #ccc;
+		}
+
+		.top-tags td{
+			border: 1px solid #ccc;
+			vertical-align: top;
+		}
+
+		.top-tags-group{
+			width: 100px;
+		}
+
+		.top-tags ul{
+			width: 100%;
+		}
+
+		.footer{
+			height: 60px;
+		}
 	</style>
 	<link rel="stylesheet" type="text/css" href="/assets/style.css">
 </head>
 <body>
+	<div class="navbar">
+		{{ if .current_user }}
+		<ul class="menu">
+			<li>{{ .current_user }}
+				{{ if .is_admin }}
+				<span title="admin">*</span>
+			{{ end }}</li>
+			<li>&nbsp;|&nbsp;</li>
+			<li><a href="/home">HOME</a></li>
+			<li><a href="/user/buckets">Buckets</a></li>			 
+			<li><a href="/user/tags">Tags</a> ( <a href="/user/tags/top">Top</a> )</li>
+			<li><a href="/static">Static</a></li>					
+			<li><a href="/user/playlist">Play</a></li>
+			<li>&nbsp;|&nbsp;</li>
+			<li><a href="/signup">Sign Up</a></li>
+			<li><a href="/signin">Login</a></li>
+			<li>&nbsp;|&nbsp;</li>
+			<li><a href="/user/edit">Upload</a></li>
+		</ul>
+
+		<ul class="menu">
+			<li>Top: </li>
+			<li><a href="/user/top/stats_digg_count/200000/9999999999">Digg</a></li>
+			<li><a href="/user/top/stats_share_count/50000/9999999999">Repost</a></li>
+			<li><a href="/user/top/stats_comment_count/50000/9999999999">Comment</a></li>
+			<li><a href="/user/top/stats_collect_count/50000/9999999999">Collect</a></li>
+			<li><a href="/user/top/stats_download_count/10000/9999999999">Download</a></li>
+			<li>&nbsp;|&nbsp;</li>
+			<li><a href="/user/by/is_public/0">non-Public</a></li>
+			<li><a href="/user/by/is_ban/1">Banned</a></li>
+			<li>&nbsp;|&nbsp;</li>
+			<li><a href="/user/likes/dot-red">Likes</a></li>
+		</ul>
+		
+		<hr/>
+		{{ end }}		
+	</div>
 	

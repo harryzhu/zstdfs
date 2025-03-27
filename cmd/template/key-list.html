@@ -1,0 +1,25 @@
+{{ render "header.html" . }}
+
+<div class="buckets">
+	<h2><a href="/home">Home</a> > 
+		<a href="/user/buckets/{{ .current_user }}">{{ .current_user }}</a> > 
+		{{ range $idx, $kv := .nav_breadcrumb }}
+		{{ range $k, $v := $kv }}
+		<a href="/user/buckets/{{ $v }}">{{ $k }}</a> > 
+		{{ end}}
+		{{ end}}
+
+		{{ if .file_count }}
+		( {{ .file_count }} )
+		{{ end}} 
+
+	</h2>
+	<table class="bucket-list">
+			
+			{{ render "part-dirs.html" . }}
+			
+			{{ render "part-files.html" . }}
+	</table>
+</div>
+
+{{ render "footer.html" . }}

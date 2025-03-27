@@ -1,0 +1,17 @@
+{{ render "header.html" .}}
+
+
+
+<h2>Current User:</h2>
+<div class="user">
+	{{ if .current_user }}
+	{{ .current_user }}
+	{{ else }}
+</p>user login required.</p>
+{{ end }}
+</div>
+
+
+
+
+{{ render "footer.html" .}}

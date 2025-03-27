@@ -1,12 +1,18 @@
 {{ render "header.html" . }}
 
 <ul>
-	<li><a href="/buckets">Buckets</a></li>
+	{{ if .current_user }}
+	<li><a href="/user/buckets">Buckets</a></li>	
+	<li><a href="/user/tags">Tags</a></li>
+	<li><a href="/user/edit">Upload</a></li>
 	<li><a href="/static">Static</a></li>
-	<li><a href="/admin/edit">Upload</a></li>
-	<li><a href="/user/signup">User SignUp</a></li>
-	<li><a href="/admin/super">Super Admin</a></li>
-	<li><a href="/user/logout">Logout</a></li>
+	
+	{{ end }}
+
+	<li><a href="/signin">Sign In</a></li>
+	<li><a href="/signup">Sign Up</a></li>
+	
+	<li><a href="/logout">Logout</a></li>
 </ul>
 
 {{ render "footer.html" . }}

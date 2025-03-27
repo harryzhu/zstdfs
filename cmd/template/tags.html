@@ -1,0 +1,31 @@
+{{ render "header.html" . }}
+
+<div class="buckets">
+	
+	<form action="{{ .form_action }}" method="POST" enctype="multipart/form-data" class="tag-filter-form">
+		<table class="tbl-tag-filter">
+			<tr>
+				<td>
+					<h2><a href="/home">Home</a> > 
+						<a href="/user/tags">Tags</a>
+						{{ if .file_count }}
+						( {{ .file_count }} )
+					{{ end}}</h2>
+				</td>
+				<td class="tag-filter-tag-contains">Tag Contains:</td>
+				<td><label class="ftaglike"><input type="text" name="frmtaglike"/></label></td>
+				<td><label class="ftagsubmit"><input type="submit" name="frmtagsubmit" value="Submit"></label></td>
+			</tr>
+		</table>
+	</form>
+	
+	<ul class="tags-list">
+		{{ range $k, $v := .nav_tag_list }}
+		<li class="tag-item"><a href="/user/tags/{{ $v }}">{{ $v }}</a></li>
+		{{ end }}
+	</ul>
+</div>
+
+<hr/>
+
+{{ render "footer.html" . }}

@@ -1,11 +1,12 @@
-{{ render "header.html" . }}
+{{ render "dirlist-header.html" . }}
 <div class="static-page">
 	<table class="table-bordered table-odd">
 		<thead>
 			<tr>
-				<th>#</th>
-				<th>Name</th>
-				<th>Size</th>
+				<td>#</td>
+				<td>Name</td>
+				<td>Last Modified</td>
+				<td>Size</td>
 			</tr>
 		</thead>
 		<tbody>
@@ -19,17 +20,19 @@
 					{{ if $file.Download }}
 					<td><a href="{{ $file.Path }}" title="{{ $file.ModTime }}" download>{{ $file.Name }}</a></td> 
 					{{ else }}
-					<td><a href="{{ $file.Path }}" title="{{ $file.ModTime }}">{{ $file.Name }}</a></td>
+					<td><a href="{{ $file.Path }}">{{ $file.Name }}</a></td>
+					<td class="mute-text">{{ $file.ModTime }}</td>
 					{{ end }}
 					{{ if $file.Info.IsDir }}
 					<td class="dir">Dir</td>
 					{{ else }}
-					<td>{{ $file.Info.Size }}</td>
+					<td class="mute-text">{{ $file.Info.Size }}</td>
 					{{ end }}
 				</tr>
 				{{ end }}
 			</tbody>
 		</table>
 	</div>
-
-	{{ render "footer.html" . }}
+	
+{{ render "dirlist-header.html" . }}
+	

@@ -1,0 +1,90 @@
+{{ render "header.html" . }}
+
+<div class="buckets">
+	<h2><a href="/home">Home</a> > 
+		<a href="/user/tags">Tags</a>
+		{{ if .cache_time }}
+		({{ .cache_time }})
+		{{ end }}
+	</h2>
+	{{ if .nav_tags_gall }}
+	<table class="top-tags">
+		<tr>
+			<td class="top-tags-group">All</td>
+			<td>
+				<ul class="tags-list">
+					{{ range $k, $v := .nav_tags_gall }}
+					<li class="tag-item"><a href="/user/tags/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					{{ end }}
+				</ul>
+			</td>
+		</tr>
+	</table>
+
+	{{ else }}
+	<table class="top-tags">
+		<tr>
+			<td class="top-tags-group">Top 20%(910)</td>
+			<td>
+				<ul class="tags-list">
+					{{ range $k, $v := .nav_tags_g910 }}
+					<li class="tag-item"><a href="/user/tags/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					{{ end }}
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<td class="top-tags-group">High 30%(678)</td>
+			<td>
+				<ul class="tags-list">
+					{{ range $k, $v := .nav_tags_g678 }}
+					<li class="tag-item"><a href="/user/tags/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					{{ end }}
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<td class="top-tags-group">Middle 30%(345)</td>
+			<td>
+				
+				<ul class="tags-list">
+					{{ range $k, $v := .nav_tags_g345 }}
+					<li class="tag-item"><a href="/user/tags/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					{{ end }}
+				</ul>
+				
+			</td>
+		</tr>
+		<tr>
+			<td class="top-tags-group">Lower 20%(12)</td>
+			<td>
+				<ul class="tags-list">
+					{{ range $k, $v := .nav_tags_g12 }}
+					<li class="tag-item"><a href="/user/tags/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					{{ end }}
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<td class="top-tags-group">Bottom 10%(0)</td>
+			<td>
+				<ul class="tags-list">
+					{{ range $k, $v := .nav_tags_g0 }}
+					<li class="tag-item"><a href="/user/tags/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</a></li>
+					{{ end }}
+				</ul>
+			</td>
+		</tr>
+		
+	</table>
+	{{ end }}
+	
+	
+	
+	
+	
+</div>
+
+<hr/>
+
+{{ render "footer.html" . }}

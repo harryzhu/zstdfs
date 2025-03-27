@@ -1,0 +1,32 @@
+{{ render "header.html" .}}
+
+
+
+<h2>{{ .title }}</h2>
+<div class="user">
+	<form action="{{ .frm_action }}" method="POST" enctype="multipart/form-data" class="user-form">
+		<table style="width: 500px;">
+			<tr>		
+				<td>
+					<label class="username">Name:<input type="text" required pattern="[^_\.]{1}[a-z0-9\-_\.]{2,64}"  name="username" id="username" size="20" minlength="2" maxlength="64" placeholder="length:2-64"></label>
+				</td>
+			</tr>
+			<tr>		
+				<td>
+					<label class="password">Password:<input type="password" required pattern=".{6,64}" name="password" id="password" size="20" minlength="6" maxlength="64" placeholder="length:6-64"></label>
+					<input type="hidden" name="frm_hash" value="{{ .frm_hash }}" />
+				</td>
+				</tr>
+				<tr>		
+					<td>
+						<label class="submit"><input type="submit" name="submit" id="submit" value="{{ .frm_submit }}"></label>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+
+
+
+
+	{{ render "footer.html" .}}

@@ -1,12 +1,20 @@
 {{ render "header.html" . }}
 
-	<div class="buckets">
-		<h2><a href="/">Home</a> > <a href="/buckets">Buckets</a></h2>
-		<ul class="bucket-list">
-			{{ range $idx, $li := .nav_list }}
-			<li class="item"><a href="/{{ $li.api_party }}/{{ $li.bucket }}">{{ $li.bucket }}</a></li>
+<div class="buckets">
+	<h2><a href="/home">Home</a> > <a href="/user/buckets">Buckets</a>
+		{{ if .file_count }}
+		( {{ .file_count }} )
+		{{ end}}  
+	</h2>
+	<ul class="bucket-list">
+		{{ range $k, $kv := .nav_list }}
+		<li class="item"><a href="/user/buckets/{{ $k }}">{{ $k }}</a>
+			{{ if $kv.doc_count }}
+			<span class="mute-text"> ( {{ $kv.doc_count }} ) </span>
 			{{ end }}
-		</ul>
-	</div>
+		</li>
+		{{ end }}
+	</ul>
+</div>
 
 {{ render "footer.html" . }}

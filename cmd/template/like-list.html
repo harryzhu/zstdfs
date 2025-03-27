@@ -1,0 +1,27 @@
+{{ render "header.html" . }}
+
+<div class="buckets">
+	<h2><a href="/home">Home</a> > <a href="/user/buckets/{{ .current_user }}">{{ .current_user }}</a> > Likes: <span class="dot-col dot-col-file {{ .current_dotcolor }}">&#9679;</span> 
+		{{ if .file_count }}
+		( {{ .file_count }} )
+		{{ end}} >  
+		<a href="/user/likes/dot-red" title="red"><span class="dot-col dot-col-file dot-red">&nbsp;&#9679;&nbsp;</span></a>
+		<a href="/user/likes/dot-green" title="green"><span class="dot-col dot-col-file dot-green">&nbsp;&#9679;&nbsp;</span></a>
+		<a href="/user/likes/dot-blue" title="blue"><span class="dot-col dot-col-file dot-blue">&nbsp;&#9679;&nbsp;</span></a> 
+		<a href="/user/likes/dot-purple" title="purple"><span class="dot-col dot-col-file dot-purple">&nbsp;&#9679;&nbsp;</span></a>  
+		<a href="/user/likes/dot-gold" title="gold"><span class="dot-col dot-col-file dot-gold">&nbsp;&#9679;&nbsp;</span></a> 
+		<a href="/user/likes/dot-orange" title="orange"><span class="dot-col dot-col-file dot-orange">&nbsp;&#9679;&nbsp;</span></a>  
+		<a href="/user/likes/dot-black" title="black"><span class="dot-col dot-col-file dot-black">&nbsp;&#9679;&nbsp;</span></a> 
+		
+	</h2>
+	<table class="bucket-list">			
+			{{ render "part-files.html" . }}
+	</table>	
+	
+	
+	
+</div>
+
+<hr/>
+
+{{ render "footer.html" . }}
