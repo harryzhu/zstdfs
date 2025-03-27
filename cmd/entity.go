@@ -144,7 +144,7 @@ func (ett Entity) SaveWithoutData() bool {
 
 	if badgerExists([]byte(ett.Meta["fsum"])) == false {
 		DebugWarn("SaveWithoutData:badgerExists", "fsum does not exist, cannot SaveWithoutData", ", fsum=", ett.Meta["fsum"])
-		//return false
+		return false
 	}
 
 	ett.Meta["author"] = strings.ToLower(ett.User)
