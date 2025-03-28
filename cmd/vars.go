@@ -18,7 +18,7 @@ const AdminBucket string = ADMIN
 const DiskCacheExpires float64 = 86400
 
 var (
-	Params     map[string]any
+	Params2    map[string]any
 	sqldb      *sql.DB
 	mgodb      *mongo.Database
 	bgrdb      *badger.DB

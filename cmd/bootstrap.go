@@ -39,13 +39,6 @@ func BeforeStart() error {
 	DefaultAsset(STATIC_DIR+"/test.jpg", "template/bg-01.jpg")
 	DefaultAsset(STATIC_DIR+"/example.jpg", "template/bg-02.jpg")
 	//
-	Params = make(map[string]any)
-	//
-	Params["MaxUploadSize"] = Int2Int64(MaxUploadSizeMB * MB)
-	Params["Host"] = Host
-	Params["Port"] = Port
-
-	//
 	DebugInfo("BeforeStart:Debug", IsDebug)
 	DebugInfo("BeforeStart:DATA_DIR", DATA_DIR)
 	DebugInfo("BeforeStart:FunctionCacheExpires", FunctionCacheExpires)
@@ -63,9 +56,6 @@ func BeforeStart() error {
 	//
 	EntitySaveSmoke()
 
-	for k, v := range Params {
-		DebugInfo("BeforeStart", k, "=", v)
-	}
 	return nil
 }
 

@@ -54,6 +54,9 @@ func GetRandomInts(count, min, max int) (ints []int) {
 }
 
 func SiteURL() string {
+	if Host == "0.0.0.0" {
+		return strings.Join([]string{"localhost", Port}, ":")
+	}
 	return strings.Join([]string{Host, Port}, ":")
 }
 

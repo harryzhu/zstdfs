@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
+
+	//"strconv"
 	"strings"
 
 	//"github.com/kataras/iris/v12/sessions"
@@ -92,7 +93,14 @@ func StartHTTPServer() {
 		v1API.Get("/has/{blake3sum:string}", apiHasFile)
 	}
 
-	app.Listen(fmt.Sprintf("%s:%s", Host, Port), iris.WithDynamicHandler)
+	if MaxUploadSizeMB <= 0 {
+		DebugWarn("StartHTTPServer: --max-upload-size-mb ", "cannot be 0, will use 16 as default")
+		MaxUploadSizeMB = 16
+	}
+
+	app.Listen(fmt.Sprintf("%s:%s", Host, Port),
+		iris.WithDynamicHandler,
+		iris.WithPostMaxMemory((MaxUploadSizeMB+1)<<20))
 
 }
 
@@ -243,9 +251,12 @@ func editFiles(ctx iris.Context) {
 		ckftags = ctx.GetCookie("ck_ftags")
 	}
 
+	currentPostMaxSize := (ctx.Application().ConfigurationReadOnly().GetPostMaxMemory())
+	DebugInfo("editFiles:currentPostMaxSize", currentPostMaxSize)
+
 	data := iris.Map{
 		"form_action":             "/user/upload",
-		"form_max_upload_size_mb": strconv.Itoa(MaxUploadSizeMB),
+		"form_max_upload_size_mb": (currentPostMaxSize >> 20) - 1,
 		"current_user":            currentUser.Name,
 		"ck_fuser":                userlogin,
 		"ck_fgroup":               ckfgroup,

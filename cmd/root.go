@@ -11,11 +11,10 @@ import (
 
 var (
 	IsDebug         bool
-	MaxUploadSizeMB int
+	MaxUploadSizeMB int64
 	CacheTimeout    int64
 	Host            string
 	Port            string
-	SampleFile      string
 	UploadDir       string
 	StaticDir       string
 )
@@ -50,7 +49,7 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().BoolVar(&IsDebug, "debug", false, "if print debug info")
-	rootCmd.PersistentFlags().IntVar(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
+	rootCmd.PersistentFlags().Int64Var(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
 	rootCmd.PersistentFlags().StringVar(&Host, "host", "0.0.0.0", "host, default: 0.0.0.0")
 	rootCmd.PersistentFlags().StringVar(&Port, "port", "9090", "port, default: 9090")
 	rootCmd.PersistentFlags().StringVar(&UploadDir, "upload-dir", "", "Upload Dir")

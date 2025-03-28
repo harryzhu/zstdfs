@@ -61,6 +61,7 @@ func apiUploadFile(ctx iris.Context) {
 		_, fileHeader, err := ctx.FormFile("file")
 		if err != nil {
 			ctx.StatusCode(iris.StatusBadRequest)
+			ctx.WriteString(err.Error())
 			return
 		}
 		//
@@ -89,7 +90,7 @@ func apiUploadFile(ctx iris.Context) {
 		}
 	}
 
-	var success bool = false
+	var success bool
 	var meta map[string]any
 	err := json.Unmarshal([]byte(fmeta), &meta)
 	DebugInfo("=====apiUploadFile:meta", meta)
@@ -124,8 +125,6 @@ func uploadFile(ctx iris.Context) {
 		DebugInfo("uploadFile", "pls use POST")
 		return
 	}
-
-	ctx.SetMaxRequestBodySize(Params["MaxUploadSize"].(int64))
 	//
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("uploadFile:currentUser", currentUser)
@@ -142,7 +141,9 @@ func uploadFile(ctx iris.Context) {
 	}
 
 	if IsAnyEmpty(fuser, fgroup) {
-		DebugWarn("MaxUploadSize", Params["MaxUploadSize"].(int64))
+		currentPostMaxSize := (ctx.Application().ConfigurationReadOnly().GetPostMaxMemory())
+		DebugInfo("uploadFile:currentPostMaxSize", currentPostMaxSize)
+
 		ctx.Writef("Error: username and group cannot be empty, or file size exceeds limit.")
 		return
 	}
@@ -155,6 +156,7 @@ func uploadFile(ctx iris.Context) {
 	_, fileHeader, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		return
 	}
 
