@@ -63,9 +63,9 @@ func GetSiteURL() string {
 		return SiteURL
 	}
 	if Host == "0.0.0.0" {
-		return strings.Join([]string{"//localhost", Port}, ":")
+		return strings.Join([]string{"http://localhost", Port}, ":")
 	}
-	return strings.Join([]string{"//", Host, ":", Port}, "")
+	return strings.Join([]string{"http://", Host, ":", Port}, "")
 }
 
 func GetURI(id string) string {

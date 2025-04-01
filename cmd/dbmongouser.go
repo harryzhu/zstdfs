@@ -379,7 +379,9 @@ func mongoUserCollectionInit(user string) bool {
 
 func mongoBatchWriteFiles(files []string) bool {
 	metaAllowKey := []string{"_id", "size", "mime", "mtime", "fsum"}
+	BulkLoadDir = ToUnixSlash(BulkLoadDir)
 	for _, file := range files {
+		file = ToUnixSlash(file)
 		fp, err := os.Open(file)
 		if err != nil {
 			PrintError("BatchWriteFiles", err)
@@ -392,7 +394,7 @@ func mongoBatchWriteFiles(files []string) bool {
 		}
 		fp.Close()
 
-		ID := strings.TrimPrefix(strings.TrimPrefix(file, BulkLoadDir), "/")
+		ID := strings.TrimPrefix(ToUnixSlash(strings.TrimPrefix(file, BulkLoadDir)), "/")
 
 		ett := NewEntity(BulkLoadUser, ID).WithFile(file)
 		for k, _ := range ett.Meta {
