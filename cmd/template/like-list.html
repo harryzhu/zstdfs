@@ -12,6 +12,10 @@
 		<a href="/user/likes/dot-gold" title="gold"><span class="dot-col dot-col-file dot-gold">&nbsp;&#9679;&nbsp;</span></a> 
 		<a href="/user/likes/dot-orange" title="orange"><span class="dot-col dot-col-file dot-orange">&nbsp;&#9679;&nbsp;</span></a>  
 		<a href="/user/likes/dot-black" title="black"><span class="dot-col dot-col-file dot-black">&nbsp;&#9679;&nbsp;</span></a> 
+
+		{{ if .url_play_dot_color }}
+		<a href="{{ .url_play_dot_color }}" title="Play all in this folder" class="btn-play btn-play-big"> PLAY &#9654;</a>
+		{{ end}} 
 		
 	</h2>
 	<table class="bucket-list">			

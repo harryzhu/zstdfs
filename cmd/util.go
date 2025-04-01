@@ -22,6 +22,7 @@ import (
 	"github.com/cespare/xxhash/v2"
 	"github.com/klauspost/compress/zstd"
 	"github.com/zeebo/blake3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func GetNowUnix() int64 {
@@ -46,6 +47,10 @@ func GetRandomInts(count, min, max int) (ints []int) {
 	ts1, _ := strconv.Atoi(strconv.FormatInt(ts.UTC().Unix(), 10))
 	ts2, _ := strconv.Atoi(strconv.FormatInt(ts.UnixNano(), 10))
 	r := rand.New(rand.NewPCG(uint64(ts1), uint64(ts2)))
+	DebugInfo("GetRandomInts:max", max)
+	if max <= 0 {
+		return ints
+	}
 	for i := 0; i < count; i++ {
 
 		ints = append(ints, r.IntN(max))
@@ -53,11 +58,27 @@ func GetRandomInts(count, min, max int) (ints []int) {
 	return ints
 }
 
-func SiteURL() string {
-	if Host == "0.0.0.0" {
-		return strings.Join([]string{"localhost", Port}, ":")
+func GetSiteURL() string {
+	if SiteURL != "" {
+		return SiteURL
 	}
-	return strings.Join([]string{Host, Port}, ":")
+	if Host == "0.0.0.0" {
+		return strings.Join([]string{"//localhost", Port}, ":")
+	}
+	return strings.Join([]string{"//", Host, ":", Port}, "")
+}
+
+func GetURI(id string) string {
+	if IsAnyEmpty(id) {
+		return ""
+	}
+	uri := GetXxhash([]byte(id))
+	fext := strings.ToLower(filepath.Ext(id))
+	if fext != "" {
+		uri = strings.Join([]string{GetXxhash([]byte(id)), fext}, "")
+	}
+
+	return uri
 }
 
 func SHA256String(s string) string {
@@ -90,8 +111,28 @@ func GetPassword(u, p string) string {
 	if IsAnyEmpty(u, p) {
 		return ""
 	}
-	p1 := strings.Join([]string{SHA256String(p), SHA256String(strings.ToLower(u))}, ":")
-	return SHA256String(p1)
+	// p1 := strings.Join([]string{SHA256String(p), SHA256String(strings.ToLower(u))}, ":")
+	// return SHA256String(p1)
+	p1 := SHA256String(strings.Join([]string{SHA256String(p), SHA256String(strings.ToLower(u))}, ":"))
+	hash, err := bcrypt.GenerateFromPassword([]byte(p1), bcrypt.DefaultCost)
+	if err != nil {
+		return ""
+	}
+	return string(hash)
+}
+
+func VerifyPassword(h string, u, p string) bool {
+	if IsAnyEmpty(h, u, p) {
+		return false
+	}
+	p1 := SHA256String(strings.Join([]string{SHA256String(p), SHA256String(strings.ToLower(u))}, ":"))
+
+	err := bcrypt.CompareHashAndPassword([]byte(h), []byte(p1))
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
 }
 
 func GenApiKey(u string) string {
@@ -132,9 +173,9 @@ func DefaultAsset(dest string, src string) {
 }
 
 func PrintSpinner(s string) {
-	if IsDebug == false {
-		fmt.Printf("... %5.30s\r", s)
-	}
+	//if IsDebug == false {
+	fmt.Printf("... %5.30s\r", s)
+	//}
 }
 
 func GetEnv(k string, defaultVal string) string {

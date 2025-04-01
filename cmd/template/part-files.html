@@ -1,42 +1,46 @@
 
-			{{ range $k, $kv := .nav_file_list }}
-			<tr class="item item-file">
-				<td class="dot-col dot-col-file {{ .dot_color }}">&#9679;</td>
-				<td class="item-keyname"><a href="/f/{{ $kv.uri }}">{{ $k }}</a></td>
-			<td class="meta meta-tags">
-				{{ if $kv.tags }}
-				<ul class="tags">
-					{{ range $k,$v := $kv.tags }}
-					<li class="item-tag"><a href="/user/tags/{{ $v }}">{{ $v }}</a></li>
-					{{ end }}
-				</ul>
-				{{ end }}
-			</td>
-			<td class="meta meta-size">{{ $kv.size }}</td>
-			<td class="meta meta-mtime">{{ $kv.mtime }}</td>
-			<td class="meta meta-statistics">
-				{{ if $kv.statistics }}
-				<table class="statistics mute-text">
-					<tr>
-						{{ range $km,$vn := $kv.statistics }}
-						<td class="no-border" title="{{$vn}}">{{$km}}</td>					
-						{{ end }}
-					</tr>
-					<tr class="no-border">
-						{{ range $km,$vn := $kv.statistics }}
-						<td class="no-border" title="{{$km}}">{{$vn}}</td>					
-						{{ end }}
-					</tr>
-				</table>
-				{{ end }}
-			</td>
-			<td class="meta meta-action">
-				<a href="/f/{{ $kv.uri }}" download title="Download" class="btn-download">&#9660;</a>
-				{{ if $kv.is_video }}
-				| <a href="/play/v/{{ $kv.uri }}" title="Play" class="btn-play">&#9654;</a>
-				{{ end }}
-				
-			</td>
-			</tr>
+{{ range $k, $kv := .nav_file_list }}
+<tr class="item item-file">
+	<td class="dot-col dot-col-file {{ .dot_color }}">&#9679;</td>
+	<td class="item-keyname"><a href="/f/{{ $kv.uid }}">{{ $k }}</a>
+		{{ if $kv.is_having_dot_color }}
+		<a title="clear the dot-color" class="btn-dot-empty" onclick="dotColor('{{ $kv.site_url }}/user/dot/empty/{{ $kv.uid }}')">&empty;</a>
+		{{ end }}
+	</td>
+	<td class="meta meta-tags">
+		{{ if $kv.tags }}
+		<ul class="tags">
+			{{ range $k,$v := $kv.tags }}
+			<li class="item-tag"><a href="/user/tags/{{ $v }}">{{ $v }}</a></li>
 			{{ end }}
-		
+		</ul>
+		{{ end }}
+	</td>
+	<td class="meta meta-size">{{ $kv.size }}</td>
+	<td class="meta meta-mtime">{{ $kv.mtime }}</td>
+	<td class="meta meta-statistics">
+		{{ if $kv.statistics }}
+		<table class="statistics mute-text">
+			<tr>
+				{{ range $km,$vn := $kv.statistics }}
+				<td class="no-border" title="{{$vn}}">{{$km}}</td>					
+				{{ end }}
+			</tr>
+			<tr class="no-border">
+				{{ range $km,$vn := $kv.statistics }}
+				<td class="no-border" title="{{$km}}">{{$vn}}</td>					
+				{{ end }}
+			</tr>
+		</table>
+		{{ end }}
+	</td>
+	<td class="meta meta-action">
+		<a href="/s/{{ $kv.uri }}" title="Share" class="btn-share">&#10148;</a> | 
+		<a href="/f/{{ $kv.uid }}" download title="Download" class="btn-download">&#9660;</a>
+		{{ if $kv.is_video }}
+		| <a href="/play/v/{{ $kv.uid }}" title="Play" class="btn-play">&#9654;</a>
+		{{ end }}
+
+	</td>
+</tr>
+{{ end }}

@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	stdContext "context"
+	"time"
+
 	//"encoding/json"
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"mime"
-	"os"
+	//"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -17,9 +20,11 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
+var app *iris.Application
+
 func StartHTTPServer() {
 
-	app := iris.New()
+	app = iris.New()
 	//app.IsDebug()
 
 	tmpl := iris.HTML(embeddedFS, ".html")
@@ -28,6 +33,14 @@ func StartHTTPServer() {
 	tmpl.Delims("{{", "}}")
 	tmpl.Reload(IsDebug)
 	app.RegisterView(tmpl)
+
+	StaticOptions := iris.DirOptions{
+		ShowList: true,
+		DirList: iris.DirListRich(iris.DirListRichOptions{
+			TmplName: "dirlist.html",
+		}),
+	}
+	app.HandleDir("/static", iris.Dir(STATIC_DIR), StaticOptions)
 
 	homeAPI := app.Party("/")
 	{
@@ -42,19 +55,16 @@ func StartHTTPServer() {
 		homeAPI.HandleDir("/assets", iris.Dir(ASSET_DIR), iris.DirOptions{ShowList: false})
 	}
 
-	StaticOptions := iris.DirOptions{
-		ShowList: true,
-		DirList: iris.DirListRich(iris.DirListRichOptions{
-			TmplName: "dirlist.html",
-		}),
-	}
-	app.HandleDir("/static", iris.Dir(STATIC_DIR), StaticOptions)
-
 	userFileAPI := app.Party("/f/")
 	{
 		userFileAPI.Use(iris.Compression)
 		userFileAPI.Get("/{uname:string}/{key:path}", getFiles)
-		//
+	}
+
+	shareAPI := app.Party("/s/")
+	{
+		shareAPI.Use(iris.Compression)
+		shareAPI.Get("/{uname:string}/{val:string}", getFiles)
 	}
 
 	playAPI := app.Party("/play")
@@ -80,17 +90,23 @@ func StartHTTPServer() {
 		userAPI.Post("/tags", tagList)
 		userAPI.Get("/tags/{tagname:string}", tagFiles)
 		userAPI.Get("/tags/top", topTags)
-		userAPI.Get("/by/{key:string}/{val:path}", ByKeyFiles)
+		userAPI.Get("/by/{key:string}/{val:path}", byKeyFiles)
 		userAPI.Get("/top/{countname:string}/{min:int}/{max:int}", topCountFiles)
-		userAPI.Get("/playlist", playList)
-
 		//
+		userAPI.Get("/playlist", playList)
+		userAPI.Get("/playlist/{prefix:path}", playPrefixList)
+		userAPI.Get("/playlikes/{color:string}", playDotColorList)
+		//
+		userAPI.Get("/dot/{color:string}/{uname:string}/{fname:path}", dotColorFile)
+
 	}
 
 	v1API := app.Party("/api/")
 	{
 		v1API.Post("/upload", apiUploadFile)
-		v1API.Get("/has/{blake3sum:string}", apiHasFile)
+		v1API.Get("/upload/schema.json", apiUploadSchema)
+		v1API.Post("/has", apiHasFiles)
+		v1API.Post("/batch-import", apiBatchImport)
 	}
 
 	if MaxUploadSizeMB <= 0 {
@@ -106,8 +122,19 @@ func StartHTTPServer() {
 
 func StopHTTPServer() {
 	fmt.Println("stopping the server ...")
+	appShutdown()
 	sqldb.Close()
 	bgrdb.Close()
+}
+
+func appShutdown() {
+	ctx, cancel := stdContext.WithTimeout(stdContext.Background(), 3*time.Second)
+	defer cancel()
+	// close all hosts
+	err := app.Shutdown(ctx)
+	if err != nil {
+		PrintError("appShutdown:", err)
+	}
 }
 
 func notFound(ctx iris.Context) {
@@ -163,6 +190,7 @@ func topCountFiles(ctx iris.Context) {
 		"nav_breadcrumb": navBreadcrumb,
 		"current_user":   uname,
 		"current_prefix": "",
+		"site_url":       GetSiteURL(),
 	}
 
 	if len(files) > 0 {
@@ -179,13 +207,28 @@ func topCountFiles(ctx iris.Context) {
 func getFiles(ctx iris.Context) {
 	uname := ctx.Params().Get("uname")
 	key := ctx.Params().Get("key")
+	val := ctx.Params().Get("val")
+	DebugInfo("getFiles:key", key)
+	DebugInfo("getFiles:val", val)
+
+	if val != "" && key == "" {
+		meta := mongoGetByKey(uname, "uri", val)
+
+		keyID, ok := meta["_id"]
+		if !ok {
+			DebugInfo("getURIFiles:fsum is empty: uri", val)
+			ctx.View("404.html")
+			return
+		}
+		key = keyID
+	}
 
 	fext := filepath.Ext(key)
 	fname := filepath.Join("f", uname, key)
 
-	entity := NewEntity(uname, key).GetMeta()
+	entity := NewEntity(uname, key).Head()
 	DebugInfo("getFiles:entity:", entity.Meta)
-	if entity.Meta["is_public"] != "1" {
+	if entity.Meta["is_public"] == "0" {
 		currentUser := getCurrentUser(ctx)
 		if currentUser.Name != uname || currentUser.IsAdmin != 1 {
 			ctx.View("403.html")
@@ -215,14 +258,19 @@ func getFiles(ctx iris.Context) {
 		return
 	}
 
-	mimeType := "text/plain"
+	mimeType := "application/octet-stream"
 
 	if fext != "" {
 		mimeType = mime.TypeByExtension(fext)
 	}
 
 	ctx.Header("X-Powered-By", "zstdfs")
-	ctx.Header("Cache-Control", "public, max-age=0")
+	if IsDebug {
+		ctx.Header("Cache-Control", "public, max-age=0")
+	} else {
+		ctx.Header("Cache-Control", "public, max-age=86400")
+	}
+
 	ctx.Header("Content-Type", mimeType)
 	ctx.Write(entity.Data)
 }
@@ -270,37 +318,6 @@ func editFiles(ctx iris.Context) {
 
 	ctx.View("upload-form.html", data)
 
-}
-
-func playVideos(ctx iris.Context) {
-	bucket := ctx.Params().Get("bucket")
-	fname := ctx.Params().Get("fname")
-
-	fkey := strings.Join([]string{TEMP_DIR, bucket, fname}, "/")
-	MakeDirs(filepath.Dir(fkey))
-	_, err := os.Stat(fkey)
-	if err != nil {
-		meta := mongoGet(bucket, fname)
-		b := badgerGet([]byte(meta["fsum"]))
-		if len(b) == 0 {
-			ctx.NotFound()
-			return
-		}
-		ioutil.WriteFile(fkey, b, os.ModePerm)
-	}
-
-	fext := filepath.Ext(fname)
-	mimeType := "video/mp4"
-
-	if fext != "" {
-		mimeType = mime.TypeByExtension(fext)
-	}
-
-	video_src := strings.Join([]string{"/play", "temp", bucket, fname}, "/")
-	ctx.View("player.html", iris.Map{
-		"video_src":  video_src,
-		"video_mime": mimeType,
-	})
 }
 
 func topTags(ctx iris.Context) {
@@ -438,22 +455,7 @@ func tagList(ctx iris.Context) {
 	}
 	uname = currentUser.Name
 	var tags []string
-
-	if currentUser.IsAdmin == 1 {
-		buckets := mongoAdminListCollections()
-		for _, bucket := range buckets {
-			usertags := mongoTagList(bucket)
-			for _, t := range usertags {
-				if Contains(tags, t) {
-					continue
-				}
-				tags = append(tags, t)
-			}
-		}
-	} else {
-		usertags := mongoTagList(uname)
-		tags = usertags
-	}
+	tags = mongoTagList(uname)
 
 	var filteredTags []string
 	if frmtaglike != "" {
@@ -504,17 +506,7 @@ func tagFiles(ctx iris.Context) {
 	var navBreadcrumb []map[string]string
 
 	var files []string
-	if currentUser.IsAdmin == 1 {
-		buckets := mongoAdminListCollections()
-		for _, bucket := range buckets {
-			userfiles := mongoTagFiles(bucket, tagname)
-			for _, t := range userfiles {
-				files = append(files, t)
-			}
-		}
-	} else {
-		files = mongoTagFiles(uname, tagname)
-	}
+	files = mongoTagFiles(uname, tagname)
 
 	fileCount := len(files)
 	navFileList := genNavFileList(files, "", uname)
@@ -533,6 +525,7 @@ func tagFiles(ctx iris.Context) {
 		"nav_breadcrumb": navBreadcrumb,
 		"current_user":   uname,
 		"current_prefix": tagname,
+		"site_url":       GetSiteURL(),
 	})
 }
 
@@ -576,6 +569,7 @@ func adminListBuckets(ctx iris.Context) {
 	data := iris.Map{
 		"nav_list":     navList,
 		"current_user": userlogin,
+		"site_url":     GetSiteURL(),
 	}
 
 	if len(collList) > 0 {
@@ -610,6 +604,7 @@ func adminListFiles(ctx iris.Context) {
 		"nav_dir_list":  navDirList,
 		"nav_file_list": navFileList,
 		"current_user":  uname,
+		"site_url":      GetSiteURL(),
 	}
 	if len(dirs) > 0 || len(files) > 0 {
 		data["file_count"] = Int2Str(len(files) + len(dirs))
@@ -659,11 +654,13 @@ func adminListKeys(ctx iris.Context) {
 	DebugInfo("adminListKeys:navFileList", navFileList)
 
 	data := iris.Map{
-		"nav_dir_list":   navDirList,
-		"nav_file_list":  navFileList,
-		"nav_breadcrumb": navBreadcrumb,
-		"current_user":   uname,
-		"current_prefix": fkey,
+		"nav_dir_list":    navDirList,
+		"nav_file_list":   navFileList,
+		"nav_breadcrumb":  navBreadcrumb,
+		"current_user":    uname,
+		"current_prefix":  fkey,
+		"url_play_prefix": strings.Join([]string{"/user/playlist", fkey}, "/"),
+		"site_url":        GetSiteURL(),
 	}
 
 	if len(files) > 0 || len(dirs) > 0 {
@@ -695,9 +692,11 @@ func likeFiles(ctx iris.Context) {
 	//DebugInfo("likeFiles", navFileList)
 
 	data := iris.Map{
-		"nav_file_list":    navFileList,
-		"current_dotcolor": dotcolor,
-		"current_user":     uname,
+		"nav_file_list":      navFileList,
+		"current_dotcolor":   dotcolor,
+		"current_user":       uname,
+		"url_play_dot_color": strings.Join([]string{GetSiteURL(), "user/playlikes", dotcolor}, "/"),
+		"site_url":           GetSiteURL(),
 	}
 
 	if len(files) > 0 {
@@ -711,58 +710,7 @@ func likeFiles(ctx iris.Context) {
 	ctx.View("like-list.html", data)
 }
 
-func playList(ctx iris.Context) {
-	currentUser := getCurrentUser(ctx)
-	uname := currentUser.Name
-	DebugInfo("playList:currentUser", currentUser, ":", uname)
-	if uname == "" {
-		return
-	}
-	var videoUrls []string
-	videoUrlsCacheFile := fmt.Sprintf("%s/playList/video_urls.dat", uname)
-
-	if GobLoad(videoUrlsCacheFile, &videoUrls, 60) == false {
-		files := mongoRandomGet(uname, 30)
-		for _, f := range files {
-			videoUrls = append(videoUrls, strings.Join([]string{"http://192.168.0.100:9090/f", uname, f}, "/"))
-		}
-		GobDump(videoUrlsCacheFile, videoUrls)
-		DebugInfo("-----playList: from", "DB")
-	} else {
-		DebugInfo("*******playList: from", "CACHE")
-	}
-
-	//DebugInfo("playList", videoUrls)
-	// fext := filepath.Ext(fname)
-	mimeType := "video/mp4"
-
-	curVid := ctx.GetCookie("cur_vid")
-
-	if curVid == "" {
-		curVid = "0"
-		ctx.SetCookieKV("cur_vid", curVid)
-	}
-
-	if Str2Int(curVid) >= len(videoUrls) {
-		curVid = "0"
-		ctx.SetCookieKV("cur_vid", curVid)
-	} else {
-		ctx.SetCookieKV("cur_vid", Int2Str(Str2Int(curVid)+1))
-	}
-
-	playURL := strings.Replace(videoUrls[Str2Int(curVid)], "/f/", "/play/v/", 1)
-	DebugInfo("playList:Cookie:curVid", curVid, "::", playURL)
-
-	data := iris.Map{
-		"current_user": uname,
-		"video_src":    videoUrls[Str2Int(curVid)],
-		"video_mime":   mimeType,
-	}
-
-	ctx.View("playlist.html", data)
-}
-
-func ByKeyFiles(ctx iris.Context) {
+func byKeyFiles(ctx iris.Context) {
 	key := ctx.Params().Get("key")
 	val := ctx.Params().Get("val")
 
@@ -782,6 +730,7 @@ func ByKeyFiles(ctx iris.Context) {
 		"nav_by_key":    key,
 		"nav_by_val":    val,
 		"current_user":  uname,
+		"site_url":      GetSiteURL(),
 	}
 
 	if len(files) > 0 {
@@ -793,4 +742,69 @@ func ByKeyFiles(ctx iris.Context) {
 	}
 
 	ctx.View("by-list.html", data)
+}
+
+func dotColorFile(ctx iris.Context) {
+	color := ctx.Params().Get("color")
+	uname := ctx.Params().Get("uname")
+	fname := ctx.Params().Get("fname")
+	if IsAnyEmpty(color, uname, fname) {
+		ctx.JSON(iris.Map{
+			"dot_color": "",
+			"error":     "color, user, file cannot be empty.",
+		})
+		return
+	}
+
+	currentUser := getCurrentUser(ctx)
+	if uname != currentUser.Name {
+		ctx.JSON(iris.Map{
+			"dot_color": "",
+			"error":     "user is invalid.",
+		})
+		return
+	}
+
+	frmDotColor := ""
+	allowColors := []string{"red", "green", "gold", "black", "blue", "orange", "purple", "empty"}
+	if !Contains(allowColors, color) {
+		ctx.JSON(iris.Map{
+			"dot_color": "",
+			"error":     "color is invalid.",
+		})
+		return
+	} else {
+		frmDotColor = strings.Join([]string{"dot", color}, "-")
+	}
+	DebugInfo("fname:", fname, " <== ", frmDotColor)
+
+	if frmDotColor != "" {
+		if frmDotColor == "dot-empty" {
+			frmDotColor = ""
+		}
+		success := mongoSave(uname, fname, "dot_color", frmDotColor)
+		if success == false {
+			ctx.JSON(iris.Map{
+				"dot_color": "",
+				"error":     "data cannot be saved.",
+			})
+			return
+		}
+	}
+
+	meta := mongoGet(uname, fname)
+	currentDotColor, ok := meta["dot_color"]
+	if !ok {
+		ctx.JSON(iris.Map{
+			"dot_color": "",
+			"error":     "cannot find dot_color field from meta.",
+		})
+		return
+	}
+	DebugInfo("frmDotColor:", currentDotColor)
+
+	ctx.JSON(iris.Map{
+		"dot_color": currentDotColor,
+		"error":     "",
+	})
 }

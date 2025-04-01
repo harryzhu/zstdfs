@@ -28,8 +28,8 @@ func BeforeStart() error {
 	MakeDirs(ASSET_DIR)
 	MakeDirs(STATIC_DIR)
 	//
-	if CacheTimeout > 0 {
-		FunctionCacheExpires = CacheTimeout
+	if IsDebug {
+		FunctionCacheExpires = 0
 	}
 	//
 	DefaultAsset(ASSET_DIR+"/video-js.min.css", "template/video-js.min.css")
@@ -56,14 +56,16 @@ func BeforeStart() error {
 	//
 	EntitySaveSmoke()
 
+	if BulkLoadDir != "" && BulkLoadExt != "" && BulkLoadUser != "" {
+		badgerBulkLoad(BulkLoadDir, BulkLoadExt)
+	}
 	return nil
 }
 
 func EntitySaveSmoke() bool {
-	testUser := "harry"
 	mongoUserCollectionInit(testUser)
 	mongoAdminCreateIndex(testUser)
-	DebugInfo("Visit test.jpg", fmt.Sprintf("http://%s/f/%s/%s", SiteURL(), testUser, "test.jpg"))
+	DebugInfo("Visit test.jpg", fmt.Sprintf("%s/f/%s/%s", GetSiteURL(), testUser, testKey))
 
 	return true
 }

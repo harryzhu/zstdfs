@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 )
 
-var seed string = "sdsdfs"
+var seed string = "This#2023$&@Spring[Sch00l)"
 var key string = SHA256String(seed)[0:24]
 var iv string = SHA256String(seed)[4:20]
 
@@ -78,5 +78,9 @@ func unPaddingPKCS7(s []byte) []byte {
 		return s
 	}
 	unPadding := int(s[length-1])
-	return s[:(length - unPadding)]
+	//DebugWarn("unPaddingPKCS7", length, ":", unPadding)
+	if length >= unPadding {
+		return s[:(length - unPadding)]
+	}
+	return nil
 }

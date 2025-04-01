@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
+	"strings"
 
 	badger "github.com/dgraph-io/badger/v4"
 )
@@ -17,7 +20,7 @@ func badgerConnect() *badger.DB {
 	opts.BaseTableSize = 256 << 20
 	opts.NumVersionsToKeep = 1
 	opts.SyncWrites = false
-	opts.ValueThreshold = 256
+	opts.ValueThreshold = 16
 	opts.CompactL0OnClose = true
 
 	db, err := badger.Open(opts)
@@ -111,5 +114,86 @@ func badgerExists(key []byte) bool {
 		return false
 	}
 
+	return true
+}
+
+func badgerBulkLoad(dpath string, fext string) bool {
+	DebugInfo("badgerBulkLoad:", "Start ...")
+
+	tsStart := GetNowUnix()
+	var counter int
+	var batchFiles []string
+
+	filepath.Walk(dpath, func(path string, finfo os.FileInfo, err error) error {
+		PrintSpinner(Int2Str(counter))
+
+		if finfo.IsDir() {
+			return nil
+		}
+		if fext != "*" {
+			if strings.ToLower(filepath.Ext(finfo.Name())) != strings.ToLower(fext) {
+				return nil
+			}
+		}
+		if strings.HasPrefix(finfo.Name(), ".") {
+			return nil
+		}
+		if finfo.Size() == 0 || finfo.Size() > (MaxUploadSizeMB<<20) {
+			return nil
+		}
+		//DebugInfo("badgerBulkLoad", path)
+		if len(batchFiles) < 10 {
+			batchFiles = append(batchFiles, path)
+			counter += 1
+		}
+		if len(batchFiles) >= 10 {
+			//BatchWriteFiles(batchFiles)
+			mongoBatchWriteFiles(batchFiles)
+			batchFiles = []string{}
+		}
+
+		return nil
+	})
+
+	BatchWriteFiles(batchFiles)
+	mongoBatchWriteFiles(batchFiles)
+
+	DebugInfo("badgerBulkLoad:", "Done! files: ", counter)
+	DebugInfo("badgerBulkLoad", fmt.Sprintf("Elapse: %v seconds", (GetNowUnix()-tsStart)))
+	return true
+}
+
+func BatchWriteFiles(files []string) bool {
+	txn := bgrdb.NewTransaction(true)
+	defer txn.Discard()
+	var batchTotalSize int
+
+	for _, file := range files {
+		fp, err := os.Open(file)
+		if err != nil {
+			PrintError("BatchWriteFiles", err)
+			return false
+		}
+		val, err := io.ReadAll(fp)
+		if err != nil {
+			PrintError("BatchWriteFiles", err)
+			return false
+		}
+		fp.Close()
+
+		err = txn.Set(SumBlake3(val), ZstdBytes(val))
+		if err != nil {
+			PrintError("BatchWriteFiles", err)
+			return false
+		}
+		batchTotalSize += len(val)
+	}
+	if err := txn.Commit(); err != nil {
+		FatalError("BatchWriteFiles", err)
+		return false
+	}
+	DebugInfo("BatchWriteFiles: files: ", len(files), ", size:", batchTotalSize>>20, " MB")
+
+	bgrdb.Sync()
 	return true
 }

@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
-	//"io/ioutil"
-	//"mime"
+	"io"
+	"mime/multipart"
 	"os"
 	"path/filepath"
 
@@ -17,15 +18,55 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
-func apiHasFile(ctx iris.Context) {
-	blake3sum := ctx.Params().Get("blake3sum")
+func apiUploadSchema(ctx iris.Context) {
+	var ueSchema UploadEntitySchema
+	bf := bytes.NewBuffer([]byte{})
+	jsonEncoder := json.NewEncoder(bf)
+	jsonEncoder.SetEscapeHTML(false)
+	jsonEncoder.Encode(ueSchema)
 
-	if badgerExists([]byte(blake3sum)) {
-		ctx.JSON(iris.Map{"status": 1})
-	} else {
-		ctx.JSON(iris.Map{"status": 0})
+	DebugInfo("apiUploadSchema", bf.String())
+	ctx.Header("Content-Type", "application/json")
+	ctx.WriteString(bf.String())
+}
+
+func apiHasFiles(ctx iris.Context) {
+	if ctx.Method() != "POST" {
+		DebugInfo("apiHasFiles", "pls use POST")
+		return
 	}
 
+	fsums := ctx.PostValue("fsums")
+	var reslts []map[string]string
+
+	var jfsums []map[string]string
+	err := json.Unmarshal([]byte(fsums), &jfsums)
+	if err != nil {
+		PrintError("apiHasFiles:json.UnMarshal", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.JSON(reslts)
+		return
+	}
+
+	for _, kv := range jfsums {
+		for k, v := range kv {
+			DebugInfo("key", k)
+			if badgerExists([]byte(k)) {
+				DebugInfo("status", "1")
+				m := make(map[string]string)
+				m[v] = "1"
+				reslts = append(reslts, m)
+			} else {
+				DebugInfo("status", "0")
+				m := make(map[string]string)
+				m[v] = "0"
+				reslts = append(reslts, m)
+			}
+		}
+
+	}
+
+	ctx.JSON(reslts)
 }
 
 func apiUploadFile(ctx iris.Context) {
@@ -34,18 +75,17 @@ func apiUploadFile(ctx iris.Context) {
 		return
 	}
 
+	fid := ctx.PostValue("fid")
 	fuser := Normalize(ctx.PostValue("fuser"))
 	fapikey := ctx.PostValue("fapikey")
-	//
-	fid := ctx.PostValue("fid")
-	fsum := ctx.PostValue("fsum")
 	fmeta := ctx.PostValue("fmeta")
-	//
-	fgroup := Normalize(ctx.PostValue("fgroup"))
-	fprefix := Normalize(ctx.PostValue("fprefix"))
-	ftags := Normalize(ctx.PostValue("ftags"))
+	if IsAnyEmpty(fuser, fapikey, fid) {
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.Writef("Error: 403 Forbidden")
+		return
+	}
 
-	DebugInfo("=====", fuser, "::", fgroup, "::", fprefix, "::", ftags, "::", fmeta, "::", fsum)
+	DebugInfo("=====", fuser, "::", fid, "::", fmeta)
 	//
 	user := mysqlApiKeyLogin(fuser, fapikey, 1)
 	if user.ApiKey != fapikey {
@@ -54,63 +94,54 @@ func apiUploadFile(ctx iris.Context) {
 		return
 	}
 
-	var fkey string
-	var dest string
+	//var success bool
+	var meta map[string]string
+	if err := json.Unmarshal([]byte(fmeta), &meta); err != nil {
+		PrintError("apiUploadFile:json.Unmarshal(fmeta)", err)
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Writef("Error: 400 BadRequest")
+		return
+	}
 
-	if fsum == "" {
-		_, fileHeader, err := ctx.FormFile("file")
-		if err != nil {
+	DebugInfo("=====apiUploadFile:meta", meta, " ==> fsum: ", meta["fsum"])
+	entity := NewEntity(fuser, fid)
+
+	var dest string
+	var success bool
+	_, fileHeader, err := ctx.FormFile("file")
+	if err != nil {
+		if meta["fsum"] == "" {
 			ctx.StatusCode(iris.StatusBadRequest)
 			ctx.WriteString(err.Error())
 			return
 		}
-		//
+	} else {
 		dest = filepath.Join(UploadDir, fuser, fileHeader.Filename)
 		MakeDirs(filepath.Join(UploadDir, fuser))
 		ctx.SaveFormFile(fileHeader, dest)
 		//
-		fbasename := Normalize(filepath.Base(dest))
-		fkey = ToUnixSlash(filepath.Join(fgroup, fbasename))
-		if fprefix != "" {
-			fkey = ToUnixSlash(filepath.Join(fgroup, fprefix, fbasename))
+		entity = entity.WithFile(dest)
+	}
+
+	if entity.Data != nil && meta["fsum"] != "" {
+		if string(SumBlake3(entity.Data)) != meta["fsum"] {
+			ctx.StatusCode(iris.StatusBadRequest)
+			ctx.WriteString("Error: meta[fsum] is invalid")
+			return
 		}
 	}
 
-	if fid != "" {
-		fkey = fid
+	for k, v := range meta {
+		//DebugInfo("apiUploadFile:entity.WithMeta", k, "=", v)
+		entity = entity.WithMeta(k, fmt.Sprintf("%v", v))
 	}
 
-	DebugInfo("apiUploadFile:key", fkey)
-	//
-	entity := NewEntity(fuser, fkey)
-	if fsum == "" && dest != "" {
-		_, err := os.Stat(dest)
-		if err == nil {
-			entity = entity.WithFile(dest)
-		}
-	}
-
-	var success bool
-	var meta map[string]any
-	err := json.Unmarshal([]byte(fmeta), &meta)
-	DebugInfo("=====apiUploadFile:meta", meta)
-	if err != nil {
-		PrintError("apiUploadFile:json.Unmarshal(fmeta)", err)
-	} else {
-		for k, v := range meta {
-			DebugInfo("apiUploadFile:entity.WithMeta", k, "=", v)
-			entity = entity.WithMeta(k, fmt.Sprintf("%v", v))
-		}
-	}
-	DebugInfo("apiUploadFile:fid", fid, ":ID:", entity.ID)
-
-	entity = entity.WithTags(ftags)
-
-	if fsum != "" {
-		entity = entity.WithMeta("fsum", fsum)
-		success = entity.SaveWithoutData()
-	} else {
+	if entity.Data != nil {
 		success = entity.Save()
+	}
+
+	if meta["fsum"] != "" && entity.Data == nil {
+		success = entity.SaveWithoutData()
 	}
 
 	if success {
@@ -118,6 +149,7 @@ func apiUploadFile(ctx iris.Context) {
 	} else {
 		fmt.Println("apiUploadFile: FAILED")
 	}
+
 }
 
 func uploadFile(ctx iris.Context) {
@@ -196,4 +228,119 @@ func uploadFile(ctx iris.Context) {
 
 	ctx.Header("Content-Type", "text/html;charset=utf-8")
 	ctx.Write([]byte(res))
+}
+
+func apiBatchImport(ctx iris.Context) {
+
+	if ctx.Method() != "POST" {
+		DebugInfo("apiBatchImport", "pls use POST")
+		return
+	}
+
+	fuser := Normalize(ctx.PostValue("fuser"))
+	fapikey := ctx.PostValue("fapikey")
+
+	result := iris.Map{}
+
+	DebugInfo("=====", fuser)
+	if IsAnyEmpty(fuser, fapikey) {
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.JSON(result)
+		return
+	}
+	//
+	user := mysqlApiKeyLogin(fuser, fapikey, 1)
+	if user.ApiKey != fapikey || user.IsAdmin != 1 {
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.JSON(result)
+		return
+	}
+	//ctx.SetMaxRequestBodySize((MaxUploadSizeMB * 11) << 20)
+	maxSize := ctx.Application().ConfigurationReadOnly().GetPostMaxMemory()
+	DebugInfo("apiBatchImport:maxSize", maxSize)
+	err := ctx.Request().ParseMultipartForm(maxSize)
+	if err != nil {
+		FatalError("apiBatchImport", err)
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.WriteString(err.Error())
+		return
+	}
+
+	saveDir := ToUnixSlash(filepath.Join(UploadDir, fuser))
+	MakeDirs(saveDir)
+	form := ctx.Request().MultipartForm
+	files := form.File
+
+	DebugInfo("files count", len(files))
+	failures := 0
+	var errFiles []string
+	var okFiles []string
+	for _, file := range files {
+		_, err = saveUploadedFile(file[0], saveDir)
+		if err != nil {
+			failures++
+			errFiles = append(errFiles, file[0].Filename)
+		} else {
+			savePath := strings.Join([]string{saveDir, file[0].Filename}, "/")
+			//DebugInfo("OK", savePath)
+			okFiles = append(okFiles, savePath)
+		}
+	}
+
+	if failures > 0 {
+		ctx.Writef("%s: failed to upload: %s\n", failures, strings.Join(errFiles, "\n"))
+		return
+	}
+
+	var rowsOk []iris.Map
+	var rowsErr []iris.Map
+	for _, okFile := range okFiles {
+		fbinData, err := os.ReadFile(okFile)
+		if err != nil {
+			PrintError("apiBatchImport:os.ReadFile(okFile)", err)
+			rowsErr = append(rowsErr, iris.Map{
+				"error":  okFile,
+				"status": 0})
+			continue
+		}
+
+		bkey := badgerSave(fbinData)
+		if bkey != nil {
+			rowsOk = append(rowsOk, iris.Map{
+				"blake3sum": string(bkey),
+				"status":    1})
+			//os.Remove(okFile)
+		} else {
+			rowsErr = append(rowsErr, iris.Map{
+				"error":  okFile,
+				"status": 0})
+		}
+
+	}
+
+	rows := make(map[string][]iris.Map)
+	rows["ok"] = rowsOk
+	rows["error"] = rowsErr
+
+	ctx.JSON(rows)
+
+}
+
+func saveUploadedFile(fh *multipart.FileHeader, destDir string) (int64, error) {
+	src, err := fh.Open()
+	if err != nil {
+		return 0, err
+	}
+	defer src.Close()
+	out, err := os.OpenFile(filepath.Join(destDir, fh.Filename),
+		os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return 0, err
+	}
+	defer out.Close()
+	wb, err := io.Copy(out, src)
+	if err != nil {
+		return wb, err
+	}
+	return wb, nil
 }

@@ -106,23 +106,38 @@ func mysqlUserLogin(username, password string, enabled int) (user User) {
 	if IsAnyEmpty(username, password) {
 		return user
 	}
-	q := fmt.Sprintf(`select id,username,apikey,isadmin,enabled from users where username=? and userpass=? and enabled = ?`)
+	var uname, upass string
+	q1 := fmt.Sprintf(`select username,userpass from users where username=? and enabled = ?`)
+	stmt1, err := sqldb.Prepare(q1)
+	defer stmt1.Close()
+	if err != nil {
+		return user
+	}
+	err = stmt1.QueryRow(username, enabled).Scan(&uname, &upass)
+	if err != nil {
+		return user
+	}
+
+	isVerified := VerifyPassword(upass, uname, password)
+	DebugInfo("mysqlUserLogin:", username, ":", len(upass), ":", isVerified)
+	if !isVerified {
+		return user
+	}
+	//
+	q := fmt.Sprintf(`select id,username,apikey,isadmin,enabled from users where username=? and enabled = ?`)
 	stmt, err := sqldb.Prepare(q)
+	defer stmt.Close()
 	if err != nil {
 		PrintError("mysqlUserLogin:Prepare", err)
 		return user
 	}
 
-	row := stmt.QueryRow(username, password, enabled)
-
-	DebugInfo("mysqlUserLogin:rows", row, ":", password)
-
+	row := stmt.QueryRow(username, enabled)
 	err = row.Scan(&user.ID, &user.Name, &user.ApiKey, &user.IsAdmin, &user.Enabled)
 	if err != nil {
 		PrintError("mysqlUserLogin:rows.Scan", err)
 		return user
 	}
-	stmt.Close()
 
 	DebugInfo("mysqlUserLogin:user", user)
 

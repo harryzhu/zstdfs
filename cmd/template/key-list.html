@@ -11,6 +11,10 @@
 
 		{{ if .file_count }}
 		( {{ .file_count }} )
+		{{ end}}
+
+		{{ if .url_play_prefix }}
+		<a href="{{ .url_play_prefix }}" title="Play all in this folder" class="btn-play btn-play-big"> PLAY &#9654;</a>
 		{{ end}} 
 
 	</h2>

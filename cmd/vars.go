@@ -3,6 +3,8 @@ package cmd
 import (
 	"database/sql"
 	//"fmt"
+	"errors"
+
 	badger "github.com/dgraph-io/badger/v4"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -15,10 +17,9 @@ const TB int = 1 << 40
 const ADMIN string = "_admin"
 const AdminBucket string = ADMIN
 
-const DiskCacheExpires float64 = 86400
+const DiskCacheExpires float64 = 3600
 
 var (
-	Params2    map[string]any
 	sqldb      *sql.DB
 	mgodb      *mongo.Database
 	bgrdb      *badger.DB
@@ -29,4 +30,13 @@ var (
 	STATIC_DIR string
 	//
 	FunctionCacheExpires int64 = 300
+)
+
+var (
+	testUser string = "harry"
+	testKey  string = "sample_group/sam/ple/pre/fix/test.jpg"
+)
+
+var (
+	ErrEmptyMeta error = errors.New("meta is empty")
 )

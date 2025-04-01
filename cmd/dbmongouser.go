@@ -8,7 +8,9 @@ import (
 	//"encoding/json"
 	"fmt"
 	//"io/ioutil"
+	"io"
 	"os"
+
 	//"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -106,9 +108,7 @@ func mongoGet(user string, id string) (meta map[string]string) {
 	if IsAnyEmpty(user, id) {
 		return meta
 	}
-	//metaCacheFile := fmt.Sprintf("%s/mongoGet/meta_%s.dat", user, GetXxhash([]byte(id)))
 
-	//if GobLoad(metaCacheFile, &meta, FunctionCacheExpires) == false {
 	collUser := mgodb.Collection(user)
 	filter := bson.D{{"_id", id}}
 
@@ -119,13 +119,34 @@ func mongoGet(user string, id string) (meta map[string]string) {
 			meta[k] = fmt.Sprintf("%v", v)
 		}
 	}
-	//	GobDump(metaCacheFile, meta)
-	//}
 
 	return meta
 }
 
-func mongoRandomGet(user string, total int) (files []string) {
+func mongoGetByKey(user string, key string, val string) (meta map[string]string) {
+	var result bson.M
+	meta = make(map[string]string)
+
+	if IsAnyEmpty(user, key, val) {
+		return meta
+	}
+
+	collUser := mgodb.Collection(user)
+	filter := bson.D{{key, val}}
+
+	err := collUser.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		PrintError("mongoGetByKey", err)
+		return meta
+	}
+	for k, v := range result {
+		meta[k] = fmt.Sprintf("%v", v)
+	}
+
+	return meta
+}
+
+func mongoRandomGetURI(user string, total int) (files []string) {
 	var allFiles []string
 
 	allFilesCacheFile := fmt.Sprintf("%s/mongoRandomGet/files_all.dat", user)
@@ -143,10 +164,11 @@ func mongoRandomGet(user string, total int) (files []string) {
 		err = results.All(context.TODO(), &rows)
 		PrintError("mongoListFiles", err)
 
-		var rowid string
+		var rowuri string
 		for _, row := range rows {
-			rowid = row["_id"].(string)
-			allFiles = append(allFiles, rowid)
+			//rowid = row["_id"].(string)
+			rowuri = row["uri"].(string)
+			allFiles = append(allFiles, rowuri)
 		}
 
 		GobDump(allFilesCacheFile, allFiles)
@@ -168,56 +190,50 @@ func mongoListFiles(user, prefix string) (dirs, files []string) {
 	if user == "" {
 		return lines, lines
 	}
-	dirsCacheFile := fmt.Sprintf("%s/mongoListFiles/dirs_%s.dat", user, GetXxhash([]byte(prefix)))
-	filesCacheFile := fmt.Sprintf("%s/mongoListFiles/files_%s.dat", user, GetXxhash([]byte(prefix)))
 
-	if GobLoad(dirsCacheFile, &dirs, FunctionCacheExpires) == false || GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
-		filter := bson.D{{"_id", bson.Regex{Pattern: "", Options: "i"}}}
-		if prefix != "" {
-			DebugInfo("prefix before regex", prefix)
-			regx_prefix := strings.Join([]string{"^(", prefix, ")"}, "")
-			filter = bson.D{{"_id", bson.Regex{Pattern: regx_prefix, Options: "i"}}}
-		}
-		DebugInfo("mongoListFiles:filter", filter)
-
-		collUser := mgodb.Collection(user)
-		results, err := collUser.Find(context.TODO(), filter)
-		if err != nil {
-			PrintError("mongoListFiles", err)
-			return lines, lines
-		}
-
-		err = results.All(context.TODO(), &rows)
-		PrintError("mongoListFiles", err)
-
-		var rowid string
-		for _, row := range rows {
-			//DebugInfo("---", row)
-			rowid = row["_id"].(string)
-			DebugInfo("0.mongoListFiles:rowid", rowid)
-
-			rowid = strings.TrimPrefix(rowid, prefix)
-			DebugInfo("1.mongoListFiles:TrimPrefix(rowid, prefix)", prefix, "===>", rowid)
-
-			rowid = strings.Trim(rowid, "/")
-			DebugInfo("2.mongoListFiles:Trim(rowid, /)", rowid)
-			if strings.Contains(rowid, "/") {
-				dd := strings.Split(rowid, "/")
-				DebugInfo("3.mongoListFiles:dd[0]<==dd", dd[0], " <=== ", dd)
-				if Contains(dirs, dd[0]) == false {
-					DebugInfo("4.mongoListFiles:dd[0]", dd[0])
-					dirs = append(dirs, dd[0])
-				}
-
-			} else {
-				files = append(files, rowid)
-			}
-		}
-		GobDump(dirsCacheFile, dirs)
-		GobDump(filesCacheFile, files)
-		//DebugInfo("mongoListFiles:dirs", dirs)
-		//DebugInfo("mongoListFiles:files", files)
+	filter := bson.D{{"_id", bson.Regex{Pattern: "", Options: "i"}}}
+	if prefix != "" {
+		DebugInfo("prefix before regex", prefix)
+		regx_prefix := strings.Join([]string{"^(", prefix, ")"}, "")
+		filter = bson.D{{"_id", bson.Regex{Pattern: regx_prefix, Options: "i"}}}
 	}
+	DebugInfo("mongoListFiles:filter", filter)
+
+	collUser := mgodb.Collection(user)
+	results, err := collUser.Find(context.TODO(), filter)
+	if err != nil {
+		PrintError("mongoListFiles", err)
+		return lines, lines
+	}
+
+	err = results.All(context.TODO(), &rows)
+	PrintError("mongoListFiles", err)
+
+	var rowid string
+	for _, row := range rows {
+		//DebugInfo("---", row)
+		rowid = row["_id"].(string)
+		DebugInfo("0.mongoListFiles:rowid", rowid)
+
+		rowid = strings.TrimPrefix(rowid, prefix)
+		DebugInfo("1.mongoListFiles:TrimPrefix(rowid, prefix)", prefix, "===>", rowid)
+
+		rowid = strings.Trim(rowid, "/")
+		DebugInfo("2.mongoListFiles:Trim(rowid, /)", rowid)
+		if strings.Contains(rowid, "/") {
+			dd := strings.Split(rowid, "/")
+			DebugInfo("3.mongoListFiles:dd[0]<==dd", dd[0], " <=== ", dd)
+			if Contains(dirs, dd[0]) == false {
+				DebugInfo("4.mongoListFiles:dd[0]", dd[0])
+				dirs = append(dirs, dd[0])
+			}
+
+		} else {
+			files = append(files, rowid)
+		}
+	}
+	//DebugInfo("mongoListFiles:dirs", dirs)
+	//DebugInfo("mongoListFiles:files", files)
 
 	return dirs, files
 }
@@ -329,7 +345,7 @@ func mongoUserCollectionInit(user string) bool {
 	FatalError("EntitySaveSmoke", err)
 	mtime := finfo.ModTime().UTC().Unix()
 
-	entity := NewEntity(user, "test.jpg").WithFile(testFile)
+	entity := NewEntity(user, testKey).WithFile(testFile)
 
 	meta := make(map[string]string)
 	meta["author"] = user
@@ -358,5 +374,38 @@ func mongoUserCollectionInit(user string) bool {
 
 	entity.Save()
 
+	return true
+}
+
+func mongoBatchWriteFiles(files []string) bool {
+	metaAllowKey := []string{"_id", "size", "mime", "mtime", "fsum"}
+	for _, file := range files {
+		fp, err := os.Open(file)
+		if err != nil {
+			PrintError("BatchWriteFiles", err)
+			return false
+		}
+		val, err := io.ReadAll(fp)
+		if err != nil {
+			PrintError("BatchWriteFiles", err)
+			return false
+		}
+		fp.Close()
+
+		ID := strings.TrimPrefix(strings.TrimPrefix(file, BulkLoadDir), "/")
+
+		ett := NewEntity(BulkLoadUser, ID).WithFile(file)
+		for k, _ := range ett.Meta {
+			if !Contains(metaAllowKey, k) {
+				delete(ett.Meta, k)
+			}
+		}
+		//DebugInfo("mongoBatchWriteFiles", file, " <= ", ID)
+		ett.Meta["fsum"] = string(SumBlake3(val))
+		ett.SaveWithoutData()
+		//DebugInfo("mongoBatchWriteFiles", ID, "<= ", file)
+
+	}
+	DebugInfo("mongoBatchWriteFiles: files: ", len(files))
 	return true
 }

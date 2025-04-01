@@ -12,17 +12,20 @@ import (
 var (
 	IsDebug         bool
 	MaxUploadSizeMB int64
-	CacheTimeout    int64
 	Host            string
 	Port            string
+	SiteURL         string
 	UploadDir       string
 	StaticDir       string
+	BulkLoadDir     string
+	BulkLoadExt     string
+	BulkLoadUser    string
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "zstdfs",
-	Short: "A brief description of your application",
+	Short: "",
 	Long:  ``,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		DebugInfo("zstdfs", "Thanks for choosing zstdfs!")
@@ -54,5 +57,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&Port, "port", "9090", "port, default: 9090")
 	rootCmd.PersistentFlags().StringVar(&UploadDir, "upload-dir", "", "Upload Dir")
 	rootCmd.PersistentFlags().StringVar(&StaticDir, "static-dir", "", "Static Dir")
-	rootCmd.PersistentFlags().Int64Var(&CacheTimeout, "cache-timeout", 300, "function data cache expires seconds")
+	rootCmd.PersistentFlags().StringVar(&SiteURL, "site-url", "http://192.168.0.100:9090", "site url")
+	rootCmd.PersistentFlags().StringVar(&BulkLoadDir, "bulk-load-dir", "", "BulkLoad dir path")
+	rootCmd.PersistentFlags().StringVar(&BulkLoadExt, "bulk-load-ext", "", "BulkLoad file type: extension, i.e.: .mp4")
+	rootCmd.PersistentFlags().StringVar(&BulkLoadUser, "bulk-load-user", "", "BulkLoad username")
 }

@@ -1,5 +1,17 @@
 <div class="footer">
 	&nbsp;
 </div>
+
+<script type="text/javascript">
+	function dotColor(url) {
+		console.log("dotColor(url): "+url)
+		fetch(url)
+		.then(resp => resp.json())
+		.then(data => console.log("response: ", data))
+		.catch(error => console.log("error: ", error))
+		//
+		window.location.reload();
+	}
+</script>
 </body>
 </html>

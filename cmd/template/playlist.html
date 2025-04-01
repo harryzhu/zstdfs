@@ -15,9 +15,16 @@
   <script src="/assets/video.min.js"></script>
   <style type="text/css">
     html,body{
-      background-color: #000!important;
+      margin: 0;
+      padding: 0;
+      background-color: #000000!important;
       width: 100%;
-      height: 100%;
+      height: 99%;
+    }
+
+    .active{
+      background-color: #eee;
+      border-radius: 0 0 9px 9px;
     }
 
     .video-js{
@@ -25,47 +32,221 @@
       height: 100%;
     }
 
-    video{
-      position: fixed!important;
-      left: 0;
-      top: 0;
-      overflow: hidden;
-    }
-    .video-data-src{
-      width: 1px;
-      height: 1px;
-      margin: 0;
-      padding: 0;
+    .video-box{
+      width: 99.98%;
+      height: 100%;
+      position: absolute;
+      margin-left: 0.01%;
       background-color: #000;
     }
-  </style>
-  <link rel="stylesheet" type="text/css" href="/assets/style.css">
+    .btn-1{
+      height: 60px;
+      width: 100%;
+      text-align: center;
+      background-color: #000;
+      top:5px;
+      left: 0;
+    }
+
+    .btn-1 a{
+      text-decoration: none;
+      display: inline-block;
+      width: 40px;
+      margin-right: 5px;
+      color: #fff;
+    }
+
+    table.cat {
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+      border: 0px solid #111;
+      border-collapse: collapse;
+    }
+
+    video{
+      /*position: absolute!important;*/
+      margin-left: auto;
+      margin-right: auto;
+      left: 0;
+      top: 0;
+      height: 100%!important;
+/*      overflow: hidden;*/
+}
+
+.dot-black{
+  color:#eee;
+}
+
+.dot-red{
+  color:#ff0007;
+}
+
+.dot-green{
+  color:#00b800;
+}
+
+.dot-blue{
+  color:#2655fe;
+}
+
+.dot-purple{
+  color:#c28bbf;
+}
+
+.dot-gold{
+  color:#feb306;
+}
+
+.dot-orange{
+  color:#ff6a00;
+}
+
+.dot-empty{
+  color:#444;
+}
+
+</style>
+<link rel="stylesheet" type="text/css" href="/assets/style.css">
+<script src="/assets/vbtn.js"></script>
 
 </head>
 <body>
-  <video
-  id="vplayer"
-  class="video-js vjs-default-skin vjs-big-play-centered vjs-9-16"
-  width=100%
-  height=100%
-  controls
-  autoplay
-  loop
-  preload="auto"
-  webkit-playsinline="true"
-  playsinline="true"
-  data-setup='{}'>
-  <source src="{{ .video_src }}" type="{{ .video_mime }}"></source>
-  <p class="vjs-no-js">
-    To view this video please enable JavaScript, and consider upgrading to a
-    web browser.
-  </p>
-</video>
+  <div class="video-box">
+    <video
+    id="vplayer"
+    class="video-js vjs-default-skin vjs-big-play-centered vjs-9-16"
+    controls
+    autoplay
+    loop
+    preload="auto"
+    webkit-playsinline=false
+    playsinline=false
+    data-setup='{}'>
+    <source id="vplayerSource" src="{{ .video_src }}" type="{{ .video_mime }}"></source>
+    <p class="vjs-no-js">
+      To view this video please enable JavaScript, and consider upgrading to a
+      web browser.
+    </p>
+  </video>
+
+  <div class="btn-1">
+    <table class="cat">
+      <tr>
+        <td id="dotred">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/red/{{ .current_user }}/{{ .id_name }}')" title="red"><span class="dot-col dot-col-file dot-red">&nbsp;&#9679;&nbsp;<br/>重要</span></a>
+        </td>
+        <td id="dotgreen">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/green/{{ .current_user }}/{{ .id_name }}')" title="green"><span class="dot-col dot-col-file dot-green">&nbsp;&#9679;&nbsp;<br/>收藏</span></a>
+        </td>
+        <td id="dotblack">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/black/{{ .current_user }}/{{ .id_name }}')" title="black"><span class="dot-col dot-col-file dot-black">&nbsp;&#9679;&nbsp;<br/>生活</span></a>
+        </td>
+        <td id="dotblue">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/blue/{{ .current_user }}/{{ .id_name }}')" title="blue"><span class="dot-col dot-col-file dot-blue">&nbsp;&#9679;&nbsp;<br/>科普</span></a> 
+        </td>
+        <td id="dotpurple">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/purple/{{ .current_user }}/{{ .id_name }}')" title="purple"><span class="dot-col dot-col-file dot-purple">&nbsp;&#9679;&nbsp;<br/>颜值</span></a>
+        </td>
+        <td id="dotgold">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/gold/{{ .current_user }}/{{ .id_name }}')" title="gold"><span class="dot-col dot-col-file dot-gold">&nbsp;&#9679;&nbsp;<br/>财经</span></a> 
+        </td>
+        <td id="dotorange">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/orange/{{ .current_user }}/{{ .id_name }}')" title="orange"><span class="dot-col dot-col-file dot-orange">&nbsp;&#9679;&nbsp;<br/>运动</span></a> 
+        </td>
+        <td id="dotempty">
+          <a onclick="dotColor('{{ .site_url }}/user/dot/empty/{{ .current_user }}/{{ .id_name }}')" title="清空分类"><span class="dot-col dot-col-file dot-empty">&nbsp;&#9679;&nbsp;<br/>清空</span></a> 
+        </td>
+      </tr>
+    </table>
+
+
+
+
+
+
+
+  </div>
+
+</div>
 
 <script>
-  window.addEventListener('error', function(event) {
-    alert("errror:"+event.message)
+  console.log({{ .video_src }})
+
+//
+  var touchDuration = 0
+  var touchStart = 0
+  var touchEnd = 0
+  const eleVplayer = document.getElementById("vplayer")
+  const eleVplayerSource = document.getElementById("vplayerSource")
+
+  eleVplayer.addEventListener('touchstart', function() {
+    touchStart = new Date().getTime();
   })
+
+  eleVplayer.addEventListener('touchend', function() {
+    touchEnd = new Date().getTime();
+    touchDuration = touchEnd - touchStart;
+    console.log(touchDuration)
+    //alert("touchend:"+eleVplayer.paused)
+    if(touchDuration < 500){
+      if(eleVplayer.paused == true){
+        eleVplayer.play()
+      }else{
+        eleVplayer.pause()
+      }
+    }else{
+      //alert("ffff")
+    }
+    
+  })
+
+  eleVplayer.addEventListener('error', function(event) {
+    console.log(event.target.error.message)
+    alert("error: video src: "+eleVplayerSource.getAttribute('src')+" <== "+event.target.error.message)
+
+  })
+
+  window.addEventListener('error', function(event) {
+    alert("error: "+event.message)
+
+  })
+
+
+  function dotColor(url) {
+    console.log("dotColor(url):"+url)
+    fetch(url)
+    .then(resp => resp.json())
+    .then(function(data){
+      if(data.dot_color!=""){
+        var activeId = data.dot_color.replace("-","");
+        console.log("activeId:",activeId)
+        var eleActiveID = document.getElementById(activeId)
+        if(data.dot_color!="dot-empty"){
+          eleActiveID.classList.add("active");
+        }
+        window.location.reload();
+      }else{
+        console.log("save failed:",data)
+      }
+    })
+    .catch(error => alert("error:"+error))
+  }
+  
+  //
+  function loadActiveColor(ac){
+    if(ac !=""){
+      var activeId = ac.replace("-","");
+      console.log("ac:",activeId)
+      var eleActiveID = document.getElementById(activeId)
+      eleActiveID.classList.add("active");
+    }
+  }
+  //
+  {{ if .active_color }}
+  loadActiveColor({{ .active_color }});
+  {{ end }}
+
 </script>
 </body>
 </html>

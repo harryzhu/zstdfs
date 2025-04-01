@@ -3,6 +3,7 @@ package cmd
 import (
 	//"encoding/json"
 	"fmt"
+	"io"
 	"mime"
 	"os"
 	"path/filepath"
@@ -16,27 +17,31 @@ type Entity struct {
 	Data []byte
 }
 
-func NewEntity(user, id string) Entity {
-	if IsAnyEmpty(user, id) {
-		return Entity{}
-	}
-
+func metaDefault() map[string]string {
 	meta := make(map[string]string)
 	meta["mime"] = ""
 	meta["size"] = ""
 	meta["fsum"] = ""
 	meta["mtime"] = ""
-	meta["sha256"] = ""
 	meta["tags"] = ""
 	meta["is_public"] = "1"
 	meta["is_ban"] = "0"
 	meta["dot_color"] = ""
-	meta["author"] = strings.ToLower(user)
 	meta["stats_digg_count"] = "0"
 	meta["stats_comment_count"] = "0"
 	meta["stats_collect_count"] = "0"
 	meta["stats_share_count"] = "0"
 	meta["stats_download_count"] = "0"
+
+	return meta
+}
+
+func NewEntity(user, id string) Entity {
+	if IsAnyEmpty(user, id) {
+		return Entity{}
+	}
+
+	meta := metaDefault()
 
 	ett := Entity{
 		ID:   id,
@@ -56,7 +61,6 @@ func (ett Entity) WithID(n string) Entity {
 
 func (ett Entity) WithData(b []byte) Entity {
 	ett.Data = b
-	ett.Meta["sha256"] = SHA256Bytes(b)
 	return ett
 }
 
@@ -71,11 +75,18 @@ func (ett Entity) WithFile(fpath string) Entity {
 		return Entity{}
 	}
 
-	data, err := os.ReadFile(fpath)
+	fp, err := os.Open(fpath)
 	if err != nil {
 		PrintError("NewEntity", err)
 		return Entity{}
 	}
+
+	data, err := io.ReadAll(fp)
+	if err != nil {
+		PrintError("NewEntity", err)
+		return Entity{}
+	}
+	fp.Close()
 
 	mimeType := "text/plain"
 	if filepath.Ext(fpath) != "" {
@@ -85,7 +96,6 @@ func (ett Entity) WithFile(fpath string) Entity {
 	ett.Meta["mtime"] = Int64ToString(finfo.ModTime().UTC().Unix())
 	ett.Meta["size"] = Int64ToString(finfo.Size())
 	ett.Meta["mime"] = mimeType
-	ett.Meta["sha256"] = SHA256File(fpath)
 	//
 	ett.Data = data
 
@@ -122,6 +132,11 @@ func (ett Entity) Save() bool {
 		return false
 	}
 
+	if len(ett.Data) != Str2Int(ett.Meta["size"]) {
+		DebugWarn("ERROR: entity.Save:", "data length != meta[size], will SKIP save")
+		return false
+	}
+
 	bkey := badgerSave(ett.Data)
 	DebugInfo("Entity Save", string(bkey))
 	if bkey == nil {
@@ -129,6 +144,7 @@ func (ett Entity) Save() bool {
 	}
 	ett.Meta["author"] = strings.ToLower(ett.User)
 	ett.Meta["fsum"] = string(bkey)
+	ett.Meta["uri"] = GetURI(ett.ID)
 
 	for k, v := range ett.Meta {
 		mongoSave(ett.User, ett.ID, k, v)
@@ -143,11 +159,12 @@ func (ett Entity) SaveWithoutData() bool {
 	}
 
 	if badgerExists([]byte(ett.Meta["fsum"])) == false {
-		DebugWarn("SaveWithoutData:badgerExists", "fsum does not exist, cannot SaveWithoutData", ", fsum=", ett.Meta["fsum"])
+		DebugWarn("badgerExists", "fsum does not exist, cannot SaveWithoutData", ", fsum=", ett.Meta["fsum"])
 		return false
 	}
 
 	ett.Meta["author"] = strings.ToLower(ett.User)
+	ett.Meta["uri"] = GetURI(ett.ID)
 
 	for k, v := range ett.Meta {
 		mongoSave(ett.User, ett.ID, k, v)
@@ -162,19 +179,26 @@ func (ett Entity) Get() Entity {
 	}
 
 	meta := mongoGet(ett.User, ett.ID)
+
+	_, ok := meta["_id"]
+	if !ok {
+		return Entity{}
+	}
+
 	ett.Meta = meta
 
-	fsum := meta["fsum"]
-	if fsum != "" {
+	fsum, ok := ett.Meta["fsum"]
+	if ok && fsum != "" {
 		//DebugInfo("Entity::Get:fsum", fsum)
 		ett.Data = badgerGet([]byte(fsum))
 	} else {
-		DebugInfo("Entity::Get:meta", meta)
+		//DebugInfo("Entity::Get:meta", meta)
+		return Entity{}
 	}
 	return ett
 }
 
-func (ett Entity) GetMeta() Entity {
+func (ett Entity) Head() Entity {
 	if IsAnyEmpty(ett.ID, ett.User) {
 		return Entity{}
 	}

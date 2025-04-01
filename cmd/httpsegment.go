@@ -45,7 +45,8 @@ func genNavFileList(files []string, fkey, uname string) map[string]map[string]an
 				a_text = line
 
 				navFileList[a_text] = map[string]any{
-					"uri":   fmt.Sprintf("%s/%s", uname, line),
+					"uid":   fmt.Sprintf("%s/%s", uname, line),
+					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
 					"size":  ToKMGTB(Str2Int(lineMeta["size"])),
 					"mtime": UnixFormat(Int2Int64(Str2Int(lineMeta["mtime"])), "06-01-02 15:04"),
 				}
@@ -54,14 +55,18 @@ func genNavFileList(files []string, fkey, uname string) map[string]map[string]an
 				a_text = strings.TrimPrefix(line, fkey)
 
 				navFileList[a_text] = map[string]any{
-					"uri":   fmt.Sprintf("%s/%s/%s", uname, fkey, line),
+					"uid":   fmt.Sprintf("%s/%s/%s", uname, fkey, line),
+					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
 					"size":  ToKMGTB(Str2Int(lineMeta["size"])),
 					"mtime": UnixFormat(Int2Int64(Str2Int(lineMeta["mtime"])), "06-01-02 15:04"),
 				}
 			}
 
+			navFileList[a_text]["site_url"] = GetSiteURL()
+
 			if lineMeta["dot_color"] != "" {
 				navFileList[a_text]["dot_color"] = lineMeta["dot_color"]
+				navFileList[a_text]["is_having_dot_color"] = "1"
 			}
 
 			if strings.Index(lineMeta["mime"], "video") > -1 || strings.Index(lineMeta["mime"], "mpeg") > -1 {
@@ -107,7 +112,7 @@ func genNavDirList(dirs []string, fkey, uname string) map[string]map[string]stri
 			line = strings.TrimPrefix(line, "/")
 			if line != "" && uname != "" {
 				navDirList[line] = map[string]string{
-					"uri": fmt.Sprintf("%s/%s", uname, line),
+					"uid": fmt.Sprintf("%s/%s", uname, line),
 				}
 			}
 		}
@@ -117,7 +122,7 @@ func genNavDirList(dirs []string, fkey, uname string) map[string]map[string]stri
 				DebugInfo("====:line=", line, " :fkey=", fkey)
 				a_text := strings.TrimPrefix(line, fkey)
 				navDirList[a_text] = map[string]string{
-					"uri": fmt.Sprintf("%s/%s/%s", uname, fkey, line),
+					"uid": fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 				}
 			}
 		}

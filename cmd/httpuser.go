@@ -49,7 +49,7 @@ func userSignup(ctx iris.Context) {
 		return
 	}
 	password_hash := GetPassword(username, password)
-	DebugInfo("userSignup:password_hash", password, ":", password_hash, ":", len(password_hash))
+	DebugInfo("userSignup:password", len(password), ":password_hash:", password_hash, ":", len(password_hash))
 	success := mysqlUserSignUp(username, password_hash)
 	if success {
 		mongoUserCollectionInit(username)
@@ -86,9 +86,8 @@ func userLogin(ctx iris.Context) {
 		DebugInfo("userLogin", "frm_hash is invalid")
 		return
 	}
-	password_hash := GetPassword(username, password)
-	DebugInfo("userLogin:password_hash", username, ":", len(password_hash))
-	user := mysqlUserLogin(username, password_hash, 1)
+
+	user := mysqlUserLogin(username, password, 1)
 	DebugInfo("userLogin:user", user, ":", user.Json())
 	//
 	cookieuser := Encrypt(user.Json())
