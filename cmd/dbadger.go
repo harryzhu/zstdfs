@@ -147,7 +147,7 @@ func badgerBulkLoad(dpath string, fext string) bool {
 			counter += 1
 		}
 		if len(batchFiles) >= 10 {
-			//BatchWriteFiles(batchFiles)
+			BatchWriteFiles(batchFiles)
 			mongoBatchWriteFiles(batchFiles)
 			batchFiles = []string{}
 		}
