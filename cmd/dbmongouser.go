@@ -184,7 +184,7 @@ func mongoRandomGetURI(user string, total int) (files []string) {
 	return files
 }
 
-func mongoListFiles(user, prefix string) (dirs, files []string) {
+func mongoListFiles(user, prefix string, optSort bson.D) (dirs, files []string) {
 	var rows []bson.M
 	var lines []string
 	if user == "" {
@@ -200,7 +200,8 @@ func mongoListFiles(user, prefix string) (dirs, files []string) {
 	DebugInfo("mongoListFiles:filter", filter)
 
 	collUser := mgodb.Collection(user)
-	results, err := collUser.Find(context.TODO(), filter)
+
+	results, err := collUser.Find(context.TODO(), filter, options.Find().SetSort(optSort))
 	if err != nil {
 		PrintError("mongoListFiles", err)
 		return lines, lines
@@ -213,18 +214,18 @@ func mongoListFiles(user, prefix string) (dirs, files []string) {
 	for _, row := range rows {
 		//DebugInfo("---", row)
 		rowid = row["_id"].(string)
-		DebugInfo("0.mongoListFiles:rowid", rowid)
+		//DebugInfo("0.mongoListFiles:rowid", rowid)
 
 		rowid = strings.TrimPrefix(rowid, prefix)
-		DebugInfo("1.mongoListFiles:TrimPrefix(rowid, prefix)", prefix, "===>", rowid)
+		//DebugInfo("1.mongoListFiles:TrimPrefix(rowid, prefix)", prefix, "===>", rowid)
 
 		rowid = strings.Trim(rowid, "/")
-		DebugInfo("2.mongoListFiles:Trim(rowid, /)", rowid)
+		//DebugInfo("2.mongoListFiles:Trim(rowid, /)", rowid)
 		if strings.Contains(rowid, "/") {
 			dd := strings.Split(rowid, "/")
-			DebugInfo("3.mongoListFiles:dd[0]<==dd", dd[0], " <=== ", dd)
+			//DebugInfo("3.mongoListFiles:dd[0]<==dd", dd[0], " <=== ", dd)
 			if Contains(dirs, dd[0]) == false {
-				DebugInfo("4.mongoListFiles:dd[0]", dd[0])
+				//DebugInfo("4.mongoListFiles:dd[0]", dd[0])
 				dirs = append(dirs, dd[0])
 			}
 
@@ -247,12 +248,13 @@ func mongoTagFiles(user, tagname string) (files []string) {
 	filesCacheFile := fmt.Sprintf("%s/mongoTagFiles/files_%s.dat", user, GetXxhash([]byte(tagname)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
-		regx_tagname := strings.Join([]string{"(", tagname, ")"}, "")
-		filter := bson.D{{"tags", bson.Regex{Pattern: regx_tagname, Options: "i"}}}
+		regxTagname := strings.Join([]string{"(", tagname, ")"}, "")
+		filter := bson.D{{"tags", bson.Regex{Pattern: regxTagname, Options: "i"}}}
 		//DebugInfo("mongoTagFiles:filter", filter)
+		optSort := bson.D{{"_id", 1}, {"mtime", -1}}
 
 		collUser := mgodb.Collection(user)
-		results, err := collUser.Find(context.TODO(), filter)
+		results, err := collUser.Find(context.TODO(), filter, options.Find().SetSort(optSort))
 		if err != nil {
 			PrintError("mongoTagFiles", err)
 			return lines
@@ -406,7 +408,6 @@ func mongoBatchWriteFiles(files []string) bool {
 		ett.Meta["fsum"] = string(SumBlake3(val))
 		ett.SaveWithoutData()
 		//DebugInfo("mongoBatchWriteFiles", ID, "<= ", file)
-
 	}
 	DebugInfo("mongoBatchWriteFiles: files: ", len(files))
 	return true

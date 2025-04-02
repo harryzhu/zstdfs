@@ -12,7 +12,7 @@ import (
 func StartCron() {
 	c := cron.New()
 
-	c.AddFunc("@every 5m", func() {
+	c.AddFunc("@every 15m", func() {
 		DebugInfo("StartCron", "CleanExpires")
 		DebugInfo("StartCron", "DiskCacheExpires: ", DiskCacheExpires)
 		DebugInfo("StartCron", "TEMP_DIR: ", TEMP_DIR)

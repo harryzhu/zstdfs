@@ -160,6 +160,19 @@ func ToKMGTB(n int) string {
 	return fmt.Sprintf("%d Bytes", n)
 }
 
+func ToKWM(n int) string {
+	if n > M {
+		return fmt.Sprintf("%.1fM", float64(n)/float64(M))
+	}
+	if n > W {
+		return fmt.Sprintf("%.1fW", float64(n)/float64(W))
+	}
+	if n > K {
+		return fmt.Sprintf("%.1fK", float64(n)/float64(K))
+	}
+	return Int2Str(n)
+}
+
 func DefaultAsset(dest string, src string) {
 	_, err := os.Stat(dest)
 	if err != nil {

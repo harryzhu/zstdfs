@@ -1,5 +1,6 @@
+{{ range $idx, $nfl := .nav_file_list }}
 
-{{ range $k, $kv := .nav_file_list }}
+{{ range $k, $kv := $nfl }}
 <tr class="item item-file">
 	<td class="dot-col dot-col-file {{ .dot_color }}">&#9679;</td>
 	<td class="item-keyname"><a href="/f/{{ $kv.uid }}">{{ $k }}</a>
@@ -43,4 +44,5 @@
 
 	</td>
 </tr>
+{{ end }}
 {{ end }}

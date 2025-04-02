@@ -14,6 +14,10 @@ const MB int = 1 << 20
 const GB int = 1 << 30
 const TB int = 1 << 40
 
+const K int = 1000
+const W int = 10000
+const M int = 1000000
+
 const ADMIN string = "_admin"
 const AdminBucket string = ADMIN
 

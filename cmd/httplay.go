@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kataras/iris/v12"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type VideoItem struct {
@@ -182,7 +183,7 @@ func playPrefixList(ctx iris.Context) {
 	videoUrlsCacheFile := fmt.Sprintf("%s/playPrefixList/video_%s.dat", uname, GetXxhash([]byte(prefix)))
 
 	if GobLoad(videoUrlsCacheFile, &videoUrls, FunctionCacheExpires) == false {
-		_, lines := mongoListFiles(uname, prefix)
+		_, lines := mongoListFiles(uname, prefix, bson.D{{"mtime", -1}})
 		var files []string
 		for _, line := range lines {
 			DebugInfo("====ext", filepath.Ext(line))

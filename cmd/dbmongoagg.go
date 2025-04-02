@@ -28,7 +28,7 @@ func mongoAggCountByKey(uname string, key string, min_count, max_count int) (fil
 
 	sortStage := bson.D{
 		{"$sort", bson.D{
-			{key, 1},
+			{key, -1},
 		}}}
 
 	DebugInfo("mongoAggCountByKey:matchStage", matchStage)
@@ -83,7 +83,7 @@ func mongoAggFilesByKey(uname string, key string, val string) (files []string) {
 
 		sortStage := bson.D{
 			{"$sort", bson.D{
-				{key, 1},
+				{key, -1},
 			}}}
 
 		DebugInfo("mongoAggFilesByKey:matchStage", matchStage)

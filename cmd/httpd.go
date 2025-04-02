@@ -16,6 +16,8 @@ import (
 	//"strconv"
 	"strings"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
+
 	//"github.com/kataras/iris/v12/sessions"
 	"github.com/kataras/iris/v12"
 )
@@ -593,12 +595,12 @@ func adminListFiles(ctx iris.Context) {
 		return
 	}
 
-	dirs, files := mongoListFiles(uname, "")
+	dirs, files := mongoListFiles(uname, "", bson.D{{"mtime", -1}})
 
 	navDirList := genNavDirList(dirs, "", uname)
 	navFileList := genNavFileList(files, "", uname)
 
-	DebugInfo("navList", navDirList)
+	//DebugInfo("navList", navDirList)
 
 	data := iris.Map{
 		"nav_dir_list":  navDirList,
@@ -634,10 +636,11 @@ func adminListKeys(ctx iris.Context) {
 	//navFileList := make(map[string]map[string]any)
 	var navBreadcrumb []map[string]string
 
-	dirs, files := mongoListFiles(uname, fkey)
+	dirs, files := mongoListFiles(uname, fkey, bson.D{{"mtime", -1}})
 
 	navDirList := genNavDirList(dirs, fkey, uname)
 	navFileList := genNavFileList(files, fkey, uname)
+	//navFileList := genNavFileList2(files, fkey, uname)
 
 	breads := strings.Split(fkey, "/")
 	for idx, bread := range breads {
@@ -650,8 +653,8 @@ func adminListKeys(ctx iris.Context) {
 		}
 	}
 
-	DebugInfo("adminListKeys:navDirList", navDirList)
-	DebugInfo("adminListKeys:navFileList", navFileList)
+	//DebugInfo("adminListKeys:navDirList", navDirList)
+	//DebugInfo("adminListKeys:navFileList", navFileList)
 
 	data := iris.Map{
 		"nav_dir_list":    navDirList,

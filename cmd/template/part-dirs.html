@@ -1,12 +1,13 @@
-
-			{{ range $k, $kv := .nav_dir_list }}
-		<tr class="item item-dir">
-			<td class="dot-col dot-col-dir">&#9679;</td>
-			<td class="item-keyname"><a href="/user/buckets/{{ $kv.uid }}">{{ $k }}</a></td>
-			<td class="meta meta-tags"> </td>
-			<td class="meta meta-size"> </td>
-			<td class="meta meta-mtime"> </td>
-			<td class="meta meta-statistics"> </td>
-			<td class="meta meta-action"> </td>
-		</tr>
-			{{ end }}
+{{ range $k, $ndl := .nav_dir_list }}
+{{ range $k, $kv := $ndl }}
+<tr class="item item-dir">
+	<td class="dot-col dot-col-dir">&#9679;</td>
+	<td class="item-keyname"><a href="/user/buckets/{{ $kv.uid }}">{{ $k }}</a></td>
+	<td class="meta meta-tags"> </td>
+	<td class="meta meta-size"> </td>
+	<td class="meta meta-mtime"> </td>
+	<td class="meta meta-statistics"> </td>
+	<td class="meta meta-action"> </td>
+</tr>
+{{ end }}
+{{ end }}

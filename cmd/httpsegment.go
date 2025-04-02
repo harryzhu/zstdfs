@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"sort"
 	//"encoding/json"
 	"fmt"
 	"strings"
@@ -12,33 +13,35 @@ func genMetaStatistics(ss map[string]string) (map[string]string, error) {
 
 	digg_count, ok := ss["stats_digg_count"]
 	if ok && Str2Int(digg_count) > 100000 {
-		counter_set["点赞"] = fmt.Sprintf("%v", digg_count)
+		//counter_set["点赞"] = fmt.Sprintf("%v", ToKWM(digg_count))
+		counter_set["点赞"] = ToKWM(Str2Int(digg_count))
 	}
 	comment_count, ok := ss["stats_comment_count"]
 	if ok && Str2Int(comment_count) > 20000 {
-		counter_set["评论"] = fmt.Sprintf("%v", comment_count)
+		counter_set["评论"] = ToKWM(Str2Int(comment_count))
 	}
 	collect_count, ok := ss["stats_collect_count"]
 	if ok && Str2Int(collect_count) > 10000 {
-		counter_set["收藏"] = fmt.Sprintf("%v", collect_count)
+		counter_set["收藏"] = ToKWM(Str2Int(collect_count))
 	}
 	share_count, ok := ss["stats_share_count"]
 	if ok && Str2Int(share_count) > 10000 {
-		counter_set["转发"] = fmt.Sprintf("%v", share_count)
+		counter_set["转发"] = ToKWM(Str2Int(share_count))
 	}
 	download_count, ok := ss["stats_download_count"]
 	if ok && Str2Int(download_count) > 10000 {
-		counter_set["下载"] = fmt.Sprintf("%v", download_count)
+		counter_set["下载"] = ToKWM(Str2Int(download_count))
 	}
 	return counter_set, nil
 }
 
-func genNavFileList(files []string, fkey, uname string) map[string]map[string]any {
-	navFileList := make(map[string]map[string]any)
+func genNavFileList(files []string, fkey, uname string) []map[string]map[string]any {
+	var navFileKVS []map[string]map[string]any
 	var a_text string
 	var lineMeta map[string]string
 
 	for _, line := range files {
+		navFileList := make(map[string]map[string]any)
 		if line != "" && uname != "" {
 			if fkey == "" {
 				lineMeta = mongoGet(uname, line)
@@ -100,13 +103,16 @@ func genNavFileList(files []string, fkey, uname string) map[string]map[string]an
 			}
 
 		}
+		navFileKVS = append(navFileKVS, navFileList)
 	}
-	return navFileList
+
+	return navFileKVS
 }
 
-func genNavDirList(dirs []string, fkey, uname string) map[string]map[string]string {
+func genNavDirList(dirs []string, fkey, uname string) []map[string]map[string]string {
 	navDirList := make(map[string]map[string]string)
-
+	var navDirKVS []map[string]map[string]string
+	sort.Strings(dirs)
 	if fkey == "" {
 		for _, line := range dirs {
 			line = strings.TrimPrefix(line, "/")
@@ -115,18 +121,20 @@ func genNavDirList(dirs []string, fkey, uname string) map[string]map[string]stri
 					"uid": fmt.Sprintf("%s/%s", uname, line),
 				}
 			}
+			navDirKVS = append(navDirKVS, navDirList)
 		}
 	} else {
 		for _, line := range dirs {
 			if line != "" && uname != "" {
-				DebugInfo("====:line=", line, " :fkey=", fkey)
+				//DebugInfo("====:line=", line, " :fkey=", fkey)
 				a_text := strings.TrimPrefix(line, fkey)
 				navDirList[a_text] = map[string]string{
 					"uid": fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 				}
 			}
+			navDirKVS = append(navDirKVS, navDirList)
 		}
 	}
 
-	return navDirList
+	return navDirKVS
 }
