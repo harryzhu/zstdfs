@@ -587,7 +587,9 @@ func adminListBuckets(ctx iris.Context) {
 
 func adminListFiles(ctx iris.Context) {
 	uname := ctx.Params().Get("uname")
+	//numPage := ctx.URLParam("page")
 	DebugInfo("adminListFiles:uname=", uname)
+
 	//
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("adminListFiles:currentUser", currentUser)
@@ -600,7 +602,7 @@ func adminListFiles(ctx iris.Context) {
 	navDirList := genNavDirList(dirs, "", uname)
 	navFileList := genNavFileList(files, "", uname)
 
-	//DebugInfo("navList", navDirList)
+	//DebugInfo("navList", dirs)
 
 	data := iris.Map{
 		"nav_dir_list":  navDirList,

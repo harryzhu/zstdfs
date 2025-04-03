@@ -121,8 +121,8 @@ func genNavDirList(dirs []string, fkey, uname string) []map[string]map[string]st
 					"uid": fmt.Sprintf("%s/%s", uname, line),
 				}
 			}
-			navDirKVS = append(navDirKVS, navDirList)
 		}
+		navDirKVS = append(navDirKVS, navDirList)
 	} else {
 		for _, line := range dirs {
 			if line != "" && uname != "" {
@@ -132,8 +132,8 @@ func genNavDirList(dirs []string, fkey, uname string) []map[string]map[string]st
 					"uid": fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 				}
 			}
-			navDirKVS = append(navDirKVS, navDirList)
 		}
+		navDirKVS = append(navDirKVS, navDirList)
 	}
 
 	return navDirKVS
