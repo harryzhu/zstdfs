@@ -34,6 +34,12 @@ var (
 	STATIC_DIR string
 	//
 	FunctionCacheExpires int64 = 300
+	// Statistics
+	MinDiggCount     int = 100000
+	MinCommentCount  int = 20000
+	MinCollectCount  int = 10000
+	MinShareCount    int = 10000
+	MinDownloadCount int = 10000
 )
 
 var (

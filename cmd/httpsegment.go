@@ -12,24 +12,23 @@ func genMetaStatistics(ss map[string]string) (map[string]string, error) {
 	counter_set := make(map[string]string)
 
 	digg_count, ok := ss["stats_digg_count"]
-	if ok && Str2Int(digg_count) > 100000 {
-		//counter_set["点赞"] = fmt.Sprintf("%v", ToKWM(digg_count))
+	if ok && Str2Int(digg_count) > MinDiggCount {
 		counter_set["点赞"] = ToKWM(Str2Int(digg_count))
 	}
 	comment_count, ok := ss["stats_comment_count"]
-	if ok && Str2Int(comment_count) > 20000 {
+	if ok && Str2Int(comment_count) > MinCommentCount {
 		counter_set["评论"] = ToKWM(Str2Int(comment_count))
 	}
 	collect_count, ok := ss["stats_collect_count"]
-	if ok && Str2Int(collect_count) > 10000 {
+	if ok && Str2Int(collect_count) > MinCollectCount {
 		counter_set["收藏"] = ToKWM(Str2Int(collect_count))
 	}
 	share_count, ok := ss["stats_share_count"]
-	if ok && Str2Int(share_count) > 10000 {
+	if ok && Str2Int(share_count) > MinShareCount {
 		counter_set["转发"] = ToKWM(Str2Int(share_count))
 	}
 	download_count, ok := ss["stats_download_count"]
-	if ok && Str2Int(download_count) > 10000 {
+	if ok && Str2Int(download_count) > MinDownloadCount {
 		counter_set["下载"] = ToKWM(Str2Int(download_count))
 	}
 	return counter_set, nil

@@ -32,6 +32,12 @@ func BeforeStart() error {
 		FunctionCacheExpires = 0
 	}
 	//
+	MinDiggCount = Str2Int(GetEnv("zstdfs_min_digg_count", Int2Str(MinDiggCount)))
+	MinCommentCount = Str2Int(GetEnv("zstdfs_min_comment_count", Int2Str(MinCommentCount)))
+	MinCollectCount = Str2Int(GetEnv("zstdfs_min_collect_count", Int2Str(MinCollectCount)))
+	MinShareCount = Str2Int(GetEnv("zstdfs_min_share_count", Int2Str(MinShareCount)))
+	MinDownloadCount = Str2Int(GetEnv("zstdfs_min_download_count", Int2Str(MinDownloadCount)))
+	//
 	DefaultAsset(ASSET_DIR+"/video-js.min.css", "template/video-js.min.css")
 	DefaultAsset(ASSET_DIR+"/video.min.js", "template/video.min.js")
 	DefaultAsset(ASSET_DIR+"/style.css", "template/style.css")
