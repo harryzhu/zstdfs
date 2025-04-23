@@ -105,9 +105,7 @@ func StartHTTPServer() {
 
 	v1API := app.Party("/api/")
 	{
-		//v1API.Post("/upload2", apiUploadFile)
 		v1API.Get("/upload/schema.json", apiUploadSchema)
-		//v1API.Post("/has", apiHasFiles)
 		v1API.Post("/upload", apiUploadFiles)
 	}
 

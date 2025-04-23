@@ -30,45 +30,6 @@ func apiUploadSchema(ctx iris.Context) {
 	ctx.WriteString(bf.String())
 }
 
-// func apiHasFiles2(ctx iris.Context) {
-// 	if ctx.Method() != "POST" {
-// 		DebugInfo("apiHasFiles", "pls use POST")
-// 		return
-// 	}
-
-// 	fsums := ctx.PostValue("fsums")
-// 	var reslts []map[string]string
-
-// 	var jfsums []map[string]string
-// 	err := json.Unmarshal([]byte(fsums), &jfsums)
-// 	if err != nil {
-// 		PrintError("apiHasFiles:json.UnMarshal", err)
-// 		ctx.StatusCode(iris.StatusBadRequest)
-// 		ctx.JSON(reslts)
-// 		return
-// 	}
-
-// 	for _, kv := range jfsums {
-// 		for k, v := range kv {
-// 			DebugInfo("key", k)
-// 			if badgerExists([]byte(k)) {
-// 				DebugInfo("status", "1")
-// 				m := make(map[string]string)
-// 				m[v] = "1"
-// 				reslts = append(reslts, m)
-// 			} else {
-// 				DebugInfo("status", "0")
-// 				m := make(map[string]string)
-// 				m[v] = "0"
-// 				reslts = append(reslts, m)
-// 			}
-// 		}
-
-// 	}
-
-// 	ctx.JSON(reslts)
-// }
-
 func apiUploadFiles(ctx iris.Context) {
 	if ctx.Method() != "POST" {
 		DebugInfo("apiUploadFiles", "pls use POST")
@@ -230,83 +191,6 @@ func uploadFile(ctx iris.Context) {
 	ctx.Header("Content-Type", "text/html;charset=utf-8")
 	ctx.Write([]byte(res))
 }
-
-// func apiUploadFiles(ctx iris.Context) {
-
-// 	if ctx.Method() != "POST" {
-// 		DebugInfo("apiUploadFiles", "pls use POST")
-// 		return
-// 	}
-
-// 	fuser := Normalize(ctx.PostValue("fuser"))
-// 	fapikey := ctx.PostValue("fapikey")
-
-// 	result := iris.Map{}
-
-// 	DebugInfo("=====", fuser)
-// 	if IsAnyEmpty(fuser, fapikey) {
-// 		ctx.StatusCode(iris.StatusForbidden)
-// 		ctx.JSON(result)
-// 		return
-// 	}
-// 	//
-// 	user := mysqlApiKeyLogin(fuser, fapikey, 1)
-// 	if user.ApiKey != fapikey || user.IsAdmin != 1 {
-// 		ctx.StatusCode(iris.StatusForbidden)
-// 		ctx.JSON(result)
-// 		return
-// 	}
-
-// 	maxSize := ctx.Application().ConfigurationReadOnly().GetPostMaxMemory()
-// 	DebugInfo("apiUploadFiles:maxSize", maxSize)
-// 	err := ctx.Request().ParseMultipartForm(maxSize)
-// 	if err != nil {
-// 		FatalError("apiUploadFiles", err)
-// 		ctx.StatusCode(iris.StatusInternalServerError)
-// 		ctx.WriteString(err.Error())
-// 		return
-// 	}
-
-// 	saveDir := ToUnixSlash(filepath.Join(UploadDir, fuser))
-// 	MakeDirs(saveDir)
-// 	form := ctx.Request().MultipartForm
-// 	files := form.File
-
-// 	DebugInfo("apiUploadFiles: files count", len(files))
-// 	failures := 0
-// 	var errFiles []string
-// 	var okFiles []string
-// 	for _, file := range files {
-// 		_, err = saveUploadedFile(file[0], saveDir)
-// 		if err != nil {
-// 			failures++
-// 			errFiles = append(errFiles, file[0].Filename)
-// 		} else {
-// 			savePath := strings.Join([]string{saveDir, file[0].Filename}, "/")
-// 			//DebugInfo("OK", savePath)
-// 			okFiles = append(okFiles, savePath)
-// 		}
-// 	}
-
-// 	if failures > 0 {
-// 		ctx.Writef("%s: failed to upload: %s\n", failures, strings.Join(errFiles, "\n"))
-// 		return
-// 	}
-
-// 	var rowsOk []iris.Map
-// 	var rowsErr []iris.Map
-// 	for _, okFile := range okFiles {
-// 		ett := NewEntity(fuser,)
-
-// 	}
-
-// 	rows := make(map[string][]iris.Map)
-// 	rows["ok"] = rowsOk
-// 	rows["error"] = rowsErr
-
-// 	ctx.JSON(rows)
-
-// }
 
 func saveUploadedFile(fh *multipart.FileHeader, destDir string) (int64, error) {
 	src, err := fh.Open()
