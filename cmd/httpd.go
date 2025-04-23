@@ -105,10 +105,10 @@ func StartHTTPServer() {
 
 	v1API := app.Party("/api/")
 	{
-		v1API.Post("/upload", apiUploadFile)
+		//v1API.Post("/upload2", apiUploadFile)
 		v1API.Get("/upload/schema.json", apiUploadSchema)
-		v1API.Post("/has", apiHasFiles)
-		v1API.Post("/batch-import", apiBatchImport)
+		//v1API.Post("/has", apiHasFiles)
+		v1API.Post("/upload", apiUploadFiles)
 	}
 
 	if MaxUploadSizeMB <= 0 {
@@ -140,6 +140,7 @@ func appShutdown() {
 }
 
 func notFound(ctx iris.Context) {
+	ctx.StatusCode(iris.StatusNotFound)
 	ctx.View("404.html")
 }
 
@@ -219,6 +220,7 @@ func getFiles(ctx iris.Context) {
 		keyID, ok := meta["_id"]
 		if !ok {
 			DebugInfo("getURIFiles:fsum is empty: uri", val)
+			ctx.StatusCode(iris.StatusNotFound)
 			ctx.View("404.html")
 			return
 		}
@@ -229,10 +231,11 @@ func getFiles(ctx iris.Context) {
 	fname := filepath.Join("f", uname, key)
 
 	entity := NewEntity(uname, key).Head()
-	DebugInfo("getFiles:entity:", entity.Meta)
+	//DebugInfo("getFiles", "entity.meta", entity.Meta)
 	if entity.Meta["is_public"] == "0" {
 		currentUser := getCurrentUser(ctx)
 		if currentUser.Name != uname || currentUser.IsAdmin != 1 {
+			ctx.StatusCode(iris.StatusForbidden)
 			ctx.View("403.html")
 			return
 		}
@@ -242,13 +245,15 @@ func getFiles(ctx iris.Context) {
 		DebugInfo("getFiles:is_ban==1", fname)
 		currentUser := getCurrentUser(ctx)
 		if currentUser.IsAdmin != 1 {
+			ctx.StatusCode(iris.StatusNotFound)
 			ctx.View("404.html")
 			return
 		}
 	}
 
-	if entity.Meta["fsum"] == "" {
+	if entity.Meta["_fsum"] == "" {
 		DebugInfo("getFiles:fsum is empty", fname)
+		ctx.StatusCode(iris.StatusNotFound)
 		ctx.View("404.html")
 		return
 	}
@@ -256,13 +261,12 @@ func getFiles(ctx iris.Context) {
 	entity = entity.Get()
 	if entity.Data == nil {
 		DebugInfo("getFiles: Data is empty", fname)
-		ctx.View("404.html")
-		return
 	}
 
 	mimeType := "application/octet-stream"
-
-	if fext != "" {
+	if entity.Meta["mime"] != "" {
+		mimeType = entity.Meta["mime"]
+	} else if fext != "" {
 		mimeType = mime.TypeByExtension(fext)
 	}
 
@@ -274,6 +278,7 @@ func getFiles(ctx iris.Context) {
 	}
 
 	ctx.Header("Content-Type", mimeType)
+	ctx.StatusCode(iris.StatusOK)
 	ctx.Write(entity.Data)
 }
 
@@ -642,7 +647,6 @@ func adminListKeys(ctx iris.Context) {
 
 	navDirList := genNavDirList(dirs, fkey, uname)
 	navFileList := genNavFileList(files, fkey, uname)
-	//navFileList := genNavFileList2(files, fkey, uname)
 
 	breads := strings.Split(fkey, "/")
 	for idx, bread := range breads {

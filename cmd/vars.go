@@ -44,7 +44,7 @@ var (
 
 var (
 	testUser string = "harry"
-	testKey  string = "sample_group/sam/ple/pre/fix/test.jpg"
+	testKey  string = "sample_group/sample/prefix/test.jpg"
 )
 
 var (

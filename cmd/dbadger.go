@@ -64,11 +64,12 @@ func badgerGet(key []byte) (val []byte) {
 		}
 		itemVal, err := item.ValueCopy(nil)
 		PrintError("badgerGet", err)
-		//DebugInfo("badgerGet", len(itemVal))
+		DebugInfo("badgerGet", len(itemVal), " :", string(key))
 		val = UnZstdBytes(itemVal)
 		return err
 	})
 
+	//DebugInfo("badgerGet:val", val)
 	return val
 }
 

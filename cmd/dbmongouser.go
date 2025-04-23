@@ -90,9 +90,10 @@ func mongoSave(user string, id string, k, v string) bool {
 	if valType == "ints" {
 		update = bson.D{{"$set", bson.D{{k, Str2Ints(v, ",")}}}}
 	}
-	opt := options.UpdateOne().SetUpsert(true)
 
+	opt := options.UpdateOne().SetUpsert(true)
 	_, err := collUser.UpdateOne(context.TODO(), filter, update, opt)
+
 	if err != nil {
 		PrintError("mongoSave", err)
 		return false
@@ -353,6 +354,7 @@ func mongoUserCollectionInit(user string) bool {
 	meta["author"] = user
 	meta["size"] = Int64ToString(finfo.Size())
 	meta["mtime"] = Int64ToString(mtime)
+	meta["fsha256"] = SHA256File(testFile)
 	//
 	meta["tags"] = TagLineFormat("壁纸，自然;杭州；游湖#泛舟/休闲")
 	meta["strs_tags"] = meta["tags"]

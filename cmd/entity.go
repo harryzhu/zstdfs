@@ -21,7 +21,7 @@ func metaDefault() map[string]string {
 	meta := make(map[string]string)
 	meta["mime"] = ""
 	meta["size"] = ""
-	meta["fsum"] = ""
+	meta["_fsum"] = ""
 	meta["mtime"] = ""
 	meta["tags"] = ""
 	meta["is_public"] = "1"
@@ -99,6 +99,10 @@ func (ett Entity) WithFile(fpath string) Entity {
 	//
 	ett.Data = data
 
+	if data == nil {
+		ett.Data = []byte("")
+	}
+
 	return ett
 }
 
@@ -137,13 +141,18 @@ func (ett Entity) Save() bool {
 		return false
 	}
 
+	if SHA256Bytes(ett.Data) != ett.Meta["fsha256"] {
+		DebugWarn("ERROR: entity.Save:", "data sha256 != meta[fsha256], will SKIP save")
+		return false
+	}
+
 	bkey := badgerSave(ett.Data)
 	DebugInfo("Entity Save", string(bkey))
 	if bkey == nil {
 		return false
 	}
 	ett.Meta["author"] = strings.ToLower(ett.User)
-	ett.Meta["fsum"] = string(bkey)
+	ett.Meta["_fsum"] = string(bkey)
 	ett.Meta["uri"] = GetURI(ett.ID)
 
 	for k, v := range ett.Meta {
@@ -154,12 +163,12 @@ func (ett Entity) Save() bool {
 }
 
 func (ett Entity) SaveWithoutData() bool {
-	if IsAnyEmpty(ett.ID, ett.User, ett.Meta["fsum"]) {
+	if IsAnyEmpty(ett.ID, ett.User, ett.Meta["_fsum"]) {
 		return false
 	}
 
-	if badgerExists([]byte(ett.Meta["fsum"])) == false {
-		DebugWarn("badgerExists", "fsum does not exist, cannot SaveWithoutData", ", fsum=", ett.Meta["fsum"])
+	if badgerExists([]byte(ett.Meta["_fsum"])) == false {
+		DebugWarn("badgerExists", "_fsum does not exist, cannot SaveWithoutData", ", _fsum=", ett.Meta["_fsum"])
 		return false
 	}
 
@@ -187,9 +196,9 @@ func (ett Entity) Get() Entity {
 
 	ett.Meta = meta
 
-	fsum, ok := ett.Meta["fsum"]
+	fsum, ok := ett.Meta["_fsum"]
 	if ok && fsum != "" {
-		//DebugInfo("Entity::Get:fsum", fsum)
+		//DebugInfo("Entity::Get:_fsum", fsum)
 		ett.Data = badgerGet([]byte(fsum))
 	} else {
 		//DebugInfo("Entity::Get:meta", meta)

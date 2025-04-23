@@ -54,8 +54,7 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				}
 			} else {
 				lineMeta = mongoGet(uname, strings.Join([]string{fkey, line}, "/"))
-				a_text = strings.TrimPrefix(line, fkey)
-
+				a_text = line
 				navFileList[a_text] = map[string]any{
 					"uid":   fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
