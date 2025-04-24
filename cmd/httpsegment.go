@@ -1,42 +1,40 @@
 package cmd
 
 import (
-	"sort"
-	//"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
-	//"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func genMetaStatistics(ss map[string]string) (map[string]string, error) {
-	counter_set := make(map[string]string)
+	counterSet := make(map[string]string)
 
-	digg_count, ok := ss["stats_digg_count"]
-	if ok && Str2Int(digg_count) > MinDiggCount {
-		counter_set["点赞"] = ToKWM(Str2Int(digg_count))
+	diggCount, ok := ss["stats_digg_count"]
+	if ok && Str2Int(diggCount) > minDiggCount {
+		counterSet["点赞"] = ToKWM(Str2Int(diggCount))
 	}
-	comment_count, ok := ss["stats_comment_count"]
-	if ok && Str2Int(comment_count) > MinCommentCount {
-		counter_set["评论"] = ToKWM(Str2Int(comment_count))
+	commentCount, ok := ss["stats_comment_count"]
+	if ok && Str2Int(commentCount) > minCommentCount {
+		counterSet["评论"] = ToKWM(Str2Int(commentCount))
 	}
-	collect_count, ok := ss["stats_collect_count"]
-	if ok && Str2Int(collect_count) > MinCollectCount {
-		counter_set["收藏"] = ToKWM(Str2Int(collect_count))
+	collectCount, ok := ss["stats_collect_count"]
+	if ok && Str2Int(collectCount) > minCollectCount {
+		counterSet["收藏"] = ToKWM(Str2Int(collectCount))
 	}
-	share_count, ok := ss["stats_share_count"]
-	if ok && Str2Int(share_count) > MinShareCount {
-		counter_set["转发"] = ToKWM(Str2Int(share_count))
+	shareCount, ok := ss["stats_share_count"]
+	if ok && Str2Int(shareCount) > minShareCount {
+		counterSet["转发"] = ToKWM(Str2Int(shareCount))
 	}
-	download_count, ok := ss["stats_download_count"]
-	if ok && Str2Int(download_count) > MinDownloadCount {
-		counter_set["下载"] = ToKWM(Str2Int(download_count))
+	downloadCount, ok := ss["stats_download_count"]
+	if ok && Str2Int(downloadCount) > minDownloadCount {
+		counterSet["下载"] = ToKWM(Str2Int(downloadCount))
 	}
-	return counter_set, nil
+	return counterSet, nil
 }
 
 func genNavFileList(files []string, fkey, uname string) []map[string]map[string]any {
 	var navFileKVS []map[string]map[string]any
-	var a_text string
+	var aText string
 	var lineMeta map[string]string
 
 	for _, line := range files {
@@ -44,9 +42,9 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 		if line != "" && uname != "" {
 			if fkey == "" {
 				lineMeta = mongoGet(uname, line)
-				a_text = line
+				aText = line
 
-				navFileList[a_text] = map[string]any{
+				navFileList[aText] = map[string]any{
 					"uid":   fmt.Sprintf("%s/%s", uname, line),
 					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
 					"size":  ToKMGTB(Str2Int(lineMeta["size"])),
@@ -54,8 +52,8 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				}
 			} else {
 				lineMeta = mongoGet(uname, strings.Join([]string{fkey, line}, "/"))
-				a_text = line
-				navFileList[a_text] = map[string]any{
+				aText = line
+				navFileList[aText] = map[string]any{
 					"uid":   fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
 					"size":  ToKMGTB(Str2Int(lineMeta["size"])),
@@ -63,19 +61,19 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				}
 			}
 
-			navFileList[a_text]["site_url"] = GetSiteURL()
+			navFileList[aText]["site_url"] = GetSiteURL()
 
 			if lineMeta["dot_color"] != "" {
-				navFileList[a_text]["dot_color"] = lineMeta["dot_color"]
-				navFileList[a_text]["is_having_dot_color"] = "1"
+				navFileList[aText]["dot_color"] = lineMeta["dot_color"]
+				navFileList[aText]["is_having_dot_color"] = "1"
 			}
 
 			if strings.Index(lineMeta["mime"], "video") > -1 || strings.Index(lineMeta["mime"], "mpeg") > -1 {
-				navFileList[a_text]["is_video"] = "1"
+				navFileList[aText]["is_video"] = "1"
 			}
 			if lineMeta["tags"] != "" {
 				metaTags := strings.Split(lineMeta["tags"], ",")
-				navFileList[a_text]["tags"] = metaTags
+				navFileList[aText]["tags"] = metaTags
 			}
 
 			ss := make(map[string]string)
@@ -95,9 +93,9 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				ss["stats_download_count"] = lineMeta["stats_download_count"]
 			}
 
-			counter_set, err := genMetaStatistics(ss)
+			counterSet, err := genMetaStatistics(ss)
 			if err == nil {
-				navFileList[a_text]["statistics"] = counter_set
+				navFileList[aText]["statistics"] = counterSet
 			}
 
 		}
@@ -125,8 +123,8 @@ func genNavDirList(dirs []string, fkey, uname string) []map[string]map[string]st
 		for _, line := range dirs {
 			if line != "" && uname != "" {
 				//DebugInfo("====:line=", line, " :fkey=", fkey)
-				a_text := strings.TrimPrefix(line, fkey)
-				navDirList[a_text] = map[string]string{
+				aText := strings.TrimPrefix(line, fkey)
+				navDirList[aText] = map[string]string{
 					"uid": fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 				}
 			}

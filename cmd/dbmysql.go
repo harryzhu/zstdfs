@@ -12,12 +12,12 @@ import (
 type User struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
-	ApiKey  string `json:"apikey"`
+	APIKey  string `json:"apikey"`
 	IsAdmin int    `json:"isadmin"`
 	Enabled int    `json:"enabled"`
 }
 
-func (u User) Json() string {
+func (u User) JSON() string {
 	b, err := json.Marshal(u)
 	if err != nil {
 		PrintError("User::Json", err)
@@ -26,7 +26,7 @@ func (u User) Json() string {
 	return string(b)
 }
 
-func Json2User(s string) (user User) {
+func JSON2User(s string) (user User) {
 	err := json.Unmarshal([]byte(s), &user)
 	if err != nil {
 		PrintError("Json2User", err)
@@ -62,14 +62,14 @@ func mysqlInit() bool {
 	if err != nil {
 		PrintError("mysqlInit:check table users", err)
 		//
-		table_user, err := embeddedFS.ReadFile("mysql/users.sql")
+		tableUser, err := embeddedFS.ReadFile("mysql/users.sql")
 		if err != nil {
 			PrintError("", err)
 			return false
 		}
-		DebugInfo("mysqlInit", string(table_user))
+		DebugInfo("mysqlInit", string(tableUser))
 		//
-		_, err = sqldb.Exec(string(table_user))
+		_, err = sqldb.Exec(string(tableUser))
 		PrintError("mysqlInit:init table users", err)
 		return false
 	}
@@ -90,7 +90,7 @@ func mysqlUserSignUp(username, password string) bool {
 		return false
 	}
 
-	apikey := GenApiKey(username)
+	apikey := GenAPIKey(username)
 
 	_, err = stmt.Exec(username, password, apikey, 0, 1)
 	if err != nil {
@@ -133,7 +133,7 @@ func mysqlUserLogin(username, password string, enabled int) (user User) {
 	}
 
 	row := stmt.QueryRow(username, enabled)
-	err = row.Scan(&user.ID, &user.Name, &user.ApiKey, &user.IsAdmin, &user.Enabled)
+	err = row.Scan(&user.ID, &user.Name, &user.APIKey, &user.IsAdmin, &user.Enabled)
 	if err != nil {
 		PrintError("mysqlUserLogin:rows.Scan", err)
 		return user
@@ -145,7 +145,7 @@ func mysqlUserLogin(username, password string, enabled int) (user User) {
 
 }
 
-func mysqlApiKeyLogin(username, apikey string, enabled int) (user User) {
+func mysqlAPIKeyLogin(username, apikey string, enabled int) (user User) {
 	username = strings.ToLower(username)
 	if IsAnyEmpty(username, apikey) {
 		return user
@@ -161,7 +161,7 @@ func mysqlApiKeyLogin(username, apikey string, enabled int) (user User) {
 
 	DebugInfo("mysqlApiKeyLogin:rows", row)
 
-	err = row.Scan(&user.ID, &user.Name, &user.ApiKey, &user.IsAdmin, &user.Enabled)
+	err = row.Scan(&user.ID, &user.Name, &user.APIKey, &user.IsAdmin, &user.Enabled)
 	if err != nil {
 		PrintError("mysqlApiKeyLogin:rows.Scan", err)
 		return user

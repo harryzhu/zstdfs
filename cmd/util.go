@@ -1,20 +1,17 @@
 package cmd
 
 import (
-	"io"
-	"sort"
-
-	//"math"
-	//"bytes"
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -130,12 +127,11 @@ func VerifyPassword(h string, u, p string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(h), []byte(p1))
 	if err != nil {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
-func GenApiKey(u string) string {
+func GenAPIKey(u string) string {
 	p1 := strings.Join([]string{UnixFormat(GetNowUnix(), ""), strings.ToLower(u)}, ":")
 	return GetXxhash([]byte(p1))
 }
@@ -385,7 +381,7 @@ func CleanExpires(fpath string, expireSecond float64) error {
 }
 
 func GobDump(fpath string, data any) bool {
-	savePath := ToUnixSlash(filepath.Join(CACHE_DIR, "gob", fpath))
+	savePath := ToUnixSlash(filepath.Join(CacheDir, "gob", fpath))
 	MakeDirs(filepath.Dir(savePath))
 
 	fp, err := os.Create(savePath)
@@ -401,7 +397,7 @@ func GobDump(fpath string, data any) bool {
 }
 
 func GobLoad(fpath string, data any, expireSeconds int64) bool {
-	savePath := ToUnixSlash(filepath.Join(CACHE_DIR, "gob", fpath))
+	savePath := ToUnixSlash(filepath.Join(CacheDir, "gob", fpath))
 	finfo, err := os.Stat(savePath)
 	if err != nil {
 		return false
@@ -425,7 +421,7 @@ func GobLoad(fpath string, data any, expireSeconds int64) bool {
 }
 
 func GobTime(fpath string) int64 {
-	savePath := ToUnixSlash(filepath.Join(CACHE_DIR, "gob", fpath))
+	savePath := ToUnixSlash(filepath.Join(CacheDir, "gob", fpath))
 	finfo, err := os.Stat(savePath)
 	if err != nil {
 		return 0
@@ -434,16 +430,16 @@ func GobTime(fpath string) int64 {
 }
 
 func GobRemove(fpath string) bool {
-	savePath := ToUnixSlash(filepath.Join(CACHE_DIR, "gob", fpath))
+	savePath := ToUnixSlash(filepath.Join(CacheDir, "gob", fpath))
 	_, err := os.Stat(savePath)
 	if err != nil {
 		return true
-	} else {
-		err = os.Remove(savePath)
-		if err != nil {
-			return false
-		}
 	}
+	err = os.Remove(savePath)
+	if err != nil {
+		return false
+	}
+
 	return true
 }
 
@@ -453,7 +449,7 @@ func UniqueInts(elements []int) []int {
 	for _, v := range elements {
 		m[v] = 0
 	}
-	for k, _ := range m {
+	for k := range m {
 		eleNew = append(eleNew, k)
 	}
 	sort.Ints(eleNew)

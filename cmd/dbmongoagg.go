@@ -2,28 +2,20 @@ package cmd
 
 import (
 	"context"
-	"strings"
-
-	//"strings"
-
-	//"encoding/json"
 	"fmt"
-	//"io/ioutil"
-	//"os"
-	//"time"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	//"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func mongoAggCountByKey(uname string, key string, min_count, max_count int) (files []string) {
+func mongoAggCountByKey(uname string, key string, mincount, maxcount int) (files []string) {
 	fmt.Print("-----mongoAggCountByKey----")
 	collUser := mgodb.Collection(uname)
 
 	matchStage := bson.D{
 		{"$match", bson.D{
-			{key, bson.D{{"$gte", min_count}, {"$lt", max_count}}},
+			{key, bson.D{{"$gte", mincount}, {"$lt", maxcount}}},
 		}}}
 
 	sortStage := bson.D{

@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -15,12 +12,12 @@ func StartCron() {
 	c.AddFunc("@every 15m", func() {
 		DebugInfo("StartCron", "CleanExpires")
 		DebugInfo("StartCron", "DiskCacheExpires: ", DiskCacheExpires)
-		DebugInfo("StartCron", "TEMP_DIR: ", TEMP_DIR)
+		DebugInfo("StartCron", "TempDir: ", TempDir)
 		DebugInfo("StartCron", "UploadDir: ", UploadDir)
 
-		if strings.Index(TEMP_DIR, "www/temp") > 0 {
-			DebugInfo("StartCron", "cleaning:", TEMP_DIR)
-			CleanExpires(TEMP_DIR, DiskCacheExpires)
+		if strings.Index(TempDir, "www/temp") > 0 {
+			DebugInfo("StartCron", "cleaning:", TempDir)
+			CleanExpires(TempDir, DiskCacheExpires)
 		}
 
 		if strings.Index(UploadDir, "www/uploads") > 0 {

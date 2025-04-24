@@ -13,12 +13,12 @@ func getCurrentUser(ctx iris.Context) (user User) {
 		return
 	}
 	//DebugInfo("getCurrentUser:curUser", curUser)
-	user = Json2User(Decrypt(curUser))
+	user = JSON2User(Decrypt(curUser))
 	if user.Name != "" && user.Enabled != 0 {
 		return user
-	} else {
-		DebugInfo("getCurrentUser:OK", user.Name)
 	}
+	DebugInfo("getCurrentUser:OK", user.Name)
+
 	ctx.Redirect("/signin", 302)
 	return user
 }
@@ -39,18 +39,18 @@ func userSignup(ctx iris.Context) {
 	}
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
-	frm_hash := ctx.PostValue("frm_hash")
-	if IsAnyEmpty(username, password, frm_hash) {
-		DebugInfo("userSignup", username, ":", password, ":", frm_hash)
+	frmhash := ctx.PostValue("frm_hash")
+	if IsAnyEmpty(username, password, frmhash) {
+		DebugInfo("userSignup", username, ":", password, ":", frmhash)
 		return
 	}
-	if verifyFormHash(frm_hash) == false {
+	if verifyFormHash(frmhash) == false {
 		DebugInfo("userSignup", "frm_hash is invalid")
 		return
 	}
-	password_hash := GetPassword(username, password)
-	DebugInfo("userSignup:password", len(password), ":password_hash:", password_hash, ":", len(password_hash))
-	success := mysqlUserSignUp(username, password_hash)
+	passwordhash := GetPassword(username, password)
+	DebugInfo("userSignup:password", len(password), ":passwordhash:", passwordhash, ":", len(passwordhash))
+	success := mysqlUserSignUp(username, passwordhash)
 	if success {
 		mongoUserCollectionInit(username)
 		mongoAdminCreateIndex(username)
@@ -76,21 +76,21 @@ func userLogin(ctx iris.Context) {
 	}
 	username := strings.ToLower(ctx.PostValue("username"))
 	password := ctx.PostValue("password")
-	frm_hash := ctx.PostValue("frm_hash")
+	frmhash := ctx.PostValue("frm_hash")
 
-	if IsAnyEmpty(username, password, frm_hash) {
-		DebugInfo("userLogin", username, ":", frm_hash)
+	if IsAnyEmpty(username, password, frmhash) {
+		DebugInfo("userLogin", username, ":", frmhash)
 		return
 	}
-	if verifyFormHash(frm_hash) == false {
-		DebugInfo("userLogin", "frm_hash is invalid")
+	if verifyFormHash(frmhash) == false {
+		DebugInfo("userLogin", "frmhash is invalid")
 		return
 	}
 
 	user := mysqlUserLogin(username, password, 1)
-	DebugInfo("userLogin:user", user, ":", user.Json())
+	DebugInfo("userLogin:user", user, ":", user.JSON())
 	//
-	cookieuser := Encrypt(user.Json())
+	cookieuser := Encrypt(user.JSON())
 	DebugInfo("userLogin:enc:cookieuser", cookieuser)
 	DebugInfo("userLogin:dec:cookieuser", Decrypt(cookieuser))
 
@@ -119,15 +119,15 @@ func verifyFormHash(s string) bool {
 	if strings.Index(s, ":") < 1 {
 		return false
 	}
-	hash_salt := strings.Split(s, ":")
-	if len(hash_salt) != 2 {
+	hashsalt := strings.Split(s, ":")
+	if len(hashsalt) != 2 {
 		return false
 	}
 
 	k1 := UnixFormat(GetNowUnix(), "2006-01-02")
-	k2 := strings.Join([]string{SHA256String(k1), hash_salt[1]}, ":")
+	k2 := strings.Join([]string{SHA256String(k1), hashsalt[1]}, ":")
 	k3 := GetXxhash([]byte(k2))
-	if hash_salt[0] == k3 {
+	if hashsalt[0] == k3 {
 		return true
 	}
 	return false

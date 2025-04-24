@@ -11,12 +11,12 @@ import (
 )
 
 func badgerConnect() *badger.DB {
-	data_dir := ToUnixSlash(filepath.Join(DATA_DIR, "fbin"))
-	MakeDirs(data_dir)
-	DebugInfo("badgerConnect", data_dir)
-	opts := badger.DefaultOptions(data_dir)
-	opts.Dir = data_dir
-	opts.ValueDir = data_dir
+	datadir := ToUnixSlash(filepath.Join(DataDir, "fbin"))
+	MakeDirs(datadir)
+	DebugInfo("badgerConnect", datadir)
+	opts := badger.DefaultOptions(datadir)
+	opts.Dir = datadir
+	opts.ValueDir = datadir
 	opts.BaseTableSize = 256 << 20
 	opts.NumVersionsToKeep = 1
 	opts.SyncWrites = false
@@ -145,10 +145,10 @@ func badgerBulkLoad(dpath string, fext string) bool {
 		//DebugInfo("badgerBulkLoad", path)
 		if len(batchFiles) < 10 {
 			batchFiles = append(batchFiles, path)
-			counter += 1
+			counter++
 		}
 		if len(batchFiles) >= 10 {
-			BatchWriteFiles(batchFiles)
+			batchWriteFiles(batchFiles)
 			mongoBatchWriteFiles(batchFiles)
 			batchFiles = []string{}
 		}
@@ -156,7 +156,7 @@ func badgerBulkLoad(dpath string, fext string) bool {
 		return nil
 	})
 
-	BatchWriteFiles(batchFiles)
+	batchWriteFiles(batchFiles)
 	mongoBatchWriteFiles(batchFiles)
 
 	DebugInfo("badgerBulkLoad:", "Done! files: ", counter)
@@ -164,7 +164,7 @@ func badgerBulkLoad(dpath string, fext string) bool {
 	return true
 }
 
-func BatchWriteFiles(files []string) bool {
+func batchWriteFiles(files []string) bool {
 	txn := bgrdb.NewTransaction(true)
 	defer txn.Discard()
 	var batchTotalSize int

@@ -4,17 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-
 	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
-
-	//"sort"
-	//"strconv"
 	"strings"
 
-	//"github.com/kataras/iris/v12/sessions"
 	"github.com/kataras/iris/v12"
 )
 
@@ -48,8 +43,8 @@ func apiUploadFiles(ctx iris.Context) {
 
 	DebugInfo("=====", fuser, "::", fid, "::", fmeta)
 	//
-	user := mysqlApiKeyLogin(fuser, fapikey, 1)
-	if user.ApiKey != fapikey {
+	user := mysqlAPIKeyLogin(fuser, fapikey, 1)
+	if user.APIKey != fapikey {
 		ctx.StatusCode(iris.StatusForbidden)
 		ctx.Writef("Error: 403 Forbidden")
 		return
@@ -80,13 +75,11 @@ func apiUploadFiles(ctx iris.Context) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString(err.Error())
 		return
-	} else {
-		dest = filepath.Join(UploadDir, fuser, fileHeader.Filename)
-		MakeDirs(filepath.Join(UploadDir, fuser))
-		ctx.SaveFormFile(fileHeader, dest)
-		//
-		entity = entity.WithFile(dest)
 	}
+	dest = filepath.Join(UploadDir, fuser, fileHeader.Filename)
+	MakeDirs(filepath.Join(UploadDir, fuser))
+	ctx.SaveFormFile(fileHeader, dest)
+	entity = entity.WithFile(dest)
 
 	if entity.Data != nil {
 		if SHA256Bytes(entity.Data) != meta["fsha256"] {

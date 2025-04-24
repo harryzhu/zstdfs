@@ -1,52 +1,49 @@
 package cmd
 
 import (
-	//"os"
 	"fmt"
 	"path/filepath"
-
-	//"fmt"
 	"time"
 )
 
 func BeforeStart() error {
-	DATA_DIR = GetEnv("zstdfs_data", "data/zstdfs")
-	TEMP_DIR = ToUnixSlash(filepath.Join(DATA_DIR, "www/temp"))
-	ASSET_DIR = ToUnixSlash(filepath.Join(DATA_DIR, "www/assets"))
-	CACHE_DIR = ToUnixSlash(filepath.Join(DATA_DIR, "www/cache"))
+	DataDir = GetEnv("zstdfs_data", "data/zstdfs")
+	TempDir = ToUnixSlash(filepath.Join(DataDir, "www/temp"))
+	AssetDir = ToUnixSlash(filepath.Join(DataDir, "www/assets"))
+	CacheDir = ToUnixSlash(filepath.Join(DataDir, "www/cache"))
 	if UploadDir == "" {
-		UploadDir = ToUnixSlash(filepath.Join(DATA_DIR, "www/uploads"))
+		UploadDir = ToUnixSlash(filepath.Join(DataDir, "www/uploads"))
 	}
 
 	if StaticDir == "" {
-		STATIC_DIR = ToUnixSlash(filepath.Join(DATA_DIR, "www/static"))
+		StaticDir = ToUnixSlash(filepath.Join(DataDir, "www/static"))
 	}
-	MakeDirs(DATA_DIR)
+	MakeDirs(DataDir)
 	MakeDirs(UploadDir)
-	MakeDirs(TEMP_DIR)
-	MakeDirs(CACHE_DIR)
-	MakeDirs(ASSET_DIR)
-	MakeDirs(STATIC_DIR)
+	MakeDirs(TempDir)
+	MakeDirs(CacheDir)
+	MakeDirs(AssetDir)
+	MakeDirs(StaticDir)
 	//
 	if IsDebug {
 		FunctionCacheExpires = 0
 	}
 	//
-	MinDiggCount = Str2Int(GetEnv("zstdfs_min_digg_count", Int2Str(MinDiggCount)))
-	MinCommentCount = Str2Int(GetEnv("zstdfs_min_comment_count", Int2Str(MinCommentCount)))
-	MinCollectCount = Str2Int(GetEnv("zstdfs_min_collect_count", Int2Str(MinCollectCount)))
-	MinShareCount = Str2Int(GetEnv("zstdfs_min_share_count", Int2Str(MinShareCount)))
-	MinDownloadCount = Str2Int(GetEnv("zstdfs_min_download_count", Int2Str(MinDownloadCount)))
+	minDiggCount = Str2Int(GetEnv("zstdfs_min_digg_count", Int2Str(minDiggCount)))
+	minCommentCount = Str2Int(GetEnv("zstdfs_min_comment_count", Int2Str(minCommentCount)))
+	minCollectCount = Str2Int(GetEnv("zstdfs_min_collect_count", Int2Str(minCollectCount)))
+	minShareCount = Str2Int(GetEnv("zstdfs_min_share_count", Int2Str(minShareCount)))
+	minDownloadCount = Str2Int(GetEnv("zstdfs_min_download_count", Int2Str(minDownloadCount)))
 	//
-	DefaultAsset(ASSET_DIR+"/video-js.min.css", "template/video-js.min.css")
-	DefaultAsset(ASSET_DIR+"/video.min.js", "template/video.min.js")
-	DefaultAsset(ASSET_DIR+"/style.css", "template/style.css")
-	DefaultAsset(ASSET_DIR+"/favicon.png", "template/favicon.png")
-	DefaultAsset(STATIC_DIR+"/test.jpg", "template/bg-01.jpg")
-	DefaultAsset(STATIC_DIR+"/example.jpg", "template/bg-02.jpg")
+	DefaultAsset(AssetDir+"/video-js.min.css", "template/video-js.min.css")
+	DefaultAsset(AssetDir+"/video.min.js", "template/video.min.js")
+	DefaultAsset(AssetDir+"/style.css", "template/style.css")
+	DefaultAsset(AssetDir+"/favicon.png", "template/favicon.png")
+	DefaultAsset(StaticDir+"/test.jpg", "template/bg-01.jpg")
+	DefaultAsset(StaticDir+"/example.jpg", "template/bg-02.jpg")
 	//
 	DebugInfo("BeforeStart:Debug", IsDebug)
-	DebugInfo("BeforeStart:DATA_DIR", DATA_DIR)
+	DebugInfo("BeforeStart:DataDir", DataDir)
 	DebugInfo("BeforeStart:FunctionCacheExpires", FunctionCacheExpires)
 	//
 	sqldb = mysqlConnect()

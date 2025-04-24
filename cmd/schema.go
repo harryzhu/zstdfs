@@ -14,7 +14,7 @@ type UploadEntityMetaSchema struct {
 	Mtime              string `json:"mtime"`
 	IsPublic           string `json:"is_public"`
 	IsBan              string `json:"is_ban"`
-	Tags               string `json:"ftags"`
+	Tags               string `json:"tags"`
 	URI                string `json:"uri"`
 	StatsDiggCount     string `json:"stats_digg_count"`
 	StatsCollectCount  string `json:"stats_collect_count"`

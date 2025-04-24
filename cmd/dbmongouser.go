@@ -2,19 +2,12 @@ package cmd
 
 import (
 	"context"
-
-	"strings"
-
-	//"encoding/json"
 	"fmt"
-	//"io/ioutil"
 	"io"
 	"os"
-
-	//"time"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
-	//"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
@@ -98,7 +91,6 @@ func mongoSave(user string, id string, k, v string) bool {
 		PrintError("mongoSave", err)
 		return false
 	}
-	//DebugInfo("---", row)
 	return true
 }
 
@@ -195,8 +187,8 @@ func mongoListFiles(user, prefix string, optSort bson.D) (dirs, files []string) 
 	filter := bson.D{{"_id", bson.Regex{Pattern: "", Options: "i"}}}
 	if prefix != "" {
 		DebugInfo("prefix before regex", prefix)
-		regx_prefix := strings.Join([]string{"^(", prefix, ")"}, "")
-		filter = bson.D{{"_id", bson.Regex{Pattern: regx_prefix, Options: "i"}}}
+		regxprefix := strings.Join([]string{"^(", prefix, ")"}, "")
+		filter = bson.D{{"_id", bson.Regex{Pattern: regxprefix, Options: "i"}}}
 	}
 	DebugInfo("mongoListFiles:filter", filter)
 
@@ -342,7 +334,7 @@ func mongoUserStats(user string) (stats map[string]string) {
 }
 
 func mongoUserCollectionInit(user string) bool {
-	testFile := STATIC_DIR + "/test.jpg"
+	testFile := StaticDir + "/test.jpg"
 
 	finfo, err := os.Stat(testFile)
 	FatalError("EntitySaveSmoke", err)
@@ -401,7 +393,7 @@ func mongoBatchWriteFiles(files []string) bool {
 		ID := strings.TrimPrefix(ToUnixSlash(strings.TrimPrefix(file, BulkLoadDir)), "/")
 
 		ett := NewEntity(BulkLoadUser, ID).WithFile(file)
-		for k, _ := range ett.Meta {
+		for k := range ett.Meta {
 			if !Contains(metaAllowKey, k) {
 				delete(ett.Meta, k)
 			}

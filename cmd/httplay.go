@@ -67,7 +67,7 @@ func playVideos(ctx iris.Context) {
 		return
 	}
 	DebugInfo("---", videoItem.Meta)
-	fkey := strings.Join([]string{TEMP_DIR, bucket, fname}, "/")
+	fkey := strings.Join([]string{TempDir, bucket, fname}, "/")
 	MakeDirs(filepath.Dir(fkey))
 	_, err = os.Stat(fkey)
 	if err != nil {
@@ -86,9 +86,9 @@ func playVideos(ctx iris.Context) {
 		mimeType = mime.TypeByExtension(fext)
 	}
 
-	video_src := strings.Join([]string{"/play", "temp", bucket, fname}, "/")
+	videosrc := strings.Join([]string{"/play", "temp", bucket, fname}, "/")
 	data := videoItem.ViewData
-	data["video_src"] = video_src
+	data["video_src"] = videosrc
 	data["video_mime"] = mimeType
 	data["id_name"] = fname
 

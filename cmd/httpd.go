@@ -4,21 +4,16 @@ import (
 	stdContext "context"
 	"time"
 
-	//"encoding/json"
 	"fmt"
-	//"io/ioutil"
 	"mime"
-	//"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 
-	//"strconv"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	//"github.com/kataras/iris/v12/sessions"
 	"github.com/kataras/iris/v12"
 )
 
@@ -42,7 +37,7 @@ func StartHTTPServer() {
 			TmplName: "dirlist.html",
 		}),
 	}
-	app.HandleDir("/static", iris.Dir(STATIC_DIR), StaticOptions)
+	app.HandleDir("/static", iris.Dir(StaticDir), StaticOptions)
 
 	homeAPI := app.Party("/")
 	{
@@ -54,7 +49,7 @@ func StartHTTPServer() {
 		homeAPI.Get("/signin", loginIndex)
 		homeAPI.Post("/userlogin", userLogin)
 		homeAPI.Get("/logout", logoutIndex)
-		homeAPI.HandleDir("/assets", iris.Dir(ASSET_DIR), iris.DirOptions{ShowList: false})
+		homeAPI.HandleDir("/assets", iris.Dir(AssetDir), iris.DirOptions{ShowList: false})
 	}
 
 	userFileAPI := app.Party("/f/")
@@ -72,7 +67,7 @@ func StartHTTPServer() {
 	playAPI := app.Party("/play")
 	{
 		playAPI.Use(iris.Compression)
-		playAPI.HandleDir("/temp", iris.Dir(TEMP_DIR), iris.DirOptions{})
+		playAPI.HandleDir("/temp", iris.Dir(TempDir), iris.DirOptions{})
 
 		playAPI.Get("/v/{bucket:string}/{fname:path}", playVideos)
 	}
@@ -561,12 +556,12 @@ func adminListBuckets(ctx iris.Context) {
 	for _, v := range collList {
 		DebugInfo("adminListBuckets:collList", v)
 		stats := mongoUserStats(v)
-		v_stats := make(map[string]string)
+		vstats := make(map[string]string)
 		val, ok := stats["doc_count"]
 		if ok {
-			v_stats["doc_count"] = val
+			vstats["doc_count"] = val
 		}
-		navList[v] = v_stats
+		navList[v] = vstats
 	}
 
 	DebugInfo("navList", navList)
@@ -649,10 +644,10 @@ func adminListKeys(ctx iris.Context) {
 	breads := strings.Split(fkey, "/")
 	for idx, bread := range breads {
 		if bread != "" {
-			fkey_left := strings.Join(breads[:idx+1], "/")
-			DebugInfo("adminListKeys:fkey_left", bread, "<==", fkey_left)
+			fkeyLeft := strings.Join(breads[:idx+1], "/")
+			DebugInfo("adminListKeys:fkey_left", bread, "<==", fkeyLeft)
 			bc := make(map[string]string)
-			bc[bread] = fmt.Sprintf("%s/%s", uname, fkey_left)
+			bc[bread] = fmt.Sprintf("%s/%s", uname, fkeyLeft)
 			navBreadcrumb = append(navBreadcrumb, bc)
 		}
 	}
@@ -780,9 +775,9 @@ func dotColorFile(ctx iris.Context) {
 			"error":     "color is invalid.",
 		})
 		return
-	} else {
-		frmDotColor = strings.Join([]string{"dot", color}, "-")
 	}
+
+	frmDotColor = strings.Join([]string{"dot", color}, "-")
 	DebugInfo("fname:", fname, " <== ", frmDotColor)
 
 	if frmDotColor != "" {

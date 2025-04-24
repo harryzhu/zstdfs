@@ -2,44 +2,46 @@ package cmd
 
 import (
 	"database/sql"
-	//"fmt"
 	"errors"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-const KB int = 1 << 10
-const MB int = 1 << 20
-const GB int = 1 << 30
-const TB int = 1 << 40
+const (
+	KB int = 1 << 10
+	MB int = 1 << 20
+	GB int = 1 << 30
+	TB int = 1 << 40
+)
 
-const K int = 1000
-const W int = 10000
-const M int = 1000000
+const (
+	K int = 1000
+	W int = 10000
+	M int = 1000000
+)
 
-const ADMIN string = "_admin"
-const AdminBucket string = ADMIN
-
-const DiskCacheExpires float64 = 3600
+const (
+	AdminBucket      string  = "_admin"
+	DiskCacheExpires float64 = 3600
+)
 
 var (
-	sqldb      *sql.DB
-	mgodb      *mongo.Database
-	bgrdb      *badger.DB
-	DATA_DIR   string
-	TEMP_DIR   string
-	CACHE_DIR  string
-	ASSET_DIR  string
-	STATIC_DIR string
+	sqldb    *sql.DB
+	mgodb    *mongo.Database
+	bgrdb    *badger.DB
+	DataDir  string
+	TempDir  string
+	CacheDir string
+	AssetDir string
 	//
 	FunctionCacheExpires int64 = 300
 	// Statistics
-	MinDiggCount     int = 100000
-	MinCommentCount  int = 20000
-	MinCollectCount  int = 10000
-	MinShareCount    int = 10000
-	MinDownloadCount int = 10000
+	minDiggCount     int = 100000
+	minCommentCount  int = 20000
+	minCollectCount  int = 10000
+	minShareCount    int = 10000
+	minDownloadCount int = 10000
 )
 
 var (
