@@ -3,7 +3,7 @@ package cmd
 type UploadEntitySchema struct {
 	ID     string                 `json:"fid"`
 	User   string                 `json:"fuser"`
-	ApiKey string                 `json:"fapikey"`
+	APIKey string                 `json:"fapikey"`
 	Meta   UploadEntityMetaSchema `json:"fmeta"`
 	Data   []byte                 `json:"file"`
 }
