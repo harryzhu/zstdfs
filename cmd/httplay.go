@@ -38,7 +38,7 @@ func NewVideoItem(user, key, val string) (videoitem VideoItem, err error) {
 	videoitem.Mime = meta["mime"]
 	videoitem.SrcID = strings.Join([]string{user, mid}, "/")
 	videoitem.SrcURI = strings.Join([]string{user, meta["uri"]}, "/")
-	videoitem.Data = badgerGet([]byte(meta["fsum"]))
+	videoitem.Data = badgerGet([]byte(meta["_fsum"]))
 
 	videoitem.ViewData = iris.Map{
 		"current_user": user,

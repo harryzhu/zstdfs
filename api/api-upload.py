@@ -11,11 +11,11 @@ import pickle
 size_limit = 16 << 20
 print(f'max_upload_size: {size_limit}')
 
-url_schema = "http://192.168.0.108:9090/api/upload/schema.json"
-url_upload = "http://192.168.0.108:9090/api/upload"
+url_schema = "http://127.0.0.1:9090/api/upload/schema.json"
+url_upload = "http://127.0.0.1:9090/api/upload"
 
 user_apikey={}
-user_apikey['harry'] = '3835573875204703656'
+user_apikey['harry'] = '14125811004486689209'
 
 user_keys = user_apikey.keys()
 
@@ -113,7 +113,7 @@ def batch_import(dpath):
 t1 = time.time()
 load_schema()
 print("item_schema: ", item_schema)
-root_dir = "/Users/harry/Desktop/portrait"
+root_dir = "/Users/harry/Desktop/v"
 batch_import(root_dir)
 t2 = time.time()
 
