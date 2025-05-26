@@ -100,8 +100,12 @@ func apiUploadFiles(ctx iris.Context) {
 
 	if success {
 		fmt.Println("apiUploadFiles: OK")
+		ctx.StatusCode(iris.StatusOK)
+		ctx.Writef("OK")
 	} else {
 		fmt.Println("apiUploadFiles: FAILED")
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.Writef("Error")
 	}
 
 }

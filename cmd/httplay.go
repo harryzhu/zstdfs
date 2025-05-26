@@ -57,13 +57,14 @@ func playVideos(ctx iris.Context) {
 	fname := ctx.Params().Get("fname")
 
 	currentUser := getCurrentUser(ctx)
-	DebugInfo("playVideos:currentUser", currentUser, ":", currentUser.Name)
+	DebugInfo("playVideos:currentUser", currentUser, ":", currentUser.Name, ", path: ", fname)
 	if currentUser.Name != bucket {
 		return
 	}
 
 	videoItem, err := NewVideoItem(bucket, "_id", fname)
 	if err != nil {
+		DebugWarn("playVideos", err)
 		return
 	}
 	DebugInfo("---", videoItem.Meta)
@@ -76,7 +77,8 @@ func playVideos(ctx iris.Context) {
 			ctx.NotFound()
 			return
 		}
-		ioutil.WriteFile(fkey, b, os.ModePerm)
+		err = ioutil.WriteFile(fkey, b, os.ModePerm)
+		PrintError("playVideos:ioutil.WriteFile", err)
 	}
 
 	fext := filepath.Ext(fname)
