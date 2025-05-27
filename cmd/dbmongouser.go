@@ -342,6 +342,9 @@ func mongoCaptionList(user string) (tags []string) {
 			words := strings.Split(line, ",")
 			for _, word := range words {
 				word = strings.TrimSpace(word)
+				if strings.Count(word, " ") > 10 || len(word) < 3 {
+					continue
+				}
 				if word != "" {
 					if Contains(tags, word) == false {
 						tags = append(tags, word)
