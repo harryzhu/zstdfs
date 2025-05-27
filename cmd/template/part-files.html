@@ -4,6 +4,9 @@
 <tr class="item item-file">
 	<td class="dot-col dot-col-file {{ .dot_color }}">&#9679;</td>
 	<td class="item-keyname"><a href="/f/{{ $kv.uid }}">{{ $k }}</a>
+		{{ if $kv.caption }}
+	<span title="{{ $kv.caption }}"> &infin; </span>
+		{{ end }}
 		{{ if $kv.is_having_dot_color }}
 		<a title="clear the dot-color" class="btn-dot-empty" onclick="dotColor('{{ $kv.site_url }}/user/dot/empty/{{ $kv.uid }}')">&empty;</a>
 		{{ end }}

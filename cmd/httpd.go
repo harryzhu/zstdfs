@@ -87,6 +87,10 @@ func StartHTTPServer() {
 		userAPI.Post("/tags", tagList)
 		userAPI.Get("/tags/{tagname:string}", tagFiles)
 		userAPI.Get("/tags/top", topTags)
+		userAPI.Get("/caption", captionIndex)
+		userAPI.Post("/caption", captionIndex)
+		userAPI.Get("/caption/top", topCaption)
+		userAPI.Get("/caption/{captionword:string}", captionFiles)
 		userAPI.Get("/by/{key:string}/{val:path}", byKeyFiles)
 		userAPI.Get("/top/{countname:string}/{min:int}/{max:int}", topCountFiles)
 		//
@@ -525,6 +529,187 @@ func tagFiles(ctx iris.Context) {
 		"nav_breadcrumb": navBreadcrumb,
 		"current_user":   uname,
 		"current_prefix": tagname,
+		"site_url":       GetSiteURL(),
+	})
+}
+
+func topCaption(ctx iris.Context) {
+	currentUser := getCurrentUser(ctx)
+	DebugInfo("topCaption:currentUser", currentUser)
+	var uname string
+	if currentUser.Name == "" {
+		return
+	}
+	uname = currentUser.Name
+	var counts []int
+	countsCacheFile := fmt.Sprintf("%s/topCaption/counts.dat", uname)
+
+	nameNum := make(map[string]int)
+	nameNumCacheFile := fmt.Sprintf("%s/topCaption/nameNum.dat", uname)
+
+	cacheTime := ""
+
+	t1 := GetNowUnix()
+
+	if GobLoad(countsCacheFile, &counts, FunctionCacheExpires) == false || GobLoad(nameNumCacheFile, &nameNum, FunctionCacheExpires) == false {
+		userTags := mongoCaptionList(uname)
+		for _, utag := range userTags {
+			nameCount := mongoCaptionCount(uname, utag)
+			c, ok := nameCount[utag]
+			if ok {
+				nameNum[utag] = c
+				counts = append(counts, c)
+			}
+		}
+		sort.Ints(counts)
+		GobDump(countsCacheFile, counts)
+		GobDump(nameNumCacheFile, nameNum)
+	} else {
+		if GobTime(countsCacheFile) != 0 {
+			cacheCurrent := UnixFormat(GobTime(countsCacheFile), "01-02 15:04")
+			cacheRefreshSeconds := FunctionCacheExpires - (GetNowUnix() - GobTime(countsCacheFile))
+			cacheTime = fmt.Sprintf("Update: %s. Will refresh after %v seconds", cacheCurrent, cacheRefreshSeconds)
+		}
+
+	}
+
+	t2 := GetNowUnix()
+
+	//DebugWarn("counts", counts, " ===> Elapse: ", (t2 - t1), " seconds")
+	//DebugWarn("nameNum", nameNum, " ===> Elapse: ", (t2 - t1), " seconds")
+	uqcounts := UniqueInts(counts)
+	DebugInfo("topTags:uqCounts", uqcounts, "; length: ", len(uqcounts), " ===> Elapse: ", (t2 - t1), " seconds")
+	DebugInfo("topTags:cacheTime", cacheTime)
+
+	slots := len(uqcounts) / 10
+	DebugWarn("topTags:slots", slots)
+
+	viewData := iris.Map{}
+
+	if slots > 9 {
+		var groups []int
+		for i := 0; i < 10; i++ {
+			if i == 9 {
+				groups = append(groups, uqcounts[len(uqcounts)-1])
+			} else {
+				groups = append(groups, uqcounts[i*slots])
+			}
+
+		}
+		DebugWarn("topTags:groups", groups)
+
+		g0 := make(map[string]int)
+		g12 := make(map[string]int)
+		g345 := make(map[string]int)
+		g678 := make(map[string]int)
+		g910 := make(map[string]int)
+
+		if groups[0] < 10 && groups[2] > 10 {
+			groups[0] = 9
+		}
+
+		for k, v := range nameNum {
+			if v <= groups[0] {
+				g0[k] = v
+			}
+			if v > groups[0] && v <= groups[2] {
+				g12[k] = v
+			}
+			if v > groups[2] && v <= groups[5] {
+				g345[k] = v
+			}
+			if v > groups[5] && v <= groups[8] {
+				g678[k] = v
+			}
+			if v > groups[8] && v <= groups[9] {
+				g910[k] = v
+			}
+		}
+		// DebugWarn("------topTags:g0", g0)
+		// DebugWarn("------topTags:g12", g12)
+		// DebugWarn("------topTags:g345", g345)
+		// DebugWarn("------topTags:g678", g678)
+		// DebugWarn("------topTags:g910", g910)
+
+		viewData = iris.Map{
+			"nav_tags_g0":   g0,
+			"nav_tags_g12":  g12,
+			"nav_tags_g345": g345,
+			"nav_tags_g678": g678,
+			"nav_tags_g910": g910,
+			"current_user":  uname,
+		}
+	} else {
+		gall := make(map[string]int)
+		for k, v := range nameNum {
+			gall[k] = v
+		}
+		viewData = iris.Map{
+			"nav_tags_gall": gall,
+			"current_user":  uname,
+		}
+	}
+
+	if cacheTime != "" {
+		viewData["cache_time"] = cacheTime
+	}
+
+	ctx.View("top_caption.html", viewData)
+}
+
+func captionIndex(ctx iris.Context) {
+	frmtaglike := ctx.PostValue("frmtaglike")
+	if frmtaglike != "" {
+		ctx.Redirect("/user/caption/" + frmtaglike)
+	}
+
+	currentUser := getCurrentUser(ctx)
+	DebugInfo("captionIndex:currentUser", currentUser)
+
+	data := iris.Map{
+		"current_user": currentUser.Name,
+		"form_action":  "/user/caption",
+	}
+
+	if currentUser.IsAdmin == 1 {
+		data["is_admin"] = true
+	}
+
+	ctx.View("caption.html", data)
+}
+
+func captionFiles(ctx iris.Context) {
+	captionword := ctx.Params().Get("captionword")
+	DebugInfo("captionFiles:captionword=", captionword)
+	//
+	currentUser := getCurrentUser(ctx)
+	DebugInfo("captionFiles:currentUser", currentUser)
+	var uname string
+	if currentUser.Name == "" {
+		return
+	}
+
+	uname = currentUser.Name
+
+	var navBreadcrumb []map[string]string
+
+	var files []string
+	files = mongoCaptionFiles(uname, captionword)
+
+	fileCount := len(files)
+	navFileList := genNavFileList(files, "", uname)
+
+	bc := make(map[string]string)
+	bc["tag"] = fmt.Sprintf("%s", captionword)
+	navBreadcrumb = append(navBreadcrumb, bc)
+
+	ctx.View("caption-files.html", iris.Map{
+		"form_action":    "/user/caption",
+		"nav_file_list":  navFileList,
+		"file_count":     Int2Str(fileCount),
+		"nav_breadcrumb": navBreadcrumb,
+		"current_user":   uname,
+		"current_prefix": captionword,
 		"site_url":       GetSiteURL(),
 	})
 }

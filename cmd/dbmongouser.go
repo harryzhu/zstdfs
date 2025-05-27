@@ -318,6 +318,92 @@ func mongoTagCount(user, tagname string) (tagcount map[string]int) {
 	return tagcount
 }
 
+func mongoCaptionList(user string) (tags []string) {
+	var lines []string
+	if user == "" {
+		return lines
+	}
+	tagsCacheFile := fmt.Sprintf("%s/mongoCaptionList/caption.dat", user)
+
+	if GobLoad(tagsCacheFile, &tags, FunctionCacheExpires) == false {
+		filter := bson.M{}
+		//opts := bson.M{sort, 1}
+
+		collUser := mgodb.Collection(user)
+		err := collUser.Distinct(context.TODO(), "caption", filter).Decode(&lines)
+		if err != nil {
+			PrintError("mongoCaptionList", err)
+			return lines
+		}
+		//DebugInfo("mongoCaptionList:lines", lines)
+
+		for _, line := range lines {
+			//line = TagLineFormat(line)
+			words := strings.Split(line, ",")
+			for _, word := range words {
+				word = strings.TrimSpace(word)
+				if word != "" {
+					if Contains(tags, word) == false {
+						tags = append(tags, word)
+					}
+				}
+			}
+		}
+		GobDump(tagsCacheFile, tags)
+	}
+
+	return tags
+}
+
+func mongoCaptionCount(user, tagname string) (tagcount map[string]int) {
+	if IsAnyEmpty(user, tagname) {
+		return tagcount
+	}
+
+	tagcount = make(map[string]int)
+	tagcount[tagname] = len(mongoCaptionFiles(user, tagname))
+
+	return tagcount
+}
+
+func mongoCaptionFiles(user, captionWord string) (files []string) {
+	var rows []bson.M
+	var lines []string
+	if user == "" || captionWord == "" {
+		return lines
+	}
+	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, GetXxhash([]byte(captionWord)))
+
+	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
+		regxCaptionWord := strings.Join([]string{"(", captionWord, ")"}, "")
+		filter := bson.D{{"caption", bson.Regex{Pattern: regxCaptionWord, Options: "i"}}}
+		//DebugInfo("mongoTagFiles:filter", filter)
+		optSort := bson.D{{"_id", 1}, {"mtime", -1}}
+
+		collUser := mgodb.Collection(user)
+		results, err := collUser.Find(context.TODO(), filter, options.Find().SetSort(optSort))
+		if err != nil {
+			PrintError("mongoTagFiles", err)
+			return lines
+		}
+
+		err = results.All(context.TODO(), &rows)
+		PrintError("mongoTagFiles", err)
+
+		var rowid string
+		for _, row := range rows {
+			//DebugInfo("---", row)
+			rowid = row["_id"].(string)
+			//DebugInfo("0.mongoTagFiles:rowid", rowid)
+			files = append(files, rowid)
+		}
+		//DebugInfo("mongoTagFiles:files", files)
+		GobDump(filesCacheFile, files)
+	}
+
+	return files
+}
+
 func mongoUserStats(user string) (stats map[string]string) {
 	if user == "" {
 		return stats
@@ -353,6 +439,7 @@ func mongoUserCollectionInit(user string) bool {
 	meta["ints_days"] = "3,  7  , 21"
 	meta["dot_color"] = "dot-purple"
 	meta["mime"] = "image/jpeg"
+	meta["caption"] = "file caption sample"
 	//
 	meta["stats_digg_count"] = "100"
 	meta["stats_comment_count"] = "200"

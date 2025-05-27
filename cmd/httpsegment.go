@@ -68,6 +68,10 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				navFileList[aText]["is_having_dot_color"] = "1"
 			}
 
+			if lineMeta["caption"] != "" {
+				navFileList[aText]["caption"] = lineMeta["caption"]
+			}
+
 			if strings.Index(lineMeta["mime"], "video") > -1 || strings.Index(lineMeta["mime"], "mpeg") > -1 {
 				navFileList[aText]["is_video"] = "1"
 			}
