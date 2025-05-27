@@ -83,6 +83,7 @@ func mongoAdminCreateIndex(user string) bool {
 	indexes["stats_comment_count"] = -1
 	indexes["stats_download_count"] = -1
 	indexes["tags"] = -1
+	indexes["caption"] = -1
 
 	for key, val := range indexes {
 		indexModel := mongo.IndexModel{
