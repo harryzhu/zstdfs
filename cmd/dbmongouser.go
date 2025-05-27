@@ -378,6 +378,7 @@ func mongoCaptionFiles(user, captionWord string) (files []string) {
 	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, GetXxhash([]byte(captionWord)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
+		captionWord = strings.ReplaceAll(captionWord, "&", ".*")
 		regxCaptionWord := strings.Join([]string{"(", captionWord, ")"}, "")
 		filter := bson.D{{"caption", bson.Regex{Pattern: regxCaptionWord, Options: "i"}}}
 		//DebugInfo("mongoTagFiles:filter", filter)

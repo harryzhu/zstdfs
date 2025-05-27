@@ -556,7 +556,7 @@ func topCaption(ctx iris.Context) {
 		for _, utag := range userTags {
 			nameCount := mongoCaptionCount(uname, utag)
 			c, ok := nameCount[utag]
-			if ok {
+			if ok && c > 9 {
 				nameNum[utag] = c
 				counts = append(counts, c)
 			}
