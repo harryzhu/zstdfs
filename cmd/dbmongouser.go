@@ -241,8 +241,10 @@ func mongoTagFiles(user, tagname string) (files []string) {
 	filesCacheFile := fmt.Sprintf("%s/mongoTagFiles/files_%s.dat", user, GetXxhash([]byte(tagname)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
+		//tagname = strings.ReplaceAll(tagname, "&", ".*")
 		regxTagname := strings.Join([]string{"(", tagname, ")"}, "")
 		filter := bson.D{{"tags", bson.Regex{Pattern: regxTagname, Options: "i"}}}
+
 		//DebugInfo("mongoTagFiles:filter", filter)
 		optSort := bson.D{{"_id", 1}, {"mtime", -1}}
 
@@ -270,7 +272,7 @@ func mongoTagFiles(user, tagname string) (files []string) {
 	return files
 }
 
-func mongoTagList(user string) (tags []string) {
+func mongoTagList(user string, idPrefix string) (tags []string) {
 	var lines []string
 	if user == "" {
 		return lines
@@ -278,8 +280,12 @@ func mongoTagList(user string) (tags []string) {
 	tagsCacheFile := fmt.Sprintf("%s/mongoTagList/tags.dat", user)
 
 	if GobLoad(tagsCacheFile, &tags, FunctionCacheExpires) == false {
-		filter := bson.M{}
+		filter := bson.D{}
 		//opts := bson.M{sort, 1}
+		if idPrefix != "" {
+			regxIDPrefix := strings.Join([]string{"(", idPrefix, ")"}, "")
+			filter = bson.D{{"_id", bson.Regex{Pattern: regxIDPrefix, Options: "i"}}}
+		}
 
 		collUser := mgodb.Collection(user)
 		err := collUser.Distinct(context.TODO(), "tags", filter).Decode(&lines)
@@ -381,6 +387,18 @@ func mongoCaptionFiles(user, captionWord string) (files []string) {
 		captionWord = strings.ReplaceAll(captionWord, "&", ".*")
 		regxCaptionWord := strings.Join([]string{"(", captionWord, ")"}, "")
 		filter := bson.D{{"caption", bson.Regex{Pattern: regxCaptionWord, Options: "i"}}}
+
+		if strings.Index(captionWord, "/") > 0 && strings.Index(captionWord, "/") < len(captionWord) {
+			idPrefixCaption := strings.Split(captionWord, "/")
+			if len(idPrefixCaption) == 2 {
+				regxCaptionWord = strings.Join([]string{"(", idPrefixCaption[1], ")"}, "")
+				regxIDPrefix := strings.Join([]string{"(", idPrefixCaption[0], ")"}, "")
+				filter = bson.D{
+					{"_id", bson.Regex{Pattern: regxIDPrefix, Options: "i"}},
+					{"caption", bson.Regex{Pattern: regxCaptionWord, Options: "i"}},
+				}
+			}
+		}
 		//DebugInfo("mongoTagFiles:filter", filter)
 		optSort := bson.D{{"_id", 1}, {"mtime", -1}}
 
@@ -465,7 +483,7 @@ func mongoUserCollectionInit(user string) bool {
 }
 
 func mongoBatchWriteFiles(files []string) bool {
-	metaAllowKey := []string{"_id", "size", "mime", "mtime", "fsum"}
+	metaAllowKey := []string{"_id", "size", "mime", "mtime", "_fsum"}
 	BulkLoadDir = ToUnixSlash(BulkLoadDir)
 	for _, file := range files {
 		file = ToUnixSlash(file)
@@ -490,7 +508,7 @@ func mongoBatchWriteFiles(files []string) bool {
 			}
 		}
 		//DebugInfo("mongoBatchWriteFiles", file, " <= ", ID)
-		ett.Meta["fsum"] = string(SumBlake3(val))
+		ett.Meta["_fsum"] = string(SumBlake3(val))
 		ett.SaveWithoutData()
 		//DebugInfo("mongoBatchWriteFiles", ID, "<= ", file)
 	}

@@ -90,7 +90,7 @@ func StartHTTPServer() {
 		userAPI.Get("/caption", captionIndex)
 		userAPI.Post("/caption", captionIndex)
 		userAPI.Get("/caption/top", topCaption)
-		userAPI.Get("/caption/{captionword:string}", captionFiles)
+		userAPI.Get("/caption/{captionword:path}", captionFiles)
 		userAPI.Get("/by/{key:string}/{val:path}", byKeyFiles)
 		userAPI.Get("/top/{countname:string}/{min:int}/{max:int}", topCountFiles)
 		//
@@ -343,7 +343,7 @@ func topTags(ctx iris.Context) {
 	t1 := GetNowUnix()
 
 	if GobLoad(countsCacheFile, &counts, FunctionCacheExpires) == false || GobLoad(nameNumCacheFile, &nameNum, FunctionCacheExpires) == false {
-		userTags := mongoTagList(uname)
+		userTags := mongoTagList(uname, "")
 		for _, utag := range userTags {
 			nameCount := mongoTagCount(uname, utag)
 			c, ok := nameCount[utag]
@@ -459,11 +459,34 @@ func tagList(ctx iris.Context) {
 	}
 	uname = currentUser.Name
 	var tags []string
-	tags = mongoTagList(uname)
-
 	var filteredTags []string
-	if frmtaglike != "" {
-		reg, err := regexp.Compile(fmt.Sprintf("(%s)", frmtaglike))
+	var idprefix string
+	var tagname string
+
+	if frmtaglike == "" {
+		tags = mongoTagList(uname, "")
+	} else {
+		if strings.Index(frmtaglike, "/") > 0 && strings.Index(frmtaglike, "/") <= len(frmtaglike) {
+			pretag := strings.Split(frmtaglike, "/")
+			if len(pretag) == 2 {
+				if pretag[0] != "" {
+					idprefix = pretag[0]
+				}
+				if pretag[1] != "" {
+					tagname = pretag[1]
+				}
+			}
+		} else {
+			tagname = frmtaglike
+		}
+
+		if idprefix != "" {
+			tags = mongoTagList(uname, idprefix)
+		} else {
+			tags = mongoTagList(uname, "")
+		}
+		DebugInfo("====", "idprefix:", idprefix, ", tagname:", tagname, ", tags:", tags)
+		reg, err := regexp.Compile(fmt.Sprintf("(%s)", tagname))
 		PrintError("tagList:regexp.Compile", err)
 		for _, tag := range tags {
 			if reg.MatchString(tag) == true {
@@ -478,9 +501,12 @@ func tagList(ctx iris.Context) {
 	sort.Strings(tags)
 
 	data := iris.Map{
-		"nav_tag_list": tags,
-		"current_user": uname,
-		"form_action":  "/user/tags",
+		"nav_tag_list":   tags,
+		"current_user":   uname,
+		"current_prefix": frmtaglike,
+		"idprefix":       idprefix,
+		"tagname":        tagname,
+		"form_action":    "/user/tags",
 	}
 
 	if len(tags) > 0 {
