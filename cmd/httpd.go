@@ -604,11 +604,11 @@ func topCaption(ctx iris.Context) {
 	//DebugWarn("counts", counts, " ===> Elapse: ", (t2 - t1), " seconds")
 	//DebugWarn("nameNum", nameNum, " ===> Elapse: ", (t2 - t1), " seconds")
 	uqcounts := UniqueInts(counts)
-	DebugInfo("topTags:uqCounts", uqcounts, "; length: ", len(uqcounts), " ===> Elapse: ", (t2 - t1), " seconds")
-	DebugInfo("topTags:cacheTime", cacheTime)
+	DebugInfo("topCaption:uqCounts", uqcounts, "; length: ", len(uqcounts), " ===> Elapse: ", (t2 - t1), " seconds")
+	DebugInfo("topCaption:cacheTime", cacheTime)
 
 	slots := len(uqcounts) / 10
-	DebugWarn("topTags:slots", slots)
+	DebugWarn("topCaption:slots", slots)
 
 	viewData := iris.Map{}
 
@@ -622,7 +622,7 @@ func topCaption(ctx iris.Context) {
 			}
 
 		}
-		DebugWarn("topTags:groups", groups)
+		DebugWarn("topCaption:groups", groups)
 
 		g0 := make(map[string]int)
 		g12 := make(map[string]int)

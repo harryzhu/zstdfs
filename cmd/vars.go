@@ -35,7 +35,7 @@ var (
 	CacheDir string
 	AssetDir string
 	//
-	FunctionCacheExpires int64 = 300
+	FunctionCacheExpires int64 = 600
 	// Statistics
 	minDiggCount     int = 100000
 	minCommentCount  int = 20000

@@ -3,8 +3,9 @@
 <div class="buckets">
 	<form action="{{ .form_action }}" method="POST" enctype="multipart/form-data" class="tag-filter-form">
 		<table class="tbl-tag-filter">
+			
 			<tr>
-				<td>
+				<td class="tag-filter-nav">
 					<h2><a href="/home">Home</a> > 
 						<a href="/user/caption">Caption</a> > 
 						{{ range $idx, $kv := .nav_breadcrumb }}
@@ -17,21 +18,22 @@
 						( {{ .file_count }} )
 					{{ end}}</h2>
 				</td>
-				<td class="tag-filter-tag-contains"><span title="ID suffix / keyword_1 & keyword_2 & keyword_3">Keyword:</span></td>
-				{{ if .current_prefix}}
-				<td><label class="ftaglike"><input type="text" name="frmtaglike" value="{{ .current_prefix }}" /></label></td>
-				{{ else }}
-				<td><label class="ftaglike"><input type="text" name="frmtaglike" placeholder="/ or .* or &" /></label></td>
-				{{ end }}
-				
-				<td><label class="ftagsubmit"><input type="submit" name="frmtagsubmit" value="Submit"></label></td>
-			</tr>
+				<td class="tag-filter-text">
+					<label class="tag-filter-lable"><span title="ID prefix / keyword_1 & keyword_2 & keyword_3">Keyword:</span>
+						{{ if .current_prefix}}
+						<input type="text" name="frmtaglike" id="frmtaglike" value="{{ .current_prefix }}" />
+						{{ else }}
+						<input type="text" name="frmtaglike" id="frmtaglike" placeholder="/ or .* or &" />
+						{{ end }}
+						<input type="submit" name="frmtagsubmit" id="frmtagsubmit" value="Submit"></label>
+					</td>
+				</tr>
+			</table>
+		</form>
+
+		<table class="bucket-list">
+			{{ render "part-files.html" . }}
 		</table>
-	</form>
+	</div>
 
-	<table class="bucket-list">
-		{{ render "part-files.html" . }}
-	</table>
-</div>
-
-{{ render "footer.html" . }}
+	{{ render "footer.html" . }}

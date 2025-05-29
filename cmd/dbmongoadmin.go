@@ -83,13 +83,22 @@ func mongoAdminCreateIndex(user string) bool {
 	indexes["stats_comment_count"] = -1
 	indexes["stats_download_count"] = -1
 	indexes["tags"] = -1
-	indexes["caption"] = -1
+	indexes["caption"] = 99
 
+	indexModel := mongo.IndexModel{}
 	for key, val := range indexes {
-		indexModel := mongo.IndexModel{
-			Keys: bson.D{
-				{key, val},
-			}}
+		if val == 99 {
+			indexModel = mongo.IndexModel{
+				Keys: bson.D{
+					{key, "text"},
+				}}
+		} else {
+			indexModel = mongo.IndexModel{
+				Keys: bson.D{
+					{key, val},
+				}}
+		}
+
 		_, err := collUser.Indexes().CreateOne(context.TODO(), indexModel)
 		FatalError("mongoAdminInitIndex:"+key, err)
 	}
