@@ -15,6 +15,11 @@ func StartCron() {
 		DebugInfo("StartCron", "TempDir: ", TempDir)
 		DebugInfo("StartCron", "UploadDir: ", UploadDir)
 
+		if strings.Index(CacheDir, "www/cache") > 0 {
+			DebugInfo("StartCron", "cleaning:", CacheDir)
+			CleanExpires(CacheDir, DiskCacheExpires)
+		}
+
 		if strings.Index(TempDir, "www/temp") > 0 {
 			DebugInfo("StartCron", "cleaning:", TempDir)
 			CleanExpires(TempDir, DiskCacheExpires)

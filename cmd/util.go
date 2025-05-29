@@ -365,7 +365,7 @@ func CleanExpires(fpath string, expireSecond float64) error {
 			return nil
 		}
 
-		if strings.HasPrefix(finfo.Name(), ".") {
+		if strings.HasPrefix(finfo.Name(), ".") || strings.HasPrefix(finfo.Name(), "..") {
 			return nil
 		}
 
