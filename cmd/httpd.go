@@ -93,6 +93,7 @@ func StartHTTPServer() {
 		userAPI.Get("/caption/{captionword:path}", captionFiles)
 		userAPI.Get("/by/{key:string}/{val:path}", byKeyFiles)
 		userAPI.Get("/top/{countname:string}/{min:int}/{max:int}", topCountFiles)
+		userAPI.Get("/samefiles", adminSameFiles)
 		//
 		userAPI.Get("/playlist", playList)
 		userAPI.Get("/playlist/{prefix:path}", playPrefixList)
@@ -771,6 +772,7 @@ func adminListBuckets(ctx iris.Context) {
 		val, ok := stats["doc_count"]
 		if ok {
 			vstats["doc_count"] = val
+			vstats["unique_doc_count"] = stats["unique_doc_count"]
 		}
 		navList[v] = vstats
 	}
@@ -885,6 +887,39 @@ func adminListKeys(ctx iris.Context) {
 	}
 
 	ctx.View("key-list.html", data)
+
+}
+
+func adminSameFiles(ctx iris.Context) {
+	currentUser := getCurrentUser(ctx)
+	DebugInfo("adminSameFiles:currentUser", currentUser)
+	if currentUser.IsAdmin != 1 || currentUser.Name == "" {
+		return
+	}
+
+	uname := currentUser.Name
+
+	mongoAdminUpdateKeyStats(uname, "fsha256")
+
+	unamekeyurls := mongoAdminGetKeyStats(uname, "fsha256")
+	var urls []string
+	unamekey := strings.Join([]string{uname, "::", "fsha256", "::"}, "")
+	for _, v := range unamekeyurls {
+		urls = append(urls, v[len(unamekey):])
+	}
+
+	data := iris.Map{
+		"urls":         urls,
+		"urls_count":   len(urls),
+		"current_user": uname,
+		"site_url":     GetSiteURL(),
+	}
+
+	if currentUser.IsAdmin == 1 {
+		data["is_admin"] = true
+	}
+
+	ctx.View("same-files.html", data)
 
 }
 

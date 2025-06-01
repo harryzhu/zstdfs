@@ -10,8 +10,12 @@
 		{{ range $k, $kv := .nav_list }}
 		<li class="item"><a href="/user/buckets/{{ $k }}">{{ $k }}</a>
 			{{ if $kv.doc_count }}
-			<span class="mute-text"> ( {{ $kv.doc_count }} ) </span>
+			<span class="mute-text"> (total: {{ $kv.doc_count }} ) 
 			{{ end }}
+			{{ if $kv.unique_doc_count }}
+			/ (unique: {{ $kv.unique_doc_count }} ) 
+			{{ end }}
+			</span>
 		</li>
 		{{ end }}
 	</ul>

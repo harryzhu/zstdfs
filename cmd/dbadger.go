@@ -64,7 +64,7 @@ func badgerGet(key []byte) (val []byte) {
 		}
 		itemVal, err := item.ValueCopy(nil)
 		PrintError("badgerGet", err)
-		DebugInfo("badgerGet", len(itemVal), " :", string(key))
+		//DebugInfo("badgerGet", len(itemVal), " :", string(key))
 		val = UnZstdBytes(itemVal)
 		return err
 	})
@@ -167,20 +167,30 @@ func badgerBulkLoad(dpath string, fext string) bool {
 func batchWriteFiles(files []string) bool {
 	txn := bgrdb.NewTransaction(true)
 	defer txn.Discard()
+
 	var batchTotalSize int
+	var err error
+	var fp *os.File
+	var val []byte
 
 	for _, file := range files {
-		fp, err := os.Open(file)
+		fp, err = os.Open(file)
 		if err != nil {
 			PrintError("BatchWriteFiles", err)
 			return false
 		}
-		val, err := io.ReadAll(fp)
+		val, err = io.ReadAll(fp)
 		if err != nil {
 			PrintError("BatchWriteFiles", err)
 			return false
 		}
 		fp.Close()
+
+		if BulkLoadOverWrite == false {
+			if badgerExists(SumBlake3(val)) {
+				continue
+			}
+		}
 
 		err = txn.Set(SumBlake3(val), ZstdBytes(val))
 		if err != nil {
@@ -189,7 +199,7 @@ func batchWriteFiles(files []string) bool {
 		}
 		batchTotalSize += len(val)
 	}
-	if err := txn.Commit(); err != nil {
+	if err = txn.Commit(); err != nil {
 		FatalError("BatchWriteFiles", err)
 		return false
 	}

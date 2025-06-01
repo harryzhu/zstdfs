@@ -108,8 +108,6 @@ func GetPassword(u, p string) string {
 	if IsAnyEmpty(u, p) {
 		return ""
 	}
-	// p1 := strings.Join([]string{SHA256String(p), SHA256String(strings.ToLower(u))}, ":")
-	// return SHA256String(p1)
 	p1 := SHA256String(strings.Join([]string{SHA256String(p), SHA256String(strings.ToLower(u))}, ":"))
 	hash, err := bcrypt.GenerateFromPassword([]byte(p1), bcrypt.DefaultCost)
 	if err != nil {

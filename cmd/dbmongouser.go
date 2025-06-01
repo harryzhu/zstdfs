@@ -184,7 +184,6 @@ func mongoListFiles(user, prefix string, optSort bson.D) (dirs, files []string) 
 		return lines, lines
 	}
 
-	//filter := bson.D{{"_id", bson.Regex{Pattern: "", Options: "i"}}}
 	filter := bson.D{{}}
 	if prefix != "" {
 		DebugInfo("prefix before regex", prefix)
@@ -204,6 +203,7 @@ func mongoListFiles(user, prefix string, optSort bson.D) (dirs, files []string) 
 	err = results.All(context.TODO(), &rows)
 	PrintError("mongoListFiles", err)
 
+	dds := make(map[string]int, 100)
 	var rowid string
 	for _, row := range rows {
 		rowid = row["_id"].(string)
@@ -211,16 +211,18 @@ func mongoListFiles(user, prefix string, optSort bson.D) (dirs, files []string) 
 		rowid = strings.Trim(rowid, "/")
 		if strings.Contains(rowid, "/") {
 			dd := strings.Split(rowid, "/")
-			if Contains(dirs, dd[0]) == false {
-				dirs = append(dirs, dd[0])
-			}
-
+			dds[dd[0]] = 1
 		} else {
 			files = append(files, rowid)
 		}
 	}
 	//DebugInfo("mongoListFiles:dirs", dirs)
 	//DebugInfo("mongoListFiles:files", files)
+	for k, _ := range dds {
+		if k != "" {
+			dirs = append(dirs, k)
+		}
+	}
 
 	return dirs, files
 }
@@ -496,9 +498,22 @@ func mongoUserStats(user string) (stats map[string]string) {
 	PrintError("mongoUserStats:docCount", err)
 
 	stats["doc_count"] = Int64ToString(docCount)
+	stats["unique_doc_count"] = Int2Str(len(mongoDistinctByKey(user, "_fsum")))
 
 	DebugInfo("mongoUserStats", stats)
 	return stats
+}
+
+func mongoDistinctByKey(uname string, key string) (files []string) {
+	filter := bson.D{{
+		key, bson.D{{"$exists", true}, {"$ne", ""}},
+	}}
+	collUser := mgodb.Collection(uname)
+
+	err := collUser.Distinct(context.TODO(), key, filter).Decode(&files)
+	PrintError("mongoDistinctByKey", err)
+
+	return files
 }
 
 func mongoUserCollectionInit(user string) bool {
@@ -545,14 +560,18 @@ func mongoUserCollectionInit(user string) bool {
 func mongoBatchWriteFiles(files []string) bool {
 	metaAllowKey := []string{"_id", "size", "mime", "mtime", "_fsum"}
 	BulkLoadDir = ToUnixSlash(BulkLoadDir)
+	var err error
+	var ett Entity
+	var fp *os.File
+	var val []byte
 	for _, file := range files {
 		file = ToUnixSlash(file)
-		fp, err := os.Open(file)
+		fp, err = os.Open(file)
 		if err != nil {
 			PrintError("BatchWriteFiles", err)
 			return false
 		}
-		val, err := io.ReadAll(fp)
+		val, err = io.ReadAll(fp)
 		if err != nil {
 			PrintError("BatchWriteFiles", err)
 			return false
@@ -561,7 +580,7 @@ func mongoBatchWriteFiles(files []string) bool {
 
 		ID := strings.TrimPrefix(ToUnixSlash(strings.TrimPrefix(file, BulkLoadDir)), "/")
 
-		ett := NewEntity(BulkLoadUser, ID).WithFile(file)
+		ett = NewEntity(BulkLoadUser, ID).WithFile(file)
 		for k := range ett.Meta {
 			if !Contains(metaAllowKey, k) {
 				delete(ett.Meta, k)

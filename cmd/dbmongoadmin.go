@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -104,4 +106,89 @@ func mongoAdminCreateIndex(user string) bool {
 	}
 
 	return true
+}
+
+func mongoAdminUpdateKeyStats(uname string, key string) error {
+	DebugInfo("mongoAdminUpdateKeyStats", uname, ":", key)
+	collUser := mgodb.Collection(uname)
+	filter := bson.D{{}}
+	update := bson.D{{}}
+
+	keyCount := make(map[string]int)
+
+	results, err := collUser.Find(context.TODO(), filter, nil)
+	if err != nil {
+		PrintError("mongoAdminUpdateKeyStats.10", err)
+		return err
+	}
+
+	var rows []bson.M
+	err = results.All(context.TODO(), &rows)
+	PrintError("mongoAdminUpdateKeyStats.20", err)
+
+	statKey := ""
+	for _, row := range rows {
+		rowfsha256 := fmt.Sprint(row["fsha256"])
+		if len(rowfsha256) > 16 {
+			statKey = strings.Join([]string{uname, key, rowfsha256}, "::")
+			keyCount[statKey] += 1
+		}
+	}
+
+	keyName := ""
+	if strings.HasPrefix(key, "_") {
+		keyName = strings.Join([]string{"count", key}, "")
+	} else {
+		keyName = strings.Join([]string{"count", key}, "_")
+	}
+	optUpdate := options.UpdateOne().SetUpsert(true)
+	collAdmin := mgodb.Collection(AdminBucket)
+	for k, v := range keyCount {
+		if v > 1 {
+			filter = bson.D{{"_id", k}}
+			update = bson.D{{"$set", bson.D{{keyName, v}}}}
+			_, err := collAdmin.UpdateOne(context.TODO(), filter, update, optUpdate)
+			if err != nil {
+				PrintError("mongoUpdateKeyStats", err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func mongoAdminGetKeyStats(uname string, key string) (urls []string) {
+	keyName := ""
+	if strings.HasPrefix(key, "_") {
+		keyName = strings.Join([]string{"count", key}, "")
+	} else {
+		keyName = strings.Join([]string{"count", key}, "_")
+	}
+
+	collAdmin := mgodb.Collection(AdminBucket)
+	regxprefix := strings.Join([]string{"^(", uname, "::", key, "::)"}, "")
+	filter := bson.D{
+		{"_id", bson.Regex{Pattern: regxprefix, Options: "i"}},
+		{keyName, bson.D{{"$gt", 1}}},
+	}
+
+	opts := options.Find().SetProjection(bson.D{{"_id", 1}})
+
+	results, err := collAdmin.Find(context.TODO(), filter, opts)
+	if err != nil {
+		PrintError("mongoAdminGetKeyStats.10", err)
+		return urls
+	}
+
+	var rows []bson.M
+	err = results.All(context.TODO(), &rows)
+	PrintError("mongoAdminGetKeyStats.20", err)
+
+	for _, row := range rows {
+		if fmt.Sprint(row["_id"]) != "" && row["_id"] != nil {
+			urls = append(urls, fmt.Sprint(row["_id"]))
+		}
+	}
+	return urls
 }

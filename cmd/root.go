@@ -7,16 +7,17 @@ import (
 )
 
 var (
-	IsDebug         bool
-	MaxUploadSizeMB int64
-	Host            string
-	Port            string
-	SiteURL         string
-	UploadDir       string
-	StaticDir       string
-	BulkLoadDir     string
-	BulkLoadExt     string
-	BulkLoadUser    string
+	IsDebug           bool
+	MaxUploadSizeMB   int64
+	Host              string
+	Port              string
+	SiteURL           string
+	UploadDir         string
+	StaticDir         string
+	BulkLoadDir       string
+	BulkLoadExt       string
+	BulkLoadUser      string
+	BulkLoadOverWrite bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -58,4 +59,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&BulkLoadDir, "bulk-load-dir", "", "BulkLoad dir path")
 	rootCmd.PersistentFlags().StringVar(&BulkLoadExt, "bulk-load-ext", "", "BulkLoad file type: extension, i.e.: .mp4")
 	rootCmd.PersistentFlags().StringVar(&BulkLoadUser, "bulk-load-user", "", "BulkLoad username")
+	rootCmd.PersistentFlags().BoolVar(&BulkLoadOverWrite, "bulk-load-overwrite", false, "if overwrite the existed file")
 }

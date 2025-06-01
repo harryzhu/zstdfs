@@ -1,0 +1,21 @@
+{{ render "header.html" . }}
+
+<div class="buckets">
+	<h2><a href="/home">Home</a> > 
+		<a href="/user/samefiles">Same Files</a> 
+		{{ if .urls_count }}
+		( {{ .urls_count }} )
+		{{ end }}
+	</h2>
+	<table class="bucket-list">
+		<ul>
+			{{ if .urls }}
+			{{ range $k, $v := .urls }}
+			<li><a href="/user/by/fsha256/{{ $v }}">{{ $v }}</a></li>
+			{{ end }}
+			{{ end }}
+		</ul>
+	</table>
+</div>
+
+{{ render "footer.html" . }}
