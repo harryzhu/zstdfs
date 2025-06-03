@@ -899,14 +899,11 @@ func adminSameFiles(ctx iris.Context) {
 
 	uname := currentUser.Name
 
+	mongoAdminResetKeyStats(uname, "fsha256")
+
 	mongoAdminUpdateKeyStats(uname, "fsha256")
 
-	unamekeyurls := mongoAdminGetKeyStats(uname, "fsha256")
-	var urls []string
-	unamekey := strings.Join([]string{uname, "::", "fsha256", "::"}, "")
-	for _, v := range unamekeyurls {
-		urls = append(urls, v[len(unamekey):])
-	}
+	urls := mongoAdminGetKeyStats(uname, "fsha256")
 
 	data := iris.Map{
 		"urls":         urls,

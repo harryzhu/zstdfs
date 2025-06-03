@@ -108,6 +108,32 @@ func mongoAdminCreateIndex(user string) bool {
 	return true
 }
 
+func mongoAdminResetKeyStats(uname string, key string) error {
+	DebugInfo("mongoAdminResetKeyStats", uname, ":", key)
+	keyName := ""
+	if strings.HasPrefix(key, "_") {
+		keyName = strings.Join([]string{"count", key}, "")
+	} else {
+		keyName = strings.Join([]string{"count", key}, "_")
+	}
+
+	collAdmin := mgodb.Collection(AdminBucket)
+
+	regxprefix := strings.Join([]string{"^(", uname, "::", key, "::)"}, "")
+	filter := bson.D{
+		{"_id", bson.Regex{Pattern: regxprefix, Options: "i"}},
+	}
+
+	update := bson.D{{"$set", bson.D{{keyName, 0}}}}
+
+	_, err := collAdmin.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		PrintError("mongoAdminResetKeyStats.10", err)
+		return err
+	}
+	return nil
+}
+
 func mongoAdminUpdateKeyStats(uname string, key string) error {
 	DebugInfo("mongoAdminUpdateKeyStats", uname, ":", key)
 	collUser := mgodb.Collection(uname)
@@ -158,7 +184,7 @@ func mongoAdminUpdateKeyStats(uname string, key string) error {
 	return nil
 }
 
-func mongoAdminGetKeyStats(uname string, key string) (urls []string) {
+func mongoAdminGetKeyStats(uname string, key string) (urls []map[string]int) {
 	keyName := ""
 	if strings.HasPrefix(key, "_") {
 		keyName = strings.Join([]string{"count", key}, "")
@@ -173,7 +199,7 @@ func mongoAdminGetKeyStats(uname string, key string) (urls []string) {
 		{keyName, bson.D{{"$gt", 1}}},
 	}
 
-	opts := options.Find().SetProjection(bson.D{{"_id", 1}})
+	opts := options.Find().SetSort(bson.D{{keyName, -1}})
 
 	results, err := collAdmin.Find(context.TODO(), filter, opts)
 	if err != nil {
@@ -185,9 +211,14 @@ func mongoAdminGetKeyStats(uname string, key string) (urls []string) {
 	err = results.All(context.TODO(), &rows)
 	PrintError("mongoAdminGetKeyStats.20", err)
 
+	unamekey := strings.Join([]string{uname, "::", key, "::"}, "")
+
 	for _, row := range rows {
 		if fmt.Sprint(row["_id"]) != "" && row["_id"] != nil {
-			urls = append(urls, fmt.Sprint(row["_id"]))
+			idcount := make(map[string]int)
+			mkey := fmt.Sprint(row["_id"])[len(unamekey):]
+			idcount[mkey] = Str2Int(fmt.Sprintf("%v", row[keyName]))
+			urls = append(urls, idcount)
 		}
 	}
 	return urls

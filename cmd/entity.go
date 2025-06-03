@@ -21,6 +21,7 @@ func metaDefault() map[string]string {
 	meta["mime"] = ""
 	meta["size"] = ""
 	meta["_fsum"] = ""
+	meta["fsha256"] = ""
 	meta["mtime"] = ""
 	meta["tags"] = ""
 	meta["is_public"] = "1"
@@ -152,6 +153,7 @@ func (ett Entity) Save() bool {
 	}
 	ett.Meta["author"] = strings.ToLower(ett.User)
 	ett.Meta["_fsum"] = string(bkey)
+	ett.Meta["fsha256"] = SHA256Bytes(ett.Data)
 	ett.Meta["uri"] = GetURI(ett.ID)
 
 	for k, v := range ett.Meta {
@@ -173,6 +175,10 @@ func (ett Entity) SaveWithoutData() bool {
 
 	ett.Meta["author"] = strings.ToLower(ett.User)
 	ett.Meta["uri"] = GetURI(ett.ID)
+	dataInBadger := badgerGet([]byte(ett.Meta["_fsum"]))
+	if dataInBadger != nil {
+		ett.Meta["fsha256"] = SHA256Bytes(dataInBadger)
+	}
 
 	for k, v := range ett.Meta {
 		mongoSave(ett.User, ett.ID, k, v)

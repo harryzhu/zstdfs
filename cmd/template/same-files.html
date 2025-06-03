@@ -11,7 +11,9 @@
 		<ul>
 			{{ if .urls }}
 			{{ range $k, $v := .urls }}
-			<li><a href="/user/by/fsha256/{{ $v }}">{{ $v }}</a></li>
+			{{ range $vk, $vc := $v}}
+			<li>{{ $vc }} : <a href="/user/by/fsha256/{{ $vk }}">{{ $vk }}</a></li>
+			{{ end }}
 			{{ end }}
 			{{ end }}
 		</ul>
