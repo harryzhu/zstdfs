@@ -96,12 +96,12 @@ def batch_import(dpath):
 	num = 0
 	for root, dirs, files in os.walk(dpath, True):
 		for f in files:
-			if f[-4:].lower() != ".png":
-				continue
+			# if f[-4:].lower() != ".json":
+			# 	continue
 			fpath = os.path.join(root,f).replace("\\","/")
 			if os.path.getsize(fpath) > size_limit:
 				continue
-			print(fpath)
+			#print(fpath)
 
 			upload_file(fpath, 'harry', rdir)
 			num += 1
@@ -113,7 +113,7 @@ def batch_import(dpath):
 t1 = time.time()
 load_schema()
 print("item_schema: ", item_schema)
-root_dir = "/Users/harry/Desktop/nn"
+root_dir = "/Users/harry/Downloads/memcached-3.2.0"
 batch_import(root_dir)
 t2 = time.time()
 

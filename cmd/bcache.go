@@ -61,13 +61,16 @@ func bcacheDelete(k string) error {
 
 func jsonEnc(data any) []byte {
 	b, err := json.Marshal(data)
-	PrintError("gobEnc", err)
+	if err != nil {
+		PrintError("jsonEnc", err)
+		return nil
+	}
 	return b
 }
 
 func jsonDec(data []byte, dataStruct any) {
 	err := json.Unmarshal(data, &dataStruct)
-	PrintError("gobDec", err)
+	PrintError("jsonDec", err)
 }
 
 func bcacheKeyJoin(args ...any) string {
@@ -86,13 +89,14 @@ func bcacheScan(uname string) (data map[string]string) {
 	iterator := bcache.Iterator()
 	count := 0
 	val := ""
+	prefix := strings.Join([]string{uname, "::"}, "")
 	for iterator.SetNext() {
 		if count > 2000 {
 			break
 		}
 		current, err := iterator.Value()
 		k := current.Key()
-		if strings.HasPrefix(k, uname) {
+		if strings.HasPrefix(k, prefix) {
 			val = string(current.Value())
 			if len(val) > 1024 {
 				val = strings.Join([]string{val[0:1024], "..."}, " ")

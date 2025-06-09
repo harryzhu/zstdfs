@@ -89,6 +89,17 @@
 			margin: 0;
 			padding: 10px;
 		}
+
+		h3.error-message {
+			color: red;
+			font-size: 18px;
+			span.error-tag{
+				background-color: red;
+				color: #fff;
+				display: inline-block;
+				padding: 2px 10px;
+			}
+		}
 		a,a:visited{
 			text-decoration: none;
 			color: #05acd7;

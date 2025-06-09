@@ -146,15 +146,19 @@ func mysqlUserLogin(username, password string, enabled int) (user User) {
 
 }
 
-func mysqlAPIKeyLogin(username, apikey string, enabled int) (user User) {
+func mysqlAPIKeyLogin(username, apikey string, enabled int) User {
+	var user User
+
 	username = strings.ToLower(username)
 	if IsAnyEmpty(username, apikey) {
 		return user
 	}
-	cacheKey := strings.Join([]string{username, "mysqlAPIKeyLogin", apikey, Int2Str(enabled)}, "::")
+
+	cacheKey := bcacheKeyJoin(username, "mysqlAPIKeyLogin", apikey, Int2Str(enabled))
 	bcval := bcacheGet(cacheKey)
+	//DebugInfo("bcval", string(bcval))
 	if bcval != nil {
-		jsonDec(bcval, user)
+		jsonDec(bcval, &user)
 		return user
 	}
 

@@ -203,10 +203,8 @@ func (ett Entity) Get() Entity {
 
 	fsum, ok := ett.Meta["_fsum"]
 	if ok && fsum != "" {
-		//DebugInfo("Entity::Get:_fsum", fsum)
 		ett.Data = badgerGet([]byte(fsum))
 	} else {
-		//DebugInfo("Entity::Get:meta", meta)
 		return Entity{}
 	}
 	return ett

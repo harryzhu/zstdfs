@@ -36,8 +36,35 @@ func apiUploadFiles(ctx iris.Context) {
 	fapikey := ctx.PostValue("fapikey")
 	fmeta := ctx.PostValue("fmeta")
 	if IsAnyEmpty(fuser, fapikey, fid) {
+		DebugWarn("apiUploadFiles.10", "fuser/fapikey/fid cannot be empty")
 		ctx.StatusCode(iris.StatusForbidden)
 		ctx.Writef("Error: 403 Forbidden")
+		return
+	}
+
+	_, fileHeader, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
+		return
+	}
+
+	var dest string
+	var success bool
+	dest = filepath.Join(UploadDir, fuser, fileHeader.Filename)
+	MakeDirs(filepath.Join(UploadDir, fuser))
+	ctx.SaveFormFile(fileHeader, dest)
+	//
+	finfo, err := os.Stat(dest)
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
+		return
+	}
+	if finfo.Size() > MaxUploadSizeMB<<20 {
+		errSize := fmt.Sprintf("File is too large. Max size limit: %v, But Uploaded size: %v", MaxUploadSizeMB<<20, finfo.Size())
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(errSize)
 		return
 	}
 
@@ -45,6 +72,7 @@ func apiUploadFiles(ctx iris.Context) {
 	//
 	user := mysqlAPIKeyLogin(fuser, fapikey, 1)
 	if user.APIKey != fapikey {
+		DebugWarn("apiUploadFiles.20", "user.APIKey: ", user.APIKey, ", fapikey: ", fapikey)
 		ctx.StatusCode(iris.StatusForbidden)
 		ctx.Writef("Error: 403 Forbidden")
 		return
@@ -59,7 +87,7 @@ func apiUploadFiles(ctx iris.Context) {
 		return
 	}
 	if meta["fsha256"] == "" {
-		DebugInfo("apiUploadFiles", "fmeta[sha256] cannot be empty")
+		DebugWarn("apiUploadFiles", "fmeta[sha256] cannot be empty")
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.Writef("Error: 400 BadRequest")
 		return
@@ -68,17 +96,6 @@ func apiUploadFiles(ctx iris.Context) {
 	DebugInfo("=====apiUploadFiles:meta", meta)
 	entity := NewEntity(fuser, fid)
 
-	var dest string
-	var success bool
-	_, fileHeader, err := ctx.FormFile("file")
-	if err != nil {
-		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.WriteString(err.Error())
-		return
-	}
-	dest = filepath.Join(UploadDir, fuser, fileHeader.Filename)
-	MakeDirs(filepath.Join(UploadDir, fuser))
-	ctx.SaveFormFile(fileHeader, dest)
 	entity = entity.WithFile(dest)
 
 	if entity.Data != nil {
@@ -90,7 +107,6 @@ func apiUploadFiles(ctx iris.Context) {
 	}
 
 	for k, v := range meta {
-		//DebugInfo("apiUploadFile:entity.WithMeta", k, "=", v)
 		entity = entity.WithMeta(k, fmt.Sprintf("%v", v))
 	}
 
@@ -99,11 +115,11 @@ func apiUploadFiles(ctx iris.Context) {
 	}
 
 	if success {
-		fmt.Println("apiUploadFiles: OK")
+		DebugInfo("apiUploadFiles:Upload", "OK")
 		ctx.StatusCode(iris.StatusOK)
 		ctx.Writef("OK")
 	} else {
-		fmt.Println("apiUploadFiles: FAILED")
+		DebugWarn("apiUploadFiles:Upload", "FAILED")
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.Writef("Error")
 	}
@@ -125,28 +141,31 @@ func uploadFile(ctx iris.Context) {
 	fprefix := Normalize(ctx.PostValue("fprefix"))
 	ftags := Normalize(ctx.PostValue("ftags"))
 
+	data := iris.Map{}
+
 	if userlogin != fuser {
-		ctx.Writef("Error: bucket name must be same as username.")
+		data["error_message"] = "Error: bucket name must be same as username."
+		ctx.View("message-upload.html", data)
 		return
 	}
 
 	if IsAnyEmpty(fuser, fgroup) {
-		currentPostMaxSize := (ctx.Application().ConfigurationReadOnly().GetPostMaxMemory())
-		DebugInfo("uploadFile:currentPostMaxSize", currentPostMaxSize)
-
-		ctx.Writef("Error: username and group cannot be empty, or file size exceeds limit.")
+		data["error_message"] = "Error: username and group cannot be empty, or file size exceeds limit."
+		ctx.View("message-upload.html", data)
 		return
 	}
 
 	if strings.HasPrefix(fuser, "_") {
-		ctx.Writef("Error: username cannot start with _")
+		data["error_message"] = "Error: username cannot start with _"
+		ctx.View("message-upload.html", data)
 		return
 	}
 
 	_, fileHeader, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.WriteString(err.Error())
+		data["error_message"] = err.Error()
+		ctx.View("message-upload.html", data)
 		return
 	}
 
@@ -160,6 +179,20 @@ func uploadFile(ctx iris.Context) {
 	MakeDirs(filepath.Join(UploadDir, userlogin))
 	ctx.SaveFormFile(fileHeader, dest)
 
+	finfo, err := os.Stat(dest)
+	if err != nil {
+		data["error_message"] = err.Error()
+		ctx.View("message-upload.html", data)
+		return
+	}
+	if finfo.Size() > MaxUploadSizeMB<<20 {
+		//currentPostMaxSize := (ctx.Application().ConfigurationReadOnly().GetPostMaxMemory())
+		//DebugWarn("uploadFile:currentPostMaxSize", currentPostMaxSize)
+		data["error_message"] = fmt.Sprintf("File is too large. Maxsize limit: %v, But Uploaded size: %v", MaxUploadSizeMB<<20, finfo.Size())
+		ctx.View("message-upload.html", data)
+		return
+	}
+
 	fbasename := Normalize(filepath.Base(dest))
 	fkey := ToUnixSlash(filepath.Join(fgroup, fbasename))
 	if fprefix != "" {
@@ -170,23 +203,27 @@ func uploadFile(ctx iris.Context) {
 	entity := NewEntity(fuser, fkey).WithFile(dest).WithTags(ftags).WithMeta("fsha256", SHA256File(dest))
 	success := entity.Save()
 	//
+	ctx.Header("Content-Type", "text/html;charset=utf-8")
+
 	if !success {
-		ctx.Header("Content-Type", "text/plain;charset=utf-8")
-		ctx.Writef("Error: %s does not upload:\n %s/%s", fileHeader.Filename, fuser, fkey)
+		data["error_message"] = strings.Join([]string{
+			"Error: ",
+			fileHeader.Filename,
+			" does not upload: ",
+			fuser,
+			"/",
+			fkey}, "")
+		ctx.View("message-upload.html", data)
 		return
 	}
 
-	res := fmt.Sprintf("OK: File: (%s) was uploaded:<br/><br/>File:<br/><a href=\"/f/%s/%s\">/f/%s/%s</a>",
-		fileHeader.Filename, fuser, fkey, fuser, fkey)
-	res = strings.Join([]string{res, fmt.Sprintf(" | <a href=\"/f/%s/%s\" download>[Download]</a>",
-		fuser, fkey)}, "")
-	res = strings.Join([]string{res, fmt.Sprintf("<br/><br/>Dir:<br/><a href=\"/user/buckets/%s/%s\">%s/%s</a>",
-		fuser, ToUnixSlash(filepath.Dir(fkey)), fuser, ToUnixSlash(filepath.Dir(fkey)))}, "")
-	res = strings.Join([]string{res, fmt.Sprintf("For Video Play:<br/><a href=\"/play/v/%s/%s\">/play/v/%s/%s</a>",
-		fuser, fkey, fuser, fkey)}, "<br/><br/>")
+	data["url_file"] = fmt.Sprintf("/f/%s/%s", fuser, fkey)
+	data["url_dir"] = fmt.Sprintf("/user/buckets/%s/%s", fuser, ToUnixSlash(filepath.Dir(fkey)))
+	data["url_play"] = fmt.Sprintf("/play/v/%s/%s", fuser, fkey)
 
-	ctx.Header("Content-Type", "text/html;charset=utf-8")
-	ctx.Write([]byte(res))
+	data["site_url"] = GetSiteURL()
+
+	ctx.View("message-upload.html", data)
 }
 
 func saveUploadedFile(fh *multipart.FileHeader, destDir string) (int64, error) {
