@@ -18,12 +18,17 @@ func BeforeStart() error {
 	if StaticDir == "" {
 		StaticDir = ToUnixSlash(filepath.Join(DataDir, "www/static"))
 	}
+
+	if ThumbDir == "" {
+		ThumbDir = ToUnixSlash(filepath.Join(DataDir, "www/thumb"))
+	}
 	MakeDirs(DataDir)
 	MakeDirs(UploadDir)
 	MakeDirs(TempDir)
 	MakeDirs(CacheDir)
 	MakeDirs(AssetDir)
 	MakeDirs(StaticDir)
+	MakeDirs(ThumbDir)
 	//
 	if IsDebug {
 		FunctionCacheExpires = 0
@@ -37,15 +42,32 @@ func BeforeStart() error {
 	//
 	DefaultAsset(AssetDir+"/video-js.min.css", "template/video-js.min.css")
 	DefaultAsset(AssetDir+"/video.min.js", "template/video.min.js")
+	DefaultAsset(AssetDir+"/zstdfs.css", "template/zstdfs.css")
 	DefaultAsset(AssetDir+"/style.css", "template/style.css")
 	DefaultAsset(AssetDir+"/favicon.png", "template/favicon.png")
+	DefaultAsset(AssetDir+"/403-logo.png", "template/403-logo.png")
+	DefaultAsset(AssetDir+"/404-logo.png", "template/404-logo.png")
+	DefaultAsset(AssetDir+"/500-logo.png", "template/500-logo.png")
+	DefaultAsset(AssetDir+"/banned-logo.png", "template/banned-logo.png")
+	DefaultAsset(AssetDir+"/document-logo.png", "template/document-logo.png")
+	DefaultAsset(AssetDir+"/thumb_logo_zip.png", "template/thumb_logo_zip.png")
+	DefaultAsset(AssetDir+"/thumb_logo_txt.png", "template/thumb_logo_txt.png")
+	DefaultAsset(AssetDir+"/thumb_logo_pdf.png", "template/thumb_logo_pdf.png")
 	DefaultAsset(StaticDir+"/test.jpg", "template/bg-01.jpg")
+	//
 	DefaultAsset(StaticDir+"/example.jpg", "template/bg-02.jpg")
+	//
+	binFileDocumentLogo = LoadFileBytes(AssetDir + "/document-logo.png")
+	bin403Logo = LoadFileBytes(AssetDir + "/403-logo.png")
+	bin404Logo = LoadFileBytes(AssetDir + "/404-logo.png")
+	bin500Logo = LoadFileBytes(AssetDir + "/500-logo.png")
+	binBannedLogo = LoadFileBytes(AssetDir + "/banned-logo.png")
 	//
 	DebugInfo("BeforeStart:Debug", IsDebug)
 	DebugInfo("BeforeStart:DataDir", DataDir)
 	DebugInfo("BeforeStart:FunctionCacheExpires", FunctionCacheExpires)
 	//
+	bigcacheInit()
 	sqldb = mysqlConnect()
 	mgodb = mongoConnect()
 	bgrdb = badgerConnect()

@@ -1,0 +1,11 @@
+{{ render "header.html" . }}
+
+<h2>Top 2000 cache items:</h2>
+
+<table class="bcache">
+	{{ range $k, $v := .bcacheItems }}
+	<tr><td class="bc-key">{{ $k }} </td><td class="bc-val"> {{ $v }}</td></tr>
+	{{ end }}
+</table>
+
+{{ render "footer.html" . }}

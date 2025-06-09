@@ -4,9 +4,10 @@
 	<form action="{{ .form_action }}" method="POST" enctype="multipart/form-data" class="upload-form">
 		<table class="tbl-upload">
 			<tr>				
-				<td><label class="fuser">User:<br/><input type="text" required readonly pattern="[^_\.]{1}[a-z0-9\-_\.]{2,64}" value="{{ .ck_fuser }}" name="fuser" id="fuser" size="16" minlength="2" maxlength="64"></label></td>
-				<td><label class="fgroup">Group:<br/><input type="text" required pattern="[^\.]{1}[a-z0-9\-_\.]{2,64}" value="{{ .ck_fgroup }}" name="fgroup" id="fgroup" size="16" minlength="2" maxlength="64"></label></td>
-				<td><label class="fprefix">Prefix:<br/><input type="text" pattern="[a-z0-9\-_\.\/]{0,64}" value="{{ .ck_fprefix }}" name="fprefix" id="fprefix" size="40" minlength="0" maxlength="64"></label></td>
+				<td><label class="fuser">User:<br/><input type="text" required readonly pattern="[^_\.\s]{1}[a-z0-9\-_]{2,64}[^\_\.\s]$" value="{{ .ck_fuser }}" name="fuser" id="fuser" size="16" minlength="2" maxlength="64"></label></td>
+				<td><label class="fgroup">Group:<br/><input type="text" required pattern="[^\.\s]{1}[^\/\\\*\?\:\|\^\>\<]{2,64}[^\.\s]$" value="{{ .ck_fgroup }}" name="fgroup" id="fgroup" size="16" minlength="2" maxlength="64"></label></td>
+
+				<td><label class="fprefix">Prefix:<br/><input type="text" pattern="[^\/\\\.\s]{1}[^\\\*\?\:\|\^\>\<]{1,64}[^\/\\\.\s]$" value="{{ .ck_fprefix }}" name="fprefix" id="fprefix" size="40" minlength="0" maxlength="64"></label></td>
 
 				<td><label class="ftags">Tags:<br/><input type="text" value="{{ .ck_ftags }}" name="ftags" id="ftags" size="30" minlength="0" maxlength="64"></label>
 				</td>
@@ -17,9 +18,9 @@
 				<td><label class="submit"><br/><input type="submit" name="submit" id="submit" value="Upload"></label></td>
 			</tr>
 			<tr class="mute-text">
-				<td>任意小写字母、数字、下划线、连字符、点；<br/>长度2-64；<br/>不能以下划线_或点.开头；<br/>不能为空</td>
-				<td>任意小写字母、数字、下划线、连字符、点；<br/>长度2-64；<br/>不能以点.开头；<br/>不能为空</td>
-				<td>任意小写字母、数字、下划线、连字符、点、斜线；<br/>长度2-64；<br/>不能以点.开头或结尾；<br/>可为空</td>
+				<td>任意小写字母、数字、下划线、连字符<br/>长度2-64,不能为空<br/>不能以下划线_或点.或空格开头或结尾</td>
+				<td>任意文字、数字、下划线、连字符、点<br/>长度2-64,不能为空<br/>不能以点.或空格开头或结尾，<br/>不能包含 \ : * ? > / < | ^</td>
+				<td>任意文字、数字、下划线、连字符、点、斜线<br/>长度2-64,可为空<br/>可以包含 / <br/>不能包含 \ : * ? > < | ^</td>
 				<td>标签集，每个标签用逗号, 分隔</td>
 				<td>最大文件大小: {{ .form_max_upload_size_mb }} MB:</td>
 				<td>Upload</td>

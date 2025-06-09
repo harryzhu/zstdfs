@@ -106,6 +106,7 @@ func mysqlUserLogin(username, password string, enabled int) (user User) {
 	if IsAnyEmpty(username, password) {
 		return user
 	}
+
 	var uname, upass string
 	q1 := fmt.Sprintf(`select username,userpass from users where username=? and enabled = ?`)
 	stmt1, err := sqldb.Prepare(q1)
@@ -150,6 +151,13 @@ func mysqlAPIKeyLogin(username, apikey string, enabled int) (user User) {
 	if IsAnyEmpty(username, apikey) {
 		return user
 	}
+	cacheKey := strings.Join([]string{username, "mysqlAPIKeyLogin", apikey, Int2Str(enabled)}, "::")
+	bcval := bcacheGet(cacheKey)
+	if bcval != nil {
+		jsonDec(bcval, user)
+		return user
+	}
+
 	q := fmt.Sprintf(`select id,username,apikey,isadmin,enabled from users where username=? and apikey=? and enabled = ?`)
 	stmt, err := sqldb.Prepare(q)
 	if err != nil {
@@ -167,6 +175,8 @@ func mysqlAPIKeyLogin(username, apikey string, enabled int) (user User) {
 		return user
 	}
 	stmt.Close()
+
+	bcacheSet(cacheKey, jsonEnc(user))
 
 	DebugInfo("mysqlApiKeyLogin:user", user)
 

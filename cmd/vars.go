@@ -52,3 +52,16 @@ var (
 var (
 	ErrEmptyMeta error = errors.New("meta is empty")
 )
+
+var (
+	binFileDocumentLogo []byte
+	bin403Logo          []byte
+	bin404Logo          []byte
+	bin500Logo          []byte
+	binBannedLogo       []byte
+)
+
+var (
+	chanShell        chan string    = make(chan string, 1000)
+	FilesToBeRemoved map[string]int = make(map[string]int, 100)
+)

@@ -9,8 +9,10 @@ import (
 	"io/ioutil"
 	"math/rand/v2"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -452,4 +454,139 @@ func UniqueInts(elements []int) []int {
 	}
 	sort.Ints(eleNew)
 	return eleNew
+}
+
+func LoadFileBytes(fpath string) []byte {
+	data, err := os.ReadFile(fpath)
+	if err != nil {
+		PrintError("LoadFileBytes", err)
+		return nil
+	}
+	return data
+}
+
+func MP4ToAPNG(src, dst string) error {
+	if src == "" || dst == "" {
+		return nil
+	}
+	src = ToUnixSlash(src)
+	dst = ToUnixSlash(dst)
+
+	tempAPNGShellPath := dst + ".ffmpeg.bat"
+	tempAPNGCommand := strings.Join([]string{
+		"ffmpeg -n -i \"",
+		src,
+		"\" -f apng -an -plays 0 -vf \"fps=6, scale=144:-1\" -ss 00:00:02 -t 2 \"",
+		dst, "\""}, "")
+
+	DebugInfo("MP4ToAPNG", tempAPNGShellPath, "=>", tempAPNGCommand)
+	MakeDirs(filepath.Dir(dst))
+
+	fp, _ := os.OpenFile(tempAPNGShellPath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0777)
+	fp.WriteString(tempAPNGCommand + "\n")
+	chanShell <- tempAPNGShellPath
+
+	return nil
+}
+
+func Image2Thumb(src, dst string) error {
+	if src == "" || dst == "" {
+		return nil
+	}
+	src = ToUnixSlash(src)
+	dst = ToUnixSlash(dst)
+
+	tempMagickShellPath := dst + ".magick.bat"
+	tempMagickCommand := strings.Join([]string{
+		"magick ",
+		src,
+		" -resize 144x256 -quality 89 ",
+		dst}, "")
+
+	DebugInfo("Image2Thumb", tempMagickShellPath, "=>", tempMagickCommand)
+	MakeDirs(filepath.Dir(dst))
+
+	fp, _ := os.OpenFile(tempMagickShellPath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0777)
+	fp.WriteString(tempMagickCommand + "\n")
+	chanShell <- tempMagickShellPath
+
+	return nil
+}
+
+func TaskRunShellCommandInChannel() error {
+	for {
+		cmdPath := <-chanShell
+		if cmdPath == "" {
+			continue
+		}
+
+		DebugInfo("RunShellCommandInChannel", Int2Str(len(chanShell)), ": == shell command ==: ", cmdPath)
+
+		cmdBash := exec.Command("bash", "-c", cmdPath)
+		if runtime.GOOS == "windows" {
+			cmdBash = exec.Command("cmd", "/Q", "/C", cmdPath)
+		}
+		if IsDebug {
+			out, err := cmdBash.CombinedOutput()
+			if err != nil {
+				PrintError("RunShellCommandInChannel.10", err)
+			}
+			DebugInfo("RunShellCommandInChannel.20", string(out))
+		} else {
+			err := cmdBash.Start()
+			PrintError("RunShellCommandInChannel.10", err)
+
+			err = cmdBash.Wait()
+			PrintError("RunShellCommandInChannel.20", err)
+		}
+
+		errRm := os.Remove(cmdPath)
+		if errRm != nil {
+			FilesToBeRemoved[cmdPath] = 1
+		}
+
+	}
+}
+
+func TaskDeleteFilesInFilesToBeRemoved() {
+	for {
+		time.Sleep(5 * time.Second)
+
+		if len(FilesToBeRemoved) == 0 {
+			continue
+		}
+
+		for cmdPath, v := range FilesToBeRemoved {
+			if cmdPath == "" {
+				continue
+			}
+
+			if v != 0 {
+				finfo, err := os.Stat(cmdPath)
+				if err == nil {
+					tNow := time.Now()
+					fage := tNow.Sub(finfo.ModTime())
+					if fage < 10*time.Second {
+						continue
+					}
+
+					errRm := os.Remove(cmdPath)
+					if errRm == nil {
+						FilesToBeRemoved[cmdPath] = 0
+						DebugInfo("TaskDeleteFilesInChannel:Delete Temp Command", cmdPath)
+					}
+				}
+			} else {
+				delete(FilesToBeRemoved, cmdPath)
+			}
+		}
+
+		if len(FilesToBeRemoved) != 0 {
+			DebugWarn("TaskDeleteFilesInChannel", "Cannot Be Removed(", len(FilesToBeRemoved), "): ", FilesToBeRemoved)
+		} else {
+			DebugInfo("TaskDeleteFilesInChannel", "ALL DONE")
+		}
+
+	}
+
 }

@@ -91,6 +91,12 @@ func mongoSave(user string, id string, k, v string) bool {
 		PrintError("mongoSave", err)
 		return false
 	}
+	cacheKeys := []string{"mongoGet", "mongoGetByKey"}
+	for _, cacheKey := range cacheKeys {
+		cacheKeyDelete := bcacheKeyJoin(user, cacheKey, id)
+		bcacheDelete(cacheKeyDelete)
+	}
+
 	return true
 }
 
@@ -99,6 +105,14 @@ func mongoGet(user string, id string) (meta map[string]string) {
 	meta = make(map[string]string)
 
 	if IsAnyEmpty(user, id) {
+		return meta
+	}
+
+	cacheKey := bcacheKeyJoin(user, "mongoGet", id)
+	bcval := bcacheGet(cacheKey)
+	if bcval != nil {
+		jsonDec(bcval, &meta)
+		DebugInfo("mongoGet:cache:", meta)
 		return meta
 	}
 
@@ -113,6 +127,8 @@ func mongoGet(user string, id string) (meta map[string]string) {
 		}
 	}
 
+	bcacheSet(cacheKey, jsonEnc(meta))
+
 	return meta
 }
 
@@ -121,6 +137,14 @@ func mongoGetByKey(user string, key string, val string) (meta map[string]string)
 	meta = make(map[string]string)
 
 	if IsAnyEmpty(user, key, val) {
+		return meta
+	}
+
+	cacheKey := bcacheKeyJoin(user, "mongoGetByKey", key, val)
+	bcval := bcacheGet(cacheKey)
+	if bcval != nil {
+		jsonDec(bcval, &meta)
+		DebugInfo("mongoGetByKey:cache:", meta)
 		return meta
 	}
 
@@ -136,6 +160,7 @@ func mongoGetByKey(user string, key string, val string) (meta map[string]string)
 		meta[k] = fmt.Sprintf("%v", v)
 	}
 
+	bcacheSet(cacheKey, jsonEnc(meta))
 	return meta
 }
 
@@ -508,6 +533,7 @@ func mongoDistinctByKey(uname string, key string) (files []string) {
 	filter := bson.D{{
 		key, bson.D{{"$exists", true}, {"$ne", ""}},
 	}}
+
 	collUser := mgodb.Collection(uname)
 
 	err := collUser.Distinct(context.TODO(), key, filter).Decode(&files)

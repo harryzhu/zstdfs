@@ -2,13 +2,13 @@ package cmd
 
 import (
 	stdContext "context"
-	"time"
-
 	"fmt"
 	"mime"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"time"
 
 	"strings"
 
@@ -58,6 +58,12 @@ func StartHTTPServer() {
 		userFileAPI.Get("/{uname:string}/{key:path}", getFiles)
 	}
 
+	thumbAPI := app.Party("/thumb/")
+	{
+		thumbAPI.Use(iris.Compression)
+		thumbAPI.Get("/{uname:string}/{key:path}", thumbFiles)
+	}
+
 	shareAPI := app.Party("/s/")
 	{
 		shareAPI.Use(iris.Compression)
@@ -100,6 +106,8 @@ func StartHTTPServer() {
 		userAPI.Get("/playlikes/{color:string}", playDotColorList)
 		//
 		userAPI.Get("/dot/{color:string}/{uname:string}/{fname:path}", dotColorFile)
+		//
+		userAPI.Get("/cache", bcacheItems)
 
 	}
 
@@ -122,9 +130,11 @@ func StartHTTPServer() {
 
 func StopHTTPServer() {
 	fmt.Println("stopping the server ...")
+	close(chanShell)
 	appShutdown()
 	sqldb.Close()
 	bgrdb.Close()
+	bcache.Close()
 }
 
 func appShutdown() {
@@ -230,7 +240,7 @@ func getFiles(ctx iris.Context) {
 
 	entity := NewEntity(uname, key).Head()
 	//DebugInfo("getFiles", "entity.meta", entity.Meta)
-	if entity.Meta["is_public"] == "0" {
+	if Str2Int(entity.Meta["is_public"]) == 0 {
 		currentUser := getCurrentUser(ctx)
 		if currentUser.Name != uname || currentUser.IsAdmin != 1 {
 			ctx.StatusCode(iris.StatusForbidden)
@@ -239,7 +249,7 @@ func getFiles(ctx iris.Context) {
 		}
 	}
 
-	if entity.Meta["is_ban"] == "1" {
+	if Str2Int(entity.Meta["is_ban"]) == 0 {
 		DebugInfo("getFiles:is_ban==1", fname)
 		currentUser := getCurrentUser(ctx)
 		if currentUser.IsAdmin != 1 {
@@ -278,6 +288,132 @@ func getFiles(ctx iris.Context) {
 	ctx.Header("Content-Type", mimeType)
 	ctx.StatusCode(iris.StatusOK)
 	ctx.Write(entity.Data)
+}
+
+func thumbFiles(ctx iris.Context) {
+	uname := ctx.Params().Get("uname")
+	key := ctx.Params().Get("key")
+	DebugInfo("thumbFiles:key", key)
+
+	ctx.Header("X-Powered-By", "zstdfs")
+
+	if uname == "" || key == "" {
+		ctx.StatusCode(iris.StatusNotFound)
+		ctx.View("404.html")
+		return
+	}
+
+	fext := strings.ToLower(filepath.Ext(key))
+	fname := filepath.Join("thumb", uname, key)
+
+	entity := NewEntity(uname, key).Head()
+	//DebugInfo("thumbFiles", "entity.meta", entity.Meta)
+
+	if Str2Int(entity.Meta["is_public"]) == 0 {
+		currentUser := getCurrentUser(ctx)
+		if currentUser.Name != uname || currentUser.IsAdmin != 1 {
+			ctx.StatusCode(iris.StatusForbidden)
+			ctx.Header("Content-Type", "image/png")
+			ctx.Header("Cache-Control", "public, max-age=0")
+			ctx.Write(bin403Logo)
+			return
+		}
+	}
+
+	if Str2Int(entity.Meta["is_ban"]) == 1 {
+		DebugInfo("thumbFiles:is_ban==1", fname)
+		currentUser := getCurrentUser(ctx)
+		if currentUser.IsAdmin != 1 {
+			ctx.StatusCode(iris.StatusForbidden)
+			ctx.Header("Content-Type", "image/png")
+			ctx.Header("Cache-Control", "public, max-age=0")
+			ctx.Write(binBannedLogo)
+			return
+		}
+	}
+
+	if entity.Meta["_fsum"] == "" {
+		DebugInfo("thumbFiles:fsum is empty", fname)
+		ctx.StatusCode(iris.StatusInternalServerError)
+		ctx.Header("Content-Type", "image/png")
+		ctx.Header("Cache-Control", "public, max-age=0")
+		ctx.Write(bin500Logo)
+		return
+	}
+
+	mimeType := "application/octet-stream"
+	extImages := []string{".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp"}
+	if fext == ".mp4" {
+		mimeType = "image/apng"
+	} else {
+		mimeType = entity.Meta["mime"]
+	}
+
+	thumbImage := filepath.Join(ThumbDir, uname, key)
+	thumbImage = ToUnixSlash(thumbImage)
+	DebugInfo(thumbImage)
+	_, err := os.Stat(thumbImage)
+	if err != nil {
+		fextDefaultLogo := strings.Join([]string{"thumb_logo_", strings.Trim(fext, "."), ".png"}, "")
+		fextDefaultPath := filepath.Join(AssetDir, fextDefaultLogo)
+		DebugInfo("thumbFiles:fextDefaultPath", fextDefaultPath)
+		if !Contains(extImages, fext) && fext != ".mp4" {
+			ctx.Header("Content-Type", "image/png")
+			_, err := os.Stat(fextDefaultPath)
+			if err != nil {
+				ctx.Write(binFileDocumentLogo)
+			} else {
+				ctx.Write(LoadFileBytes(fextDefaultPath))
+			}
+
+			return
+		}
+		entity = entity.Get()
+		if entity.Data == nil {
+			DebugInfo("thumbFiles: Data is empty", fname)
+			ctx.Header("Content-Type", "image/png")
+			ctx.Header("Cache-Control", "public, max-age=0")
+			ctx.Write(bin404Logo)
+			return
+		}
+
+		mp4Temp := filepath.Join(TempDir, "thumb", uname, key)
+		mp4Temp = ToUnixSlash(mp4Temp)
+
+		MakeDirs(filepath.Dir(thumbImage))
+		MakeDirs(filepath.Dir(mp4Temp))
+
+		fp, _ := os.OpenFile(mp4Temp, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0777)
+		fp.Write(entity.Data)
+		fp.Close()
+		if fext == ".mp4" {
+			MP4ToAPNG(mp4Temp, thumbImage)
+		}
+
+		if Contains(extImages, fext) {
+			Image2Thumb(mp4Temp, thumbImage)
+		}
+	}
+
+	ctx.Header("Content-Type", mimeType)
+	ctx.StatusCode(iris.StatusOK)
+	data, err := os.ReadFile(thumbImage)
+	if err != nil {
+		DebugWarn("thumbFiles:", thumbImage)
+		PrintError("thumbFiles", err)
+		ctx.Header("Cache-Control", "public, max-age=0")
+		ctx.Write(bin404Logo)
+		return
+	}
+
+	if IsDebug {
+		ctx.Header("Cache-Control", "public, max-age=0")
+	} else {
+		ctx.Header("Cache-Control", "public, max-age=3600")
+	}
+
+	ctx.Write(data)
+	return
 }
 
 func editFiles(ctx iris.Context) {
@@ -550,14 +686,20 @@ func tagFiles(ctx iris.Context) {
 	//DebugInfo("tagFiles:navBreadcrumb", navBreadcrumb)
 	//DebugInfo("tagFiles:fileCount", fileCount)
 
-	ctx.View("tag-files.html", iris.Map{
+	data := iris.Map{
 		"nav_file_list":  navFileList,
 		"file_count":     Int2Str(fileCount),
 		"nav_breadcrumb": navBreadcrumb,
 		"current_user":   uname,
 		"current_prefix": tagname,
 		"site_url":       GetSiteURL(),
-	})
+	}
+
+	if len(files) < 1001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
+	}
+
+	ctx.View("tag-files.html", data)
 }
 
 func topCaption(ctx iris.Context) {
@@ -730,7 +872,7 @@ func captionFiles(ctx iris.Context) {
 	bc["tag"] = fmt.Sprintf("%s", captionword)
 	navBreadcrumb = append(navBreadcrumb, bc)
 
-	ctx.View("caption-files.html", iris.Map{
+	data := iris.Map{
 		"form_action":    "/user/caption",
 		"nav_file_list":  navFileList,
 		"file_count":     Int2Str(fileCount),
@@ -738,7 +880,13 @@ func captionFiles(ctx iris.Context) {
 		"current_user":   uname,
 		"current_prefix": captionword,
 		"site_url":       GetSiteURL(),
-	})
+	}
+
+	if len(files) < 1001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
+	}
+
+	ctx.View("caption-files.html", data)
 }
 
 func adminListBuckets(ctx iris.Context) {
@@ -825,6 +973,10 @@ func adminListFiles(ctx iris.Context) {
 		data["file_count"] = Int2Str(len(files) + len(dirs))
 	}
 
+	if len(files) < 1001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
+	}
+
 	if currentUser.IsAdmin == 1 {
 		data["is_admin"] = true
 	}
@@ -880,6 +1032,10 @@ func adminListKeys(ctx iris.Context) {
 
 	if len(files) > 0 || len(dirs) > 0 {
 		data["file_count"] = Int2Str(len(files) + len(dirs))
+	}
+
+	if len(files) < 1001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
 	}
 
 	if currentUser.IsAdmin == 1 {
@@ -948,6 +1104,10 @@ func likeFiles(ctx iris.Context) {
 		data["file_count"] = Int2Str(len(files))
 	}
 
+	if len(files) < 1001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
+	}
+
 	if currentUser.IsAdmin == 1 {
 		data["is_admin"] = true
 	}
@@ -980,6 +1140,10 @@ func byKeyFiles(ctx iris.Context) {
 
 	if len(files) > 0 {
 		data["file_count"] = Int2Str(len(files))
+	}
+
+	if len(files) < 1001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
 	}
 
 	if currentUser.IsAdmin == 1 {
@@ -1052,4 +1216,20 @@ func dotColorFile(ctx iris.Context) {
 		"dot_color": currentDotColor,
 		"error":     "",
 	})
+}
+
+func bcacheItems(ctx iris.Context) {
+	currentUser := getCurrentUser(ctx)
+	uname := currentUser.Name
+
+	if uname == "" && currentUser.IsAdmin != 1 {
+		return
+	}
+
+	data := iris.Map{
+		"bcacheItems":  bcacheScan(uname),
+		"current_user": uname,
+		"site_url":     GetSiteURL(),
+	}
+	ctx.View("bcache-items.html", data)
 }

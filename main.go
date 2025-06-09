@@ -18,10 +18,30 @@ func main() {
 	cmd.Execute()
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(8)
 
 	go func() {
 		cmd.StartHTTPServer()
+	}()
+
+	go func() {
+		cmd.TaskRunShellCommandInChannel()
+	}()
+
+	go func() {
+		cmd.TaskRunShellCommandInChannel()
+	}()
+
+	go func() {
+		cmd.TaskRunShellCommandInChannel()
+	}()
+
+	go func() {
+		cmd.TaskRunShellCommandInChannel()
+	}()
+
+	go func() {
+		cmd.TaskDeleteFilesInFilesToBeRemoved()
 	}()
 
 	go func() {

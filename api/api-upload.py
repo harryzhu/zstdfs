@@ -58,7 +58,7 @@ def upload_file(fpath, username, dpath):
 	data["fapikey"] = user_apikey[username]
 	data["fid"] = fpath[len(dpath):].strip("/")
 	if data["fid"][0:1] == ".":
-		return 
+		return None
 
 	fmeta = {}
 	fmeta["size"] = str(round(finfo.st_size))
@@ -96,7 +96,7 @@ def batch_import(dpath):
 	num = 0
 	for root, dirs, files in os.walk(dpath, True):
 		for f in files:
-			if f[-4:].lower() != ".mp4":
+			if f[-4:].lower() != ".png":
 				continue
 			fpath = os.path.join(root,f).replace("\\","/")
 			if os.path.getsize(fpath) > size_limit:
@@ -113,7 +113,7 @@ def batch_import(dpath):
 t1 = time.time()
 load_schema()
 print("item_schema: ", item_schema)
-root_dir = "/Users/harry/Desktop/v"
+root_dir = "/Users/harry/Desktop/nn"
 batch_import(root_dir)
 t2 = time.time()
 
