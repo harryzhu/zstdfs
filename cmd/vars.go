@@ -59,6 +59,7 @@ var (
 	bin404Logo          []byte
 	bin500Logo          []byte
 	binBannedLogo       []byte
+	binEmptyLogo        []byte
 )
 
 var (

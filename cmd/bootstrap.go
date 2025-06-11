@@ -48,6 +48,7 @@ func BeforeStart() error {
 	DefaultAsset(AssetDir+"/403-logo.png", "template/403-logo.png")
 	DefaultAsset(AssetDir+"/404-logo.png", "template/404-logo.png")
 	DefaultAsset(AssetDir+"/500-logo.png", "template/500-logo.png")
+	DefaultAsset(AssetDir+"/thumb_logo_empty.png", "template/thumb_logo_empty.png")
 	DefaultAsset(AssetDir+"/banned-logo.png", "template/banned-logo.png")
 	DefaultAsset(AssetDir+"/document-logo.png", "template/document-logo.png")
 	DefaultAsset(AssetDir+"/thumb_logo_zip.png", "template/thumb_logo_zip.png")
@@ -62,6 +63,7 @@ func BeforeStart() error {
 	bin404Logo = LoadFileBytes(AssetDir + "/404-logo.png")
 	bin500Logo = LoadFileBytes(AssetDir + "/500-logo.png")
 	binBannedLogo = LoadFileBytes(AssetDir + "/banned-logo.png")
+	binEmptyLogo = LoadFileBytes(AssetDir + "/thumb_logo_empty.png")
 	//
 	DebugInfo("BeforeStart:Debug", IsDebug)
 	DebugInfo("BeforeStart:DataDir", DataDir)

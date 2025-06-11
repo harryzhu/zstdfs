@@ -23,4 +23,6 @@ type UploadEntityMetaSchema struct {
 	StatsCommentCount  string `json:"stats_comment_count"`
 	StatsDownloadCount string `json:"stats_download_count"`
 	DotColor           string `json:"dot_color"`
+	CaptionEN          string `json:"caption.en"`
+	CaptionCN          string `json:"caption.cn"`
 }

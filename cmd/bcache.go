@@ -68,9 +68,10 @@ func jsonEnc(data any) []byte {
 	return b
 }
 
-func jsonDec(data []byte, dataStruct any) {
+func jsonDec(data []byte, dataStruct any) error {
 	err := json.Unmarshal(data, &dataStruct)
 	PrintError("jsonDec", err)
+	return err
 }
 
 func bcacheKeyJoin(args ...any) string {

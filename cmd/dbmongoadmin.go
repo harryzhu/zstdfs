@@ -85,15 +85,27 @@ func mongoAdminCreateIndex(user string) bool {
 	indexes["stats_comment_count"] = -1
 	indexes["stats_download_count"] = -1
 	indexes["tags"] = -1
-	indexes["caption"] = 99
+	indexes["caption.en"] = -1
+	indexes["caption.cn"] = -1
+	//
+	indexes["uri"] = 11
+	//
+	//indexes["caption"] = 99
 
 	indexModel := mongo.IndexModel{}
 	for key, val := range indexes {
 		if val == 99 {
 			indexModel = mongo.IndexModel{
 				Keys: bson.D{
-					{key, "text"},
+					{"caption", "text"},
 				}}
+		} else if val == 11 {
+			indexModel = mongo.IndexModel{
+				Keys: bson.D{
+					{key, 1},
+				},
+				Options: options.Index().SetUnique(true),
+			}
 		} else {
 			indexModel = mongo.IndexModel{
 				Keys: bson.D{

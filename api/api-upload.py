@@ -73,6 +73,13 @@ def upload_file(fpath, username, dpath):
 	fmeta["stats_comment_count"] = "0"
 	fmeta["stats_download_count"] = "0"
 	fmeta["dot_color"] = ""
+
+	#caption = {}
+	fmeta["caption.en_us"] = "asdfsdfgdf"
+	fmeta["caption.zh_cn"] = "啊啊大帅哥发噶规范，啊刚发发噶风格，山东分公司的风格。是发给对方"
+
+	#fmeta["caption"] = caption
+	
 	
 	try:
 		f1 = open(fpath, 'rb')

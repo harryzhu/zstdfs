@@ -261,12 +261,28 @@ func mongoTagFiles(user, tagname string) (files []string) {
 	filesCacheFile := fmt.Sprintf("%s/mongoTagFiles/files_%s.dat", user, GetXxhash([]byte(tagname)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
-		//tagname = strings.ReplaceAll(tagname, "&", ".*")
-		regxTagname := strings.Join([]string{"(", tagname, ")"}, "")
+		idPrefix := ""
+		tagWord := tagname
+		if strings.Count(tagname, "::") == 1 {
+			idWord := strings.Split(tagname, "::")
+			idPrefix = idWord[0]
+			tagWord = idWord[1]
+		}
+		regxTagname := strings.Join([]string{"(", tagWord, ")"}, "")
 		filter := bson.D{
 			{"tags", bson.D{{"$exists", true}}},
 			{"tags", bson.D{{"$ne", ""}}},
 			{"tags", bson.Regex{Pattern: regxTagname, Options: "i"}},
+		}
+
+		if idPrefix != "" {
+			regxidPrefix := strings.Join([]string{"(", idPrefix, ")"}, "")
+			filter = bson.D{
+				{"_id", bson.Regex{Pattern: regxidPrefix, Options: "i"}},
+				{"tags", bson.D{{"$exists", true}}},
+				{"tags", bson.D{{"$ne", ""}}},
+				{"tags", bson.Regex{Pattern: regxTagname, Options: "i"}},
+			}
 		}
 
 		optSort := bson.D{{"_id", 1}, {"mtime", -1}}
@@ -293,21 +309,19 @@ func mongoTagFiles(user, tagname string) (files []string) {
 	return files
 }
 
-func mongoTagList(user string, idPrefix string) (tags []string) {
-	var lines []string
+func mongoTagList(user string, idPrefix string) (tagCount map[string]int) {
+	tagCount = make(map[string]int)
 	if user == "" {
-		return lines
+		return tagCount
 	}
-	tagsCacheFile := fmt.Sprintf("%s/mongoTagList/tags.dat", user)
+	t1 := GetNowUnix()
 	tagCountCacheFile := fmt.Sprintf("%s/mongoTagList/tags_count.dat", user)
 
 	if len(idPrefix) > 0 {
-		tagsCacheFile = fmt.Sprintf("%s/mongoTagList/tags_%s.dat", user, GetXxhash([]byte(idPrefix)))
 		tagCountCacheFile = fmt.Sprintf("%s/mongoTagList/tags_count_%s.dat", user, GetXxhash([]byte(idPrefix)))
-
 	}
 
-	if GobLoad(tagsCacheFile, &tags, FunctionCacheExpires) == false {
+	if GobLoad(tagCountCacheFile, &tagCount, FunctionCacheExpires) == false {
 		filter := bson.D{
 			{"tags", bson.D{{"$exists", true}}},
 			{"tags", bson.D{{"$ne", ""}}},
@@ -329,88 +343,75 @@ func mongoTagList(user string, idPrefix string) (tags []string) {
 		opts := options.Find().SetProjection(bson.D{{"tags", 1}})
 
 		collUser := mgodb.Collection(user)
-		//err := collUser.Distinct(context.TODO(), "tags", filter).Decode(&lines)
 		results, err := collUser.Find(context.TODO(), filter, opts)
 		if err != nil {
 			PrintError("mongoTagList.10", err)
-			return lines
+			return tagCount
 		}
 
 		var rows []bson.M
 		err = results.All(context.TODO(), &rows)
 		PrintError("mongoTagList.20", err)
 
-		tagcount := make(map[string]int)
 		var line string
 		for _, row := range rows {
-			line = row["tags"].(string)
+			line = fmt.Sprintf("%v", row["tags"])
 			line = TagLineFormat(line)
 			words := strings.Split(line, ",")
 			for _, word := range words {
 				word = strings.TrimSpace(word)
 				if word != "" {
-					tagcount[word] += 1
+					tagCount[word] += 1
 				}
 			}
 		}
-		for k, _ := range tagcount {
-			tags = append(tags, k)
-		}
-
-		GobDump(tagsCacheFile, tags)
-		GobDump(tagCountCacheFile, tagcount)
+		GobDump(tagCountCacheFile, tagCount)
 	}
 
-	return tags
+	t2 := GetNowUnix()
+	DebugWarn("mongoTagList.40: ===> Elapse:", (t2 - t1), " seconds")
+
+	return tagCount
 }
 
-func mongoTagCount(user, tagname string) (tagcount map[string]int) {
-	if IsAnyEmpty(user, tagname) {
-		return tagcount
+func mongoCaptionList(user, language string) (tagCount map[string]int) {
+	tagCount = make(map[string]int)
+	if user == "" || language == "" {
+		return tagCount
 	}
+	t1 := GetNowUnix()
 
-	tagCountCacheFile := fmt.Sprintf("%s/mongoTagList/tags_count.dat", user)
-	if GobLoad(tagCountCacheFile, &tagcount, FunctionCacheExpires) == false {
-		mongoTagList(user, "")
-	}
-	GobLoad(tagCountCacheFile, &tagcount, FunctionCacheExpires)
+	tagCountCacheFile := fmt.Sprintf("%s/mongoCaptionList/caption_count_%s.dat", user, language)
 
-	if tagcount == nil {
-		tagcount[tagname] = len(mongoTagFiles(user, tagname))
-	}
-	return tagcount
-}
-
-func mongoCaptionList(user string) (tags []string) {
-	var lines []string
-	if user == "" {
-		return lines
-	}
-	tagsCacheFile := fmt.Sprintf("%s/mongoCaptionList/caption.dat", user)
-	tagCountCacheFile := fmt.Sprintf("%s/mongoCaptionList/caption_count.dat", user)
-
-	if GobLoad(tagsCacheFile, &tags, FunctionCacheExpires) == false {
+	if GobLoad(tagCountCacheFile, &tagCount, FunctionCacheExpires) == false {
+		captionKey := strings.Join([]string{"caption", language}, ".")
 		filter := bson.D{
-			{"caption", bson.D{{"$exists", true}}},
-			{"caption", bson.D{{"$ne", ""}}},
+			{captionKey, bson.D{{"$exists", true}}},
+			{captionKey, bson.D{{"$ne", ""}}},
 		}
-		opts := options.Find().SetProjection(bson.D{{"caption", 1}})
+		opts := options.Find().SetProjection(bson.D{{captionKey, 1}})
 
 		collUser := mgodb.Collection(user)
 		results, err := collUser.Find(context.TODO(), filter, opts)
 		if err != nil {
 			PrintError("mongoCaptionList.10", err)
-			return lines
+			return tagCount
 		}
 
 		var rows []bson.M
 		err = results.All(context.TODO(), &rows)
 		PrintError("mongoCaptionList.20", err)
 
-		tagcount := make(map[string]int)
 		var line string
+		var langVal map[string]string
 		for _, row := range rows {
-			line = row["caption"].(string)
+			rc := fmt.Sprintf("%v", row["caption"])
+			err = jsonDec([]byte(rc), &langVal)
+			if err != nil {
+				DebugWarn("mongoCaptionList.25", err.Error())
+				continue
+			}
+			line = langVal[language]
 			line = strings.ReplaceAll(line, ".", ",")
 			line = strings.ReplaceAll(line, ";", ",")
 			words := strings.Split(line, ",")
@@ -420,69 +421,49 @@ func mongoCaptionList(user string) (tags []string) {
 					continue
 				}
 
-				tagcount[word] += 1
+				tagCount[word] += 1
 
 			}
 		}
 
-		for k, _ := range tagcount {
-			tags = append(tags, k)
-			//DebugInfo("mongoCaptionList.30", k, ":", v)
-		}
-
-		GobDump(tagsCacheFile, tags)
-		GobDump(tagCountCacheFile, tagcount)
+		GobDump(tagCountCacheFile, tagCount)
 	}
 
-	return tags
+	t2 := GetNowUnix()
+	DebugWarn("mongoCaptionList.40: ===> Elapse:", (t2 - t1), " seconds")
+
+	return tagCount
 }
 
-func mongoCaptionCount(user, tagname string) (tagcount map[string]int) {
-	if IsAnyEmpty(user, tagname) {
-		return tagcount
-	}
-
-	tagCountCacheFile := fmt.Sprintf("%s/mongoCaptionList/caption_count.dat", user)
-	if GobLoad(tagCountCacheFile, &tagcount, FunctionCacheExpires) == false {
-		mongoCaptionList(user)
-	}
-	GobLoad(tagCountCacheFile, &tagcount, FunctionCacheExpires)
-
-	if tagcount == nil {
-		tagcount[tagname] = len(mongoCaptionFiles(user, tagname))
-	}
-
-	return tagcount
-}
-
-func mongoCaptionFiles(user, captionWord string) (files []string) {
+func mongoCaptionFiles(user, captionLanguage, captionWord string) (files []string) {
 	var rows []bson.M
 	var lines []string
-	if user == "" || captionWord == "" {
+	if user == "" || captionLanguage == "" || captionWord == "" {
 		return lines
 	}
-	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, GetXxhash([]byte(captionWord)))
+	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, captionLanguage, GetXxhash([]byte(captionWord)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
 		captionWord = strings.ReplaceAll(captionWord, "&", ".*")
 		regxCaptionWord := strings.Join([]string{"(", captionWord, ")"}, "")
+		captionKey := strings.Join([]string{"caption", captionLanguage}, ".")
 
 		filter := bson.D{
-			{"caption", bson.D{{"$exists", true}}},
-			{"caption", bson.D{{"$ne", ""}}},
-			{"caption", bson.Regex{Pattern: regxCaptionWord, Options: "i"}},
+			{captionKey, bson.D{{"$exists", true}}},
+			{captionKey, bson.D{{"$ne", ""}}},
+			{captionKey, bson.Regex{Pattern: regxCaptionWord, Options: "i"}},
 		}
 
-		if strings.Index(captionWord, "/") > 0 && strings.Index(captionWord, "/") < len(captionWord) {
-			idPrefixCaption := strings.Split(captionWord, "/")
+		if strings.Index(captionWord, "::") > 0 && strings.Index(captionWord, "::") < len(captionWord) {
+			idPrefixCaption := strings.Split(captionWord, "::")
 			if len(idPrefixCaption) == 2 {
 				regxCaptionWord = strings.Join([]string{"(", idPrefixCaption[1], ")"}, "")
 				regxIDPrefix := strings.Join([]string{"(", idPrefixCaption[0], ")"}, "")
 				filter = bson.D{
 					{"_id", bson.Regex{Pattern: regxIDPrefix, Options: "i"}},
-					{"caption", bson.D{{"$exists", true}}},
-					{"caption", bson.D{{"$ne", ""}}},
-					{"caption", bson.Regex{Pattern: regxCaptionWord, Options: "i"}},
+					{captionKey, bson.D{{"$exists", true}}},
+					{captionKey, bson.D{{"$ne", ""}}},
+					{captionKey, bson.Regex{Pattern: regxCaptionWord, Options: "i"}},
 				}
 			}
 		}
@@ -504,7 +485,7 @@ func mongoCaptionFiles(user, captionWord string) (files []string) {
 
 		var rowid string
 		for _, row := range rows {
-			rowid = row["_id"].(string)
+			rowid = fmt.Sprintf("%v", row["_id"])
 			files = append(files, rowid)
 		}
 		GobDump(filesCacheFile, files)
@@ -562,7 +543,8 @@ func mongoUserCollectionInit(user string) bool {
 	meta["ints_days"] = "3,  7  , 21"
 	meta["dot_color"] = "dot-purple"
 	meta["mime"] = "image/jpeg"
-	meta["caption"] = "file, caption, sample"
+	meta["caption.en"] = "file, caption, sample"
+	meta["caption.cn"] = "文件描述, 文字内容, 样例演示"
 	//
 	meta["stats_digg_count"] = "100"
 	meta["stats_comment_count"] = "200"

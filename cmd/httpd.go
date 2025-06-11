@@ -83,7 +83,7 @@ func StartHTTPServer() {
 		userAPI.Use(iris.Compression)
 
 		userAPI.Get("/buckets", adminListBuckets)
-		userAPI.Get("/buckets/{uname:string}", adminListFiles)
+		userAPI.Get("/buckets/{uname:string}", adminListGroup)
 		userAPI.Get("/buckets/{uname:string}/{fkey:path}", adminListKeys)
 		//
 		userAPI.Post("/upload", uploadFile)
@@ -95,8 +95,8 @@ func StartHTTPServer() {
 		userAPI.Get("/tags/top", topTags)
 		userAPI.Get("/caption", captionIndex)
 		userAPI.Post("/caption", captionIndex)
-		userAPI.Get("/caption/top", topCaption)
-		userAPI.Get("/caption/{captionword:path}", captionFiles)
+		userAPI.Get("/caption/top/{lang:string}", topCaption)
+		userAPI.Get("/caption/{lang:string}/{captionword:string}", captionFiles)
 		userAPI.Get("/by/{key:string}/{val:path}", byKeyFiles)
 		userAPI.Get("/top/{countname:string}/{min:int}/{max:int}", topCountFiles)
 		userAPI.Get("/samefiles", adminSameFiles)
@@ -400,7 +400,7 @@ func thumbFiles(ctx iris.Context) {
 	data, err := os.ReadFile(thumbImage)
 	if err != nil {
 		DebugWarn("thumbFiles:", thumbImage)
-		PrintError("thumbFiles", err)
+		DebugWarn("thumbFiles", err.Error())
 		ctx.Header("Cache-Control", "public, max-age=0")
 		ctx.Write(bin404Logo)
 		return
@@ -412,7 +412,12 @@ func thumbFiles(ctx iris.Context) {
 		ctx.Header("Cache-Control", "public, max-age=3600")
 	}
 
-	ctx.Write(data)
+	if len(data) == 0 {
+		ctx.Write(binEmptyLogo)
+	} else {
+		ctx.Write(data)
+	}
+
 	return
 }
 
@@ -480,14 +485,13 @@ func topTags(ctx iris.Context) {
 	t1 := GetNowUnix()
 
 	if GobLoad(countsCacheFile, &counts, FunctionCacheExpires) == false || GobLoad(nameNumCacheFile, &nameNum, FunctionCacheExpires) == false {
-		userTags := mongoTagList(uname, "")
-		for _, utag := range userTags {
-			nameCount := mongoTagCount(uname, utag)
-			c, ok := nameCount[utag]
-			if ok {
-				nameNum[utag] = c
-				counts = append(counts, c)
+		userTagCount := mongoTagList(uname, "")
+		for ukey, uval := range userTagCount {
+			if uval > 9 {
+				nameNum[ukey] = uval
+				counts = append(counts, uval)
 			}
+
 		}
 		sort.Ints(counts)
 		GobDump(countsCacheFile, counts)
@@ -587,7 +591,7 @@ func topTags(ctx iris.Context) {
 
 func tagList(ctx iris.Context) {
 	frmtaglike := ctx.PostValue("frmtaglike")
-
+	frmtaglike = strings.Replace(frmtaglike, "：：", "::", 1)
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("tagFiles:currentUser", currentUser)
 	var uname string
@@ -601,10 +605,16 @@ func tagList(ctx iris.Context) {
 	var tagname string
 
 	if frmtaglike == "" {
-		tags = mongoTagList(uname, "")
+		tagCount := mongoTagList(uname, "")
+		for k, _ := range tagCount {
+			if k != "" {
+				tags = append(tags, k)
+			}
+		}
+
 	} else {
-		if strings.Index(frmtaglike, "/") > 0 && strings.Index(frmtaglike, "/") <= len(frmtaglike) {
-			pretag := strings.Split(frmtaglike, "/")
+		if strings.Index(frmtaglike, "::") > 0 && strings.Index(frmtaglike, "::") <= len(frmtaglike) {
+			pretag := strings.Split(frmtaglike, "::")
 			if len(pretag) == 2 {
 				if pretag[0] != "" {
 					idprefix = pretag[0]
@@ -618,9 +628,19 @@ func tagList(ctx iris.Context) {
 		}
 
 		if idprefix != "" {
-			tags = mongoTagList(uname, idprefix)
+			tagCount := mongoTagList(uname, idprefix)
+			for k, _ := range tagCount {
+				if k != "" {
+					tags = append(tags, k)
+				}
+			}
 		} else {
-			tags = mongoTagList(uname, "")
+			tagCount := mongoTagList(uname, "")
+			for k, _ := range tagCount {
+				if k != "" {
+					tags = append(tags, k)
+				}
+			}
 		}
 		DebugInfo("====", "idprefix:", idprefix, ", tagname:", tagname, ", tags:", tags)
 		reg, err := regexp.Compile(fmt.Sprintf("(%s)", tagname))
@@ -641,9 +661,12 @@ func tagList(ctx iris.Context) {
 		"nav_tag_list":   tags,
 		"current_user":   uname,
 		"current_prefix": frmtaglike,
-		"idprefix":       idprefix,
 		"tagname":        tagname,
 		"form_action":    "/user/tags",
+	}
+
+	if idprefix != "" {
+		data["idprefix"] = idprefix
 	}
 
 	if len(tags) > 0 {
@@ -659,6 +682,7 @@ func tagList(ctx iris.Context) {
 
 func tagFiles(ctx iris.Context) {
 	tagname := ctx.Params().Get("tagname")
+	tagname = strings.Replace(tagname, "：：", "::", 1)
 	DebugInfo("tagFiles:tagname=", tagname)
 	//
 	currentUser := getCurrentUser(ctx)
@@ -695,7 +719,7 @@ func tagFiles(ctx iris.Context) {
 		"site_url":       GetSiteURL(),
 	}
 
-	if len(files) < 1001 && len(files) > 0 {
+	if len(files) < 2001 && len(files) > 0 {
 		data["enable_thumbnail"] = true
 	}
 
@@ -703,6 +727,7 @@ func tagFiles(ctx iris.Context) {
 }
 
 func topCaption(ctx iris.Context) {
+	captionlang := ctx.Params().Get("lang")
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("topCaption:currentUser", currentUser)
 	var uname string
@@ -711,23 +736,21 @@ func topCaption(ctx iris.Context) {
 	}
 	uname = currentUser.Name
 	var counts []int
-	countsCacheFile := fmt.Sprintf("%s/topCaption/counts.dat", uname)
+	countsCacheFile := fmt.Sprintf("%s/topCaption/counts_%s.dat", uname, captionlang)
 
 	nameNum := make(map[string]int)
-	nameNumCacheFile := fmt.Sprintf("%s/topCaption/nameNum.dat", uname)
+	nameNumCacheFile := fmt.Sprintf("%s/topCaption/nameNum_%s.dat", uname, captionlang)
 
 	cacheTime := ""
 
 	t1 := GetNowUnix()
 
 	if GobLoad(countsCacheFile, &counts, FunctionCacheExpires) == false || GobLoad(nameNumCacheFile, &nameNum, FunctionCacheExpires) == false {
-		userTags := mongoCaptionList(uname)
-		for _, utag := range userTags {
-			nameCount := mongoCaptionCount(uname, utag)
-			c, ok := nameCount[utag]
-			if ok && c > 9 {
-				nameNum[utag] = c
-				counts = append(counts, c)
+		userTagCount := mongoCaptionList(uname, captionlang)
+		for ukey, uval := range userTagCount {
+			if uval > 9 {
+				nameNum[ukey] = uval
+				counts = append(counts, uval)
 			}
 		}
 		sort.Ints(counts)
@@ -801,12 +824,13 @@ func topCaption(ctx iris.Context) {
 		// DebugWarn("------topTags:g910", g910)
 
 		viewData = iris.Map{
-			"nav_tags_g0":   g0,
-			"nav_tags_g12":  g12,
-			"nav_tags_g345": g345,
-			"nav_tags_g678": g678,
-			"nav_tags_g910": g910,
-			"current_user":  uname,
+			"nav_tags_g0":     g0,
+			"nav_tags_g12":    g12,
+			"nav_tags_g345":   g345,
+			"nav_tags_g678":   g678,
+			"nav_tags_g910":   g910,
+			"current_user":    uname,
+			"current_caplang": captionlang,
 		}
 	} else {
 		gall := make(map[string]int)
@@ -814,8 +838,9 @@ func topCaption(ctx iris.Context) {
 			gall[k] = v
 		}
 		viewData = iris.Map{
-			"nav_tags_gall": gall,
-			"current_user":  uname,
+			"nav_tags_gall":   gall,
+			"current_user":    uname,
+			"current_caplang": captionlang,
 		}
 	}
 
@@ -827,9 +852,11 @@ func topCaption(ctx iris.Context) {
 }
 
 func captionIndex(ctx iris.Context) {
+	frmcaplang := ctx.PostValue("frmcaplang")
 	frmtaglike := ctx.PostValue("frmtaglike")
-	if frmtaglike != "" {
-		ctx.Redirect("/user/caption/" + frmtaglike)
+	frmtaglike = strings.Replace(frmtaglike, "：：", "::", 1)
+	if frmtaglike != "" && frmcaplang != "" {
+		ctx.Redirect("/user/caption/" + frmcaplang + "/" + frmtaglike)
 	}
 
 	currentUser := getCurrentUser(ctx)
@@ -848,8 +875,10 @@ func captionIndex(ctx iris.Context) {
 }
 
 func captionFiles(ctx iris.Context) {
+	captionlang := ctx.Params().Get("lang")
 	captionword := ctx.Params().Get("captionword")
-	DebugInfo("captionFiles:captionword=", captionword)
+	captionword = strings.Replace(captionword, "：：", "::", 1)
+	DebugInfo("captionFiles:captionlang:", captionlang, ": ", captionword)
 	//
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("captionFiles:currentUser", currentUser)
@@ -863,7 +892,7 @@ func captionFiles(ctx iris.Context) {
 	var navBreadcrumb []map[string]string
 
 	var files []string
-	files = mongoCaptionFiles(uname, captionword)
+	files = mongoCaptionFiles(uname, captionlang, captionword)
 
 	fileCount := len(files)
 	navFileList := genNavFileList(files, "", uname)
@@ -873,16 +902,24 @@ func captionFiles(ctx iris.Context) {
 	navBreadcrumb = append(navBreadcrumb, bc)
 
 	data := iris.Map{
-		"form_action":    "/user/caption",
-		"nav_file_list":  navFileList,
-		"file_count":     Int2Str(fileCount),
-		"nav_breadcrumb": navBreadcrumb,
-		"current_user":   uname,
-		"current_prefix": captionword,
-		"site_url":       GetSiteURL(),
+		"form_action":     "/user/caption",
+		"nav_file_list":   navFileList,
+		"file_count":      Int2Str(fileCount),
+		"nav_breadcrumb":  navBreadcrumb,
+		"current_user":    uname,
+		"current_prefix":  captionword,
+		"site_url":        GetSiteURL(),
+		"current_caplang": captionlang,
 	}
 
-	if len(files) < 1001 && len(files) > 0 {
+	if captionlang == "en" {
+		data["current_caplang_en"] = captionlang
+	}
+	if captionlang == "cn" {
+		data["current_caplang_cn"] = captionlang
+	}
+
+	if len(files) < 2001 && len(files) > 0 {
 		data["enable_thumbnail"] = true
 	}
 
@@ -944,14 +981,13 @@ func adminListBuckets(ctx iris.Context) {
 	ctx.View("bucket-list.html", data)
 }
 
-func adminListFiles(ctx iris.Context) {
+func adminListGroup(ctx iris.Context) {
 	uname := ctx.Params().Get("uname")
-	//numPage := ctx.URLParam("page")
-	DebugInfo("adminListFiles:uname=", uname)
+	DebugInfo("adminListGroup:uname=", uname)
 
 	//
 	currentUser := getCurrentUser(ctx)
-	DebugInfo("adminListFiles:currentUser", currentUser)
+	DebugInfo("adminListGroup:currentUser", currentUser)
 	if currentUser.IsAdmin != 1 && currentUser.Name != uname {
 		return
 	}
@@ -973,7 +1009,7 @@ func adminListFiles(ctx iris.Context) {
 		data["file_count"] = Int2Str(len(files) + len(dirs))
 	}
 
-	if len(files) < 1001 && len(files) > 0 {
+	if len(files) < 2001 && len(files) > 0 {
 		data["enable_thumbnail"] = true
 	}
 
@@ -1034,7 +1070,7 @@ func adminListKeys(ctx iris.Context) {
 		data["file_count"] = Int2Str(len(files) + len(dirs))
 	}
 
-	if len(files) < 1001 && len(files) > 0 {
+	if len(files) < 2001 && len(files) > 0 {
 		data["enable_thumbnail"] = true
 	}
 
@@ -1104,7 +1140,7 @@ func likeFiles(ctx iris.Context) {
 		data["file_count"] = Int2Str(len(files))
 	}
 
-	if len(files) < 1001 && len(files) > 0 {
+	if len(files) < 2001 && len(files) > 0 {
 		data["enable_thumbnail"] = true
 	}
 
@@ -1142,7 +1178,7 @@ func byKeyFiles(ctx iris.Context) {
 		data["file_count"] = Int2Str(len(files))
 	}
 
-	if len(files) < 1001 && len(files) > 0 {
+	if len(files) < 2001 && len(files) > 0 {
 		data["enable_thumbnail"] = true
 	}
 

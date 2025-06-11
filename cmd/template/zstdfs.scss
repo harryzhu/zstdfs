@@ -157,7 +157,7 @@
 			color: #fff!important;
 		}
 		ul.tags li a:hover{
-			color: #blue!important;
+			color: blue!important;
 		}
 
 		.item-dir a{
@@ -378,13 +378,16 @@
 		}
 
 		.tags-list li.tag-item{
-			margin: 2px;
+			margin: 3px;
 			padding: 2px 4px;
 			list-style: none;
+			font-size: 18px;
 			display: inline-block;
 			border: 1px solid #05acd7;
 			border-radius: 6px;
+			/*box-shadow: none!important;*/
 		}
+
 		.top-tags{
 			border: 1px solid #ccc;
 		}
@@ -414,8 +417,8 @@
 		}
 
 		ul.thumbnails li{
-			border-radius: 15px;
-			border: 1px solid #ccc;
+			border-radius: 20px;
+			border: 1px solid #dcdcde;
 			width: 144px;
 			height: 256px;
 			margin: 2px;

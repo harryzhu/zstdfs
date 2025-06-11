@@ -9,7 +9,7 @@
 					<h2><a href="/home">Home</a> > 
 						<a href="/user/tags">Tags</a> > 
 						{{ if .idprefix }}
-						    {{ .idprefix }} /
+						    {{ .idprefix }} ::
 						{{ end }}
 
 						{{ if .tagname }}
@@ -21,11 +21,11 @@
 					{{ end}}</h2>
 				</td>
 				<td class="tag-filter-text">
-					<label class="tag-filter-lable"><span title="ID prefix / keyword_1 & keyword_2 & keyword_3">Keyword:</span>
+					<label class="tag-filter-lable"><span title="ID prefix :: keyword_1 & keyword_2 & keyword_3">Keyword:</span>
 				{{ if .current_prefix }}
 				<input type="text" name="frmtaglike" id="frmtaglike" value="{{ .current_prefix }}" />
 				{{ else }}
-				<input type="text" name="frmtaglike" id="frmtaglike" placeholder="/ or .* or &" />
+				<input type="text" name="frmtaglike" id="frmtaglike" placeholder=":: or .* or &" />
 				{{ end }}
 				<input type="submit" name="frmtagsubmit" id="frmtagsubmit" value="Submit"></label>
 				</td>
@@ -34,8 +34,18 @@
 	</form>
 	
 	<ul class="tags-list">
+		{{ if .idprefix }}
+
+		{{ range $k, $v := .nav_tag_list }}
+		<li class="tag-item"><a href="/user/tags/{{ $.idprefix }}::{{ $v }}">{{ $v }}</a></li>
+		{{ end }}
+
+		{{ else }}
+
 		{{ range $k, $v := .nav_tag_list }}
 		<li class="tag-item"><a href="/user/tags/{{ $v }}">{{ $v }}</a></li>
+		{{ end }}
+
 		{{ end }}
 	</ul>
 </div>

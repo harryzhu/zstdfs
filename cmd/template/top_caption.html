@@ -14,7 +14,7 @@
 			<td>
 				<ul class="tags-list">
 					{{ range $k, $v := .nav_tags_gall }}
-					<li class="tag-item"><a href="/user/caption/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					<li class="tag-item"><a href="/user/caption/{{ $.current_caplang }}/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
 					{{ end }}
 				</ul>
 			</td>
@@ -28,7 +28,7 @@
 			<td>
 				<ul class="tags-list">
 					{{ range $k, $v := .nav_tags_g910 }}
-					<li class="tag-item"><a href="/user/caption/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					<li class="tag-item"><a href="/user/caption/{{ $.current_caplang }}/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
 					{{ end }}
 				</ul>
 			</td>
@@ -38,7 +38,7 @@
 			<td>
 				<ul class="tags-list">
 					{{ range $k, $v := .nav_tags_g678 }}
-					<li class="tag-item"><a href="/user/caption/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					<li class="tag-item"><a href="/user/caption/{{ $.current_caplang }}/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
 					{{ end }}
 				</ul>
 			</td>
@@ -49,7 +49,7 @@
 				
 				<ul class="tags-list">
 					{{ range $k, $v := .nav_tags_g345 }}
-					<li class="tag-item"><a href="/user/caption/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					<li class="tag-item"><a href="/user/caption/{{ $.current_caplang }}/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
 					{{ end }}
 				</ul>
 				
@@ -60,7 +60,7 @@
 			<td>
 				<ul class="tags-list">
 					{{ range $k, $v := .nav_tags_g12 }}
-					<li class="tag-item"><a href="/user/caption/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
+					<li class="tag-item"><a href="/user/caption/{{ $.current_caplang }}/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</li>
 					{{ end }}
 				</ul>
 			</td>
@@ -70,7 +70,7 @@
 			<td>
 				<ul class="tags-list">
 					{{ range $k, $v := .nav_tags_g0 }}
-					<li class="tag-item"><a href="/user/caption/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</a></li>
+					<li class="tag-item"><a href="/user/caption/{{ $.current_caplang }}/{{ $k }}">{{ $k }}</a>&nbsp;{{ $v }}</a></li>
 					{{ end }}
 				</ul>
 			</td>
@@ -86,6 +86,6 @@
 </div>
 
 <hr/>
-<p>* caption will not show in the top list if count < 10, sentence with more than 10 words or less the 2 letters will be ignored</p>
+<p>* caption will not show in the top list if count < 10, sentence with more than 10 words or less then 2 letters will be ignored</p>
 
 {{ render "footer.html" . }}
