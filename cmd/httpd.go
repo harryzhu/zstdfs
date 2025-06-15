@@ -1052,21 +1052,26 @@ func adminListBuckets(ctx iris.Context) {
 
 	var collList []string
 	navList := make(map[string]map[string]string)
-	buckets := mongoAdminListCollections()
+	// you can uncomment the following
+	// if you want to allow admin to view other user's files.
 
-	if currentUser.IsAdmin != 1 {
-		if Contains(buckets, userlogin) {
-			collList = append(collList, userlogin)
-		}
-	} else {
-		for _, bkt := range buckets {
-			if strings.HasPrefix(bkt, "system.") || strings.HasPrefix(bkt, "_") {
-				continue
-			}
-			collList = append(collList, bkt)
-		}
+	//buckets := mongoAdminListCollections()
 
-	}
+	// if currentUser.IsAdmin != 1 {
+	// 	if Contains(buckets, userlogin) {
+	// 		collList = append(collList, userlogin)
+	// 	}
+	// } else {
+	// 	for _, bkt := range buckets {
+	// 		if strings.HasPrefix(bkt, "system.") || strings.HasPrefix(bkt, "_") {
+	// 			continue
+	// 		}
+	// 		collList = append(collList, bkt)
+	// 	}
+
+	// }
+
+	collList = append(collList, userlogin)
 
 	for _, v := range collList {
 		DebugInfo("adminListBuckets:collList", v)
@@ -1107,7 +1112,8 @@ func adminListGroup(ctx iris.Context) {
 	//
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("adminListGroup:currentUser", currentUser)
-	if currentUser.IsAdmin != 1 && currentUser.Name != uname {
+
+	if currentUser.Name != uname {
 		return
 	}
 
@@ -1149,7 +1155,7 @@ func adminListKeys(ctx iris.Context) {
 	//
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("adminListKeys:currentUser", currentUser)
-	if currentUser.IsAdmin != 1 && currentUser.Name != uname {
+	if currentUser.Name != uname {
 		return
 	}
 
