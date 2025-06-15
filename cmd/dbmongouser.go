@@ -532,6 +532,7 @@ func mongoUserStats(user string) (stats map[string]string) {
 
 	stats["doc_count"] = Int64ToString(docCount)
 	stats["unique_doc_count"] = Int2Str(len(mongoDistinctByKey(user, "_fsum")))
+	stats["total_size"] = ToKMGTB(Str2Int(Int64ToString(mongoAggSumByKey(user, "size"))))
 
 	DebugInfo("mongoUserStats", stats)
 	return stats

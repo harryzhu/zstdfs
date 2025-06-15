@@ -27,6 +27,15 @@ func GetNowUnix() int64 {
 	return time.Now().UTC().Unix()
 }
 
+func GetNowUnixMillo() int64 {
+	return time.Now().UTC().UnixMilli()
+}
+
+func ShowRunningTime(t1 int64, label string) {
+	t2 := GetNowUnixMillo()
+	DebugInfo("RunningTime", label, ": ", fmt.Sprintf("%v", t2-t1), " msec. [", t2, "-", t1, "]")
+}
+
 func ToUnixSlash(s string) string {
 	// for windows
 	return strings.ReplaceAll(s, "\\", "/")
@@ -207,6 +216,14 @@ func Str2Int(n string) int {
 		n = n[:strings.Index(n, ".")]
 	}
 	s, err := strconv.Atoi(n)
+	if err != nil {
+		return 0
+	}
+	return s
+}
+
+func Str2Int64(n string) int64 {
+	s, err := strconv.ParseInt(n, 10, 64)
 	if err != nil {
 		return 0
 	}

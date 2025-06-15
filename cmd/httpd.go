@@ -1076,6 +1076,7 @@ func adminListBuckets(ctx iris.Context) {
 		if ok {
 			vstats["doc_count"] = val
 			vstats["unique_doc_count"] = stats["unique_doc_count"]
+			vstats["total_size"] = stats["total_size"]
 		}
 		navList[v] = vstats
 	}

@@ -10,7 +10,7 @@ import (
 )
 
 func mongoAggCountByKey(uname string, key string, mincount, maxcount int) (files []string) {
-	fmt.Print("-----mongoAggCountByKey----")
+	t1 := GetNowUnixMillo()
 	collUser := mgodb.Collection(uname)
 
 	matchStage := bson.D{
@@ -37,12 +37,12 @@ func mongoAggCountByKey(uname string, key string, mincount, maxcount int) (files
 		files = append(files, fmt.Sprintf("%v", result["_id"]))
 		//DebugInfo("mongoAggCountByKey", result)
 	}
+	ShowRunningTime(t1, "mongoAggCountByKey")
 	return files
 }
 
 func mongoAggFilesByKey(uname string, key string, val string) (files []string) {
-	fmt.Print("-----mongoAggFilesByKey----")
-
+	t1 := GetNowUnixMillo()
 	kv := strings.Join([]string{key, val}, ":")
 	filesCacheFile := fmt.Sprintf("%s/mongoAggFilesByKey/files_%s.dat", uname, GetXxhash([]byte(kv)))
 
@@ -98,5 +98,66 @@ func mongoAggFilesByKey(uname string, key string, val string) (files []string) {
 
 	}
 
+	ShowRunningTime(t1, "mongoAggFilesByKey")
 	return files
+}
+
+func mongoAggSumByKey(uname string, key string) (totalSum int64) {
+	if uname == "" || key == "" {
+		return 0
+	}
+
+	cacheKey := bcacheKeyJoin(uname, "mongoAggSumByKey", key)
+	bcval := bcacheGet(cacheKey)
+	bckv := make(map[string]int64, 1)
+	if bcval != nil {
+		err := jsonDec(bcval, &bckv)
+		PrintError("mongoAggSumByKey.10", err)
+		totalSum = bckv["user_size_sum"]
+		DebugInfo("mongoAggSumByKey:cache:bckv", bckv)
+		return totalSum
+	}
+
+	t1 := GetNowUnixMillo()
+	collUser := mgodb.Collection(uname)
+
+	pipeline := []bson.M{
+		{
+			"$group": bson.M{
+				"_id":           nil,
+				"uniqueAmounts": bson.M{"$addToSet": "$size"},
+			},
+		},
+
+		{
+			"$unwind": "$uniqueAmounts",
+		},
+
+		{
+			"$group": bson.M{
+				"_id":   nil,
+				"total": bson.M{"$sum": "$uniqueAmounts"},
+			},
+		},
+	}
+
+	cursor, err := collUser.Aggregate(context.TODO(), pipeline)
+	PrintError("mongoAggSumByKey.20", err)
+
+	var result struct {
+		Total int64 `bson:"total"`
+	}
+	if cursor.Next(context.TODO()) {
+		if err := cursor.Decode(&result); err != nil {
+			PrintError("mongoAggSumByKey.30", err)
+		}
+		totalSum = result.Total
+	}
+	ShowRunningTime(t1, "mongoAggSumByKey")
+	DebugInfo("mongoAggSumByKey: totalSum", totalSum)
+	DebugInfo("mongoAggSumByKey: totalSum", totalSum/Int2Int64(MB), " MB")
+
+	bckv["user_size_sum"] = totalSum
+	bcacheSet(cacheKey, jsonEnc(bckv))
+	return totalSum
 }

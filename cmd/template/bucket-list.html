@@ -15,6 +15,9 @@
 			{{ if $kv.unique_doc_count }}
 			/ (unique: {{ $kv.unique_doc_count }} ) 
 			{{ end }}
+			{{ if $kv.total_size }}
+			/ (size: {{ $kv.total_size }}) 
+			{{ end }}
 			</span>
 		</li>
 		{{ end }}
