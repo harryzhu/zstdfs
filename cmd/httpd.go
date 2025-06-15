@@ -115,6 +115,8 @@ func StartHTTPServer() {
 	{
 		v1API.Get("/upload/schema.json", apiUploadSchema)
 		v1API.Post("/upload", apiUploadFiles)
+		v1API.Post("/list/tags", apiListTags)
+		v1API.Post("/list/caption", apiListCaption)
 	}
 
 	if MaxUploadSizeMB <= 0 {
@@ -206,6 +208,10 @@ func topCountFiles(ctx iris.Context) {
 
 	if len(files) > 0 {
 		data["file_count"] = Int2Str(len(files))
+	}
+
+	if len(files) < 2001 && len(files) > 0 {
+		data["enable_thumbnail"] = true
 	}
 
 	if currentUser.IsAdmin == 1 {
@@ -861,10 +867,122 @@ func captionIndex(ctx iris.Context) {
 
 	currentUser := getCurrentUser(ctx)
 	DebugInfo("captionIndex:currentUser", currentUser)
+	// en
+	captionlangen := "en"
+	nameNumEn := make(map[string]int)
+	nameNumEnCacheFile := fmt.Sprintf("%s/captionIndex/nameNum_%s.dat", currentUser.Name, captionlangen)
+
+	if GobLoad(nameNumEnCacheFile, &nameNumEn, FunctionCacheExpires) == false {
+		userCaptionCount := mongoCaptionList(currentUser.Name, captionlangen)
+		for ukey, uval := range userCaptionCount {
+			if strings.Count(ukey, " ") < 3 && uval > 9 {
+				nameNumEn[ukey] = uval
+			}
+		}
+		GobDump(nameNumEnCacheFile, nameNumEn)
+	}
+
+	// cn
+	captionlangcn := "cn"
+	nameNumCn := make(map[string]int)
+	nameNumCnCacheFile := fmt.Sprintf("%s/captionIndex/nameNum_%s.dat", currentUser.Name, captionlangcn)
+
+	if GobLoad(nameNumCnCacheFile, &nameNumCn, FunctionCacheExpires) == false {
+		userCaptionCount := mongoCaptionList(currentUser.Name, captionlangcn)
+		for ukey, uval := range userCaptionCount {
+			if strings.Count(ukey, " ") < 3 && uval > 9 {
+				nameNumCn[ukey] = uval
+			}
+		}
+		GobDump(nameNumCnCacheFile, nameNumCn)
+	}
+
+	var groupSkirt, groupSkirtCn []map[string]int
+	var groupDress, groupDressCn []map[string]int
+	var groupHair, groupHairCn []map[string]int
+	var groupShirt, groupShirtCn []map[string]int
+	var groupBody, groupBodyCn []map[string]int
+	var groupOther, groupOtherCn []map[string]int
+
+	for ukey, uval := range nameNumEn {
+		ukey = strings.ToLower(ukey)
+		// if strings.Index(ukey, "skirt") >= 0 || strings.Index(ukey, "shorts") >= 0 {
+		// 	groupSkirt = append(groupSkirt, map[string]int{ukey: uval})
+		// }
+		if IndexOr(ukey, "skirt", "shorts") {
+			groupSkirt = append(groupSkirt, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "dress") {
+			groupDress = append(groupDress, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "hair", "smile", "cry") {
+			groupHair = append(groupHair, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "shirt", "shoulder", "top", "tank", "jacket") {
+			groupShirt = append(groupShirt, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "eye", "leg", "toe", "waist", "shoes") {
+			groupBody = append(groupBody, map[string]int{ukey: uval})
+		}
+		//
+		if IndexOr(ukey, "jean", "slacks", "pants", "overalls", "trousers", "socks") {
+			groupOther = append(groupOther, map[string]int{ukey: uval})
+		}
+
+	}
+
+	for ukey, uval := range nameNumCn {
+		ukey = strings.ToLower(ukey)
+		if strings.Index(ukey, "裙") >= 0 && strings.Index(ukey, "连衣裙") < 0 {
+			groupSkirtCn = append(groupSkirtCn, map[string]int{ukey: uval})
+		}
+
+		if IndexOr(ukey, "连衣裙") {
+			groupDressCn = append(groupDressCn, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "发", "眼", "笑", "哭") {
+			groupHairCn = append(groupHairCn, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "衫", "恤", "肩", "夹克") {
+			groupShirtCn = append(groupShirtCn, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "腿", "脚", "手", "腰") {
+			groupBodyCn = append(groupBodyCn, map[string]int{ukey: uval})
+		}
+		if IndexOr(ukey, "裤", "袜") {
+			groupOtherCn = append(groupOtherCn, map[string]int{ukey: uval})
+		}
+	}
+
+	groupSkirtOrdered := MapKeyOrdered(groupSkirt)
+	groupSkirtCnOrdered := MapKeyOrdered(groupSkirtCn)
+	groupDressOrdered := MapKeyOrdered(groupDress)
+	groupDressCnOrdered := MapKeyOrdered(groupDressCn)
+	groupHairOrdered := MapKeyOrdered(groupHair)
+	groupHairCnOrdered := MapKeyOrdered(groupHairCn)
+	groupShirtOrdered := MapKeyOrdered(groupShirt)
+	groupShirtCnOrdered := MapKeyOrdered(groupShirtCn)
+	groupBodyOrdered := MapKeyOrdered(groupBody)
+	groupBodyCnOrdered := MapKeyOrdered(groupBodyCn)
+	groupOtherOrdered := MapKeyOrdered(groupOther)
+	groupOtherCnOrdered := MapKeyOrdered(groupOtherCn)
+	//DebugInfo("captionIndex", groupSkirt)
 
 	data := iris.Map{
-		"current_user": currentUser.Name,
-		"form_action":  "/user/caption",
+		"current_user":       currentUser.Name,
+		"form_action":        "/user/caption",
+		"cap_group_skirt":    groupSkirtOrdered,
+		"cap_group_skirt_cn": groupSkirtCnOrdered,
+		"cap_group_dress":    groupDressOrdered,
+		"cap_group_dress_cn": groupDressCnOrdered,
+		"cap_group_hair":     groupHairOrdered,
+		"cap_group_hair_cn":  groupHairCnOrdered,
+		"cap_group_shirt":    groupShirtOrdered,
+		"cap_group_shirt_cn": groupShirtCnOrdered,
+		"cap_group_body":     groupBodyOrdered,
+		"cap_group_body_cn":  groupBodyCnOrdered,
+		"cap_group_other":    groupOtherOrdered,
+		"cap_group_other_cn": groupOtherCnOrdered,
 	}
 
 	if currentUser.IsAdmin == 1 {
@@ -1267,5 +1385,67 @@ func bcacheItems(ctx iris.Context) {
 		"current_user": uname,
 		"site_url":     GetSiteURL(),
 	}
+	if currentUser.IsAdmin == 1 {
+		data["is_admin"] = true
+	}
 	ctx.View("bcache-items.html", data)
+}
+
+func apiListTags(ctx iris.Context) {
+	if ctx.Method() != "POST" {
+		DebugInfo("apiListTags", "pls use POST")
+		return
+	}
+	ctx.Header("Content-Type", "text/json;charset=utf-8")
+
+	fuser := ctx.PostValue("fuser")
+	fapikey := ctx.PostValue("fapikey")
+
+	if IsAnyEmpty(fuser, fapikey) {
+		DebugWarn("apiListTags.10", "fuser/fapikey cannot be empty")
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.Writef("Error: 403 Forbidden")
+		return
+	}
+
+	user := mysqlAPIKeyLogin(fuser, fapikey, 1)
+	if user.APIKey != fapikey {
+		DebugWarn("apiListTags.20", "user.APIKey: ", user.APIKey, ", fapikey: ", fapikey)
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.Writef("Error: 403 Forbidden")
+		return
+	}
+
+	tagCount := mongoTagList(fuser, "")
+	ctx.JSON(tagCount)
+}
+
+func apiListCaption(ctx iris.Context) {
+	if ctx.Method() != "POST" {
+		DebugInfo("apiListCaption", "pls use POST")
+		return
+	}
+	ctx.Header("Content-Type", "text/json;charset=utf-8")
+
+	fuser := ctx.PostValue("fuser")
+	fapikey := ctx.PostValue("fapikey")
+	flanguage := ctx.PostValue("flanguage")
+
+	if IsAnyEmpty(fuser, fapikey, flanguage) {
+		DebugWarn("apiListCaption.10", "fuser/fapikey cannot be empty")
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.Writef("Error: 403 Forbidden")
+		return
+	}
+
+	user := mysqlAPIKeyLogin(fuser, fapikey, 1)
+	if user.APIKey != fapikey {
+		DebugWarn("apiListCaption.20", "user.APIKey: ", user.APIKey, ", fapikey: ", fapikey)
+		ctx.StatusCode(iris.StatusForbidden)
+		ctx.Writef("Error: 403 Forbidden")
+		return
+	}
+
+	captionCount := mongoCaptionList(fuser, flanguage)
+	ctx.JSON(captionCount)
 }

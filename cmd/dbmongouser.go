@@ -11,6 +11,29 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+func mongoEscape(s string) string {
+	//. ? + * | { } [ ] ( ) < > " \ @ #
+	DebugInfo("mongoEscape", "before:", s)
+	s = strings.ReplaceAll(s, ".", "\\.")
+	s = strings.ReplaceAll(s, "+", `\+`)
+	s = strings.ReplaceAll(s, "?", "\\?")
+	s = strings.ReplaceAll(s, "|", "\\|")
+	s = strings.ReplaceAll(s, "}", "\\}")
+	s = strings.ReplaceAll(s, "{", "\\{")
+	s = strings.ReplaceAll(s, "]", "\\]")
+	s = strings.ReplaceAll(s, "[", "\\[")
+	s = strings.ReplaceAll(s, ")", "\\)")
+	s = strings.ReplaceAll(s, "(", "\\(")
+	s = strings.ReplaceAll(s, ">", "\\>")
+	s = strings.ReplaceAll(s, "<", "\\<")
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "@", "\\@")
+	s = strings.ReplaceAll(s, "#", "\\#")
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	DebugInfo("mongoEscape", "after :", s)
+	return s
+}
+
 func mongoGuessValueTypeByKey(key string) (t string) {
 	t = "string"
 	k4Int64v := []string{"size", "mtime"}
@@ -231,7 +254,7 @@ func mongoListFiles(user, prefix string, optSort bson.D) (dirs, files []string) 
 	dds := make(map[string]int, 100)
 	var rowid string
 	for _, row := range rows {
-		rowid = row["_id"].(string)
+		rowid = fmt.Sprintf("%v", row["_id"])
 		rowid = strings.TrimPrefix(rowid, prefix)
 		rowid = strings.Trim(rowid, "/")
 		if strings.Contains(rowid, "/") {
@@ -444,8 +467,11 @@ func mongoCaptionFiles(user, captionLanguage, captionWord string) (files []strin
 	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, captionLanguage, GetXxhash([]byte(captionWord)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
+		captionWord = strings.ReplaceAll(captionWord, "+", "\\+")
 		captionWord = strings.ReplaceAll(captionWord, "&", ".*")
+
 		regxCaptionWord := strings.Join([]string{"(", captionWord, ")"}, "")
+		DebugInfo("mongoCaptionFiles", "regxCaptionWord", regxCaptionWord)
 		captionKey := strings.Join([]string{"caption", captionLanguage}, ".")
 
 		filter := bson.D{
@@ -459,6 +485,7 @@ func mongoCaptionFiles(user, captionLanguage, captionWord string) (files []strin
 			if len(idPrefixCaption) == 2 {
 				regxCaptionWord = strings.Join([]string{"(", idPrefixCaption[1], ")"}, "")
 				regxIDPrefix := strings.Join([]string{"(", idPrefixCaption[0], ")"}, "")
+
 				filter = bson.D{
 					{"_id", bson.Regex{Pattern: regxIDPrefix, Options: "i"}},
 					{captionKey, bson.D{{"$exists", true}}},

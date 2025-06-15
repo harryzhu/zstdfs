@@ -432,6 +432,21 @@
 			box-shadow: 2px 2px 6px #eee;
 		}
 
+		table.caption{
+			margin: 0;
+			padding: 0;
+			min-width: 99%;
+			border-collapse: collapse;
+			border: 1px solid #ccc;
+			td {
+				
+			width: 33%;
+				padding: 5px;
+			}
+
+
+		}
+
 		table.bcache{
 			margin: 0;
 			padding: 0;

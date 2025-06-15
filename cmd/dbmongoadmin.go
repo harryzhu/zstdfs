@@ -90,7 +90,6 @@ func mongoAdminCreateIndex(user string) bool {
 	//
 	indexes["uri"] = 11
 	//
-	//indexes["caption"] = 99
 
 	indexModel := mongo.IndexModel{}
 	for key, val := range indexes {

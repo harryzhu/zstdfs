@@ -89,8 +89,9 @@ func bcacheScan(uname string) (data map[string]string) {
 	data = make(map[string]string, 100)
 	iterator := bcache.Iterator()
 	count := 0
-	val := ""
+	val_safe := ""
 	prefix := strings.Join([]string{uname, "::"}, "")
+	emptyJSON := make(map[string]any)
 	for iterator.SetNext() {
 		if count > 2000 {
 			break
@@ -98,11 +99,24 @@ func bcacheScan(uname string) (data map[string]string) {
 		current, err := iterator.Value()
 		k := current.Key()
 		if strings.HasPrefix(k, prefix) {
-			val = string(current.Value())
-			if len(val) > 1024 {
-				val = strings.Join([]string{val[0:1024], "..."}, " ")
+			m := emptyJSON
+			err := jsonDec(current.Value(), &m)
+			if err != nil {
+				DebugWarn("bcacheScan", err.Error())
+				continue
 			}
-			data[k] = val
+			DebugInfo("======", m)
+			if _, ok := m["_fsum"]; ok {
+				delete(m, "_fsum")
+			}
+			if _, ok := m["fsha256"]; ok {
+				delete(m, "fsha256")
+			}
+			val_safe = string(jsonEnc(m))
+			if len(val_safe) > 1024 {
+				val_safe = strings.Join([]string{val_safe[0:1024], "..."}, " ")
+			}
+			data[k] = val_safe
 			count++
 		}
 		PrintError("bcacheScan", err)

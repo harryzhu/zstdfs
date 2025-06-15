@@ -14,20 +14,188 @@
 				</td>
 				<td class="tag-filter-text">
 					<label class="tag-filter-lable"><span title="ID prefix :: keyword_1 & keyword_2 & keyword_3">Search:</span>
-				<input type="radio" name="frmcaplang" id="frmcaplang" value="en" checked> En
-				<input type="radio" name="frmcaplang" id="frmcaplang" value="cn"> 中文
-				<input type="text" name="frmtaglike" id="frmtaglike" placeholder=":: or .* or &" />
-				<input type="submit" name="frmtagsubmit" id="frmtagsubmit" value="Submit"></label>
-			</td>
-			</tr>
-		</table>
-	</form>
-	
-	<ul class="tags-list">
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="en" checked> En
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="cn"> 中文
+						<input type="text" name="frmtaglike" id="frmtaglike" placeholder=":: or .* or &" />
+						<input type="submit" name="frmtagsubmit" id="frmtagsubmit" value="Submit"></label>
+					</td>
+				</tr>
+			</table>
+		</form>
+
+	<!-- <ul class="tags-list">
 		{{ range $k, $v := .nav_tag_list }}
 		<li class="tag-item"><a href="/user/caption/{{ $v }}">{{ $v }}</a></li>
 		{{ end }}
-	</ul>
+	</ul> -->
+	<table class="caption">
+		<tr>
+			<td>Skirt</td>
+			<td>Dress</td>
+			<td>Shirt</td>
+		</tr>
+		<tr>
+			<td>
+				<ul class="tags-list">
+					{{ if .cap_group_skirt_cn }}
+					{{ range $idx, $kv := .cap_group_skirt_cn }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/cn/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				<br>
+				<ul class="tags-list">
+					{{ if .cap_group_skirt }}
+					{{ range $idx, $kv := .cap_group_skirt }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/en/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				
+			</td>
+
+			<td>
+
+				<ul class="tags-list">
+					{{ if .cap_group_dress_cn }}
+					{{ range $idx, $kv := .cap_group_dress_cn }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/cn/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				<br>
+				<ul class="tags-list">
+					{{ if .cap_group_dress }}
+					{{ range $idx, $kv := .cap_group_dress }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/en/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+
+				
+			</td>
+
+			<td>
+				<ul class="tags-list">
+					{{ if .cap_group_shirt_cn }}
+					{{ range $idx, $kv := .cap_group_shirt_cn }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/cn/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				<br>
+				<ul class="tags-list">
+					{{ if .cap_group_shirt }}
+					{{ range $idx, $kv := .cap_group_shirt }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/en/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				
+			</td>
+
+			
+
+			
+		</tr>
+
+		<tr>
+			
+			<td>Hair</td>
+			<td>Jeans</td>
+			<td>...</td>
+		</tr>
+
+		<tr>
+			<td>
+				<ul class="tags-list">
+					{{ if .cap_group_hair_cn }}
+					{{ range $idx, $kv := .cap_group_hair_cn }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/cn/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				<br>
+				<ul class="tags-list">
+					{{ if .cap_group_hair }}
+					{{ range $idx, $kv := .cap_group_hair }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/en/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+
+				
+
+				
+			</td>
+			
+			<td>
+				<ul class="tags-list">
+					{{ if .cap_group_other_cn }}
+					{{ range $idx, $kv := .cap_group_other_cn }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/cn/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				<br>
+				<ul class="tags-list">
+					{{ if .cap_group_other }}
+					{{ range $idx, $kv := .cap_group_other }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/en/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+
+				
+			</td>
+
+			<td>
+				<ul class="tags-list">
+					{{ if .cap_group_body_cn }}
+					{{ range $idx, $kv := .cap_group_body_cn }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/cn/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				<br>
+				<ul class="tags-list">
+					{{ if .cap_group_body }}
+					{{ range $idx, $kv := .cap_group_body }}
+					{{ range $k, $v := $kv }}
+					<li class="tag-item"><a href="/user/caption/en/{{ $k }}">{{ $k }}</a> {{ $v }}</li>
+					{{ end }}
+					{{ end }}
+					{{ end }}
+				</ul>
+				
+			</td>
+
+		</tr>
+
+	</table>
+
 </div>
 
 

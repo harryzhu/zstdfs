@@ -511,3 +511,60 @@ func Image2Thumb(src, dst string) error {
 
 	return nil
 }
+
+func IndexOr(ukey string, args ...string) bool {
+	ukey = strings.ToLower(ukey)
+	for _, arg := range args {
+		if strings.Index(ukey, strings.ToLower(arg)) >= 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func MapKeyOrdered2(maps []map[string]int) (ordmaps []map[string]int) {
+	var mkeys []string
+	for _, kv := range maps {
+		for mkey, _ := range kv {
+			mkeys = append(mkeys, mkey)
+		}
+	}
+	sort.Sort(sort.StringSlice(mkeys))
+	for _, mk := range mkeys {
+		for _, kv := range maps {
+			if mval, ok := kv[mk]; ok {
+				ordmaps = append(ordmaps, map[string]int{mk: mval})
+			}
+		}
+	}
+	return ordmaps
+}
+
+func MapKeyOrdered(maps []map[string]int) []map[string]int {
+	// 提取所有键并去重
+	keySet := make(map[string]struct{})
+	for _, m := range maps {
+		for k := range m {
+			keySet[k] = struct{}{}
+		}
+	}
+
+	// 将键转换为切片并排序
+	keys := make([]string, 0, len(keySet))
+	for k := range keySet {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// 按排序后的键收集值
+	var result []map[string]int
+	for _, k := range keys {
+		for _, m := range maps {
+			if val, exists := m[k]; exists {
+				result = append(result, map[string]int{k: val})
+			}
+		}
+	}
+
+	return result
+}
