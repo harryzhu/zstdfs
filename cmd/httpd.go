@@ -1052,24 +1052,6 @@ func adminListBuckets(ctx iris.Context) {
 
 	var collList []string
 	navList := make(map[string]map[string]string)
-	// you can uncomment the following
-	// if you want to allow admin to view other user's files.
-
-	//buckets := mongoAdminListCollections()
-
-	// if currentUser.IsAdmin != 1 {
-	// 	if Contains(buckets, userlogin) {
-	// 		collList = append(collList, userlogin)
-	// 	}
-	// } else {
-	// 	for _, bkt := range buckets {
-	// 		if strings.HasPrefix(bkt, "system.") || strings.HasPrefix(bkt, "_") {
-	// 			continue
-	// 		}
-	// 		collList = append(collList, bkt)
-	// 	}
-
-	// }
 
 	collList = append(collList, userlogin)
 

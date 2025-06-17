@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	KB int = 1 << 10
-	MB int = 1 << 20
-	GB int = 1 << 30
-	TB int = 1 << 40
+	KB int64 = 1 << 10
+	MB int64 = 1 << 20
+	GB int64 = 1 << 30
+	TB int64 = 1 << 40
 )
 
 const (

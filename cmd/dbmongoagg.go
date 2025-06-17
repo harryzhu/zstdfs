@@ -155,7 +155,7 @@ func mongoAggSumByKey(uname string, key string) (totalSum int64) {
 	}
 	ShowRunningTime(t1, "mongoAggSumByKey")
 	DebugInfo("mongoAggSumByKey: totalSum", totalSum)
-	DebugInfo("mongoAggSumByKey: totalSum", totalSum/Int2Int64(MB), " MB")
+	DebugInfo("mongoAggSumByKey: totalSum", totalSum/MB, " MB")
 
 	bckv["user_size_sum"] = totalSum
 	bcacheSet(cacheKey, jsonEnc(bckv))

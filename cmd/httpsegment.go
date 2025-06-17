@@ -47,7 +47,7 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				navFileList[aText] = map[string]any{
 					"uid":   fmt.Sprintf("%s/%s", uname, line),
 					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
-					"size":  ToKMGTB(Str2Int(lineMeta["size"])),
+					"size":  ToKMGTB(Str2Int64(lineMeta["size"])),
 					"mtime": UnixFormat(Int2Int64(Str2Int(lineMeta["mtime"])), "06-01-02 15:04"),
 				}
 			} else {
@@ -56,7 +56,7 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 				navFileList[aText] = map[string]any{
 					"uid":   fmt.Sprintf("%s/%s/%s", uname, fkey, line),
 					"uri":   fmt.Sprintf("%s/%s", uname, lineMeta["uri"]),
-					"size":  ToKMGTB(Str2Int(lineMeta["size"])),
+					"size":  ToKMGTB(Str2Int64(lineMeta["size"])),
 					"mtime": UnixFormat(Int2Int64(Str2Int(lineMeta["mtime"])), "06-01-02 15:04"),
 				}
 			}

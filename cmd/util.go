@@ -7,7 +7,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand/v2"
+
+	//"math"
+
+	"math/rand"
+
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,12 +20,19 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"sync"
 	"time"
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/klauspost/compress/zstd"
 	"github.com/zeebo/blake3"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	globalRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	randMutex  = &sync.Mutex{}
 )
 
 func GetNowUnix() int64 {
@@ -50,18 +62,24 @@ func UnixFormat(t int64, format string) string {
 }
 
 func GetRandomInts(count, min, max int) (ints []int) {
-	ts := time.Now()
-	ts1, _ := strconv.Atoi(strconv.FormatInt(ts.UTC().Unix(), 10))
-	ts2, _ := strconv.Atoi(strconv.FormatInt(ts.UnixNano(), 10))
-	r := rand.New(rand.NewPCG(uint64(ts1), uint64(ts2)))
-	DebugInfo("GetRandomInts:max", max)
-	if max <= 0 {
+	if count <= 0 {
 		return ints
 	}
-	for i := 0; i < count; i++ {
-
-		ints = append(ints, r.IntN(max))
+	if max <= min {
+		return ints
 	}
+
+	rangeSize := max - min
+
+	ints = make([]int, count)
+
+	randMutex.Lock()
+	defer randMutex.Unlock()
+
+	for i := 0; i < count; i++ {
+		ints[i] = min + globalRand.Intn(rangeSize)
+	}
+
 	return ints
 }
 
@@ -70,9 +88,33 @@ func GetSiteURL() string {
 		return SiteURL
 	}
 	if Host == "0.0.0.0" {
+		ip := GetPrimaryIP()
+		if ip != "0.0.0.0" {
+			return strings.Join([]string{"http://", ip, ":", Port}, "")
+		}
 		return strings.Join([]string{"http://localhost", Port}, ":")
 	}
 	return strings.Join([]string{"http://", Host, ":", Port}, "")
+}
+
+func GetPrimaryIP() string {
+	addrs, err := net.InterfaceAddrs()
+	PrintError("GetPrimaryIP", err)
+	for _, addr := range addrs {
+		var ip net.IP
+		switch v := addr.(type) {
+		case *net.IPNet:
+			ip = v.IP
+		case *net.IPAddr:
+			ip = v.IP
+		}
+
+		if ip == nil || ip.IsLoopback() || ip.To4() == nil {
+			continue
+		}
+		return ip.String()
+	}
+	return "0.0.0.0"
 }
 
 func GetURI(id string) string {
@@ -144,7 +186,7 @@ func GenAPIKey(u string) string {
 	return GetXxhash([]byte(p1))
 }
 
-func ToKMGTB(n int) string {
+func ToKMGTB(n int64) string {
 	if n > TB {
 		return fmt.Sprintf("%.1f TB", float64(n)/float64(TB))
 	}
@@ -206,7 +248,7 @@ func GetEnv(k string, defaultVal string) string {
 func Str2Float64(n string) float64 {
 	s, err := strconv.ParseFloat(n, 64)
 	if err != nil {
-		return 0
+		return -1
 	}
 	return s
 }
@@ -217,7 +259,7 @@ func Str2Int(n string) int {
 	}
 	s, err := strconv.Atoi(n)
 	if err != nil {
-		return 0
+		return -1
 	}
 	return s
 }
@@ -225,7 +267,7 @@ func Str2Int(n string) int {
 func Str2Int64(n string) int64 {
 	s, err := strconv.ParseInt(n, 10, 64)
 	if err != nil {
-		return 0
+		return -1
 	}
 	return s
 }

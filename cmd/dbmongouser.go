@@ -526,14 +526,24 @@ func mongoUserStats(user string) (stats map[string]string) {
 		return stats
 	}
 	stats = make(map[string]string)
+
+	cacheKey := bcacheKeyJoin(user, "mongoUserStats", "stats")
+	bcval := bcacheGet(cacheKey)
+	if bcval != nil {
+		jsonDec(bcval, &stats)
+		DebugInfo("mongoUserStats:cache:", stats)
+		return stats
+	}
+
 	collUser := mgodb.Collection(user)
 	docCount, err := collUser.EstimatedDocumentCount(context.TODO(), nil)
 	PrintError("mongoUserStats:docCount", err)
 
 	stats["doc_count"] = Int64ToString(docCount)
 	stats["unique_doc_count"] = Int2Str(len(mongoDistinctByKey(user, "_fsum")))
-	stats["total_size"] = ToKMGTB(Str2Int(Int64ToString(mongoAggSumByKey(user, "size"))))
+	stats["total_size"] = ToKMGTB(mongoAggSumByKey(user, "size"))
 
+	bcacheSet(cacheKey, jsonEnc(stats))
 	DebugInfo("mongoUserStats", stats)
 	return stats
 }
