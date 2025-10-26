@@ -111,7 +111,7 @@ func logoutIndex(ctx iris.Context) {
 func getFormHash(salt string) string {
 	k1 := UnixFormat(GetNowUnix(), "2006-01-02")
 	k2 := strings.Join([]string{SHA256String(k1), salt}, ":")
-	k3 := GetXxhash([]byte(k2))
+	k3 := GetXxhashString([]byte(k2))
 	return strings.Join([]string{k3, salt}, ":")
 }
 
@@ -126,7 +126,7 @@ func verifyFormHash(s string) bool {
 
 	k1 := UnixFormat(GetNowUnix(), "2006-01-02")
 	k2 := strings.Join([]string{SHA256String(k1), hashsalt[1]}, ":")
-	k3 := GetXxhash([]byte(k2))
+	k3 := GetXxhashString([]byte(k2))
 	if hashsalt[0] == k3 {
 		return true
 	}

@@ -79,11 +79,11 @@ func mongoAdminCreateIndex(user string) bool {
 	indexes["dot_color"] = 1
 	indexes["is_ban"] = 1
 	indexes["is_public"] = -1
-	indexes["stats_digg_count"] = -1
-	indexes["stats_collect_count"] = -1
-	indexes["stats_share_count"] = -1
-	indexes["stats_comment_count"] = -1
-	indexes["stats_download_count"] = -1
+	indexes["stats.digg_count"] = -1
+	indexes["stats.collect_count"] = -1
+	indexes["stats.share_count"] = -1
+	indexes["stats.comment_count"] = -1
+	indexes["stats.download_count"] = -1
 	indexes["tags"] = -1
 	indexes["caption.en"] = -1
 	indexes["caption.cn"] = -1

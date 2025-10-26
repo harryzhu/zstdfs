@@ -42,8 +42,8 @@ func bigcacheInit() {
 }
 
 func bcacheSet(k string, v []byte) error {
-	bcache.Set(k, v)
-	return nil
+	err := bcache.Set(k, v)
+	return err
 }
 
 func bcacheGet(k string) []byte {

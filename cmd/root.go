@@ -1,25 +1,22 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+*/
 package cmd
 
 import (
 	"os"
+	"sync"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	IsDebug           bool
-	MaxUploadSizeMB   int64
-	MaxCacheSizeMB    int
-	Host              string
-	Port              string
-	SiteURL           string
-	UploadDir         string
-	StaticDir         string
-	ThumbDir          string
-	BulkLoadDir       string
-	BulkLoadExt       string
-	BulkLoadUser      string
-	BulkLoadOverWrite bool
+	IsDebug            bool
+	IsGrpcServerOnline bool
+	IsHTTPServerOnline bool
+	MaxUploadSizeMB    int64
+	MaxCacheSizeMB     int
+	wg                 sync.WaitGroup
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -36,6 +33,7 @@ var rootCmd = &cobra.Command{
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 
+		wg.Wait()
 	},
 }
 
@@ -46,22 +44,12 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-	//
-	BeforeStart()
+
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVar(&IsDebug, "debug", false, "if print debug info")
-	rootCmd.PersistentFlags().Int64Var(&MaxUploadSizeMB, "max-upload-size-mb", 16, "max upload size, default: 16mb")
-	rootCmd.PersistentFlags().IntVar(&MaxCacheSizeMB, "max-cache-size-mb", 256, "max size for memory cache")
-	rootCmd.PersistentFlags().StringVar(&Host, "host", "0.0.0.0", "host, default: 0.0.0.0")
-	rootCmd.PersistentFlags().StringVar(&Port, "port", "9090", "port, default: 9090")
-	rootCmd.PersistentFlags().StringVar(&UploadDir, "upload-dir", "", "Upload Dir")
-	rootCmd.PersistentFlags().StringVar(&StaticDir, "static-dir", "", "Static Dir")
-	rootCmd.PersistentFlags().StringVar(&ThumbDir, "thumb-dir", "", "Thumbnail Dir")
-	rootCmd.PersistentFlags().StringVar(&SiteURL, "site-url", "", "site url")
-	rootCmd.PersistentFlags().StringVar(&BulkLoadDir, "bulk-load-dir", "", "BulkLoad dir path")
-	rootCmd.PersistentFlags().StringVar(&BulkLoadExt, "bulk-load-ext", "", "BulkLoad file type: extension, i.e.: .mp4")
-	rootCmd.PersistentFlags().StringVar(&BulkLoadUser, "bulk-load-user", "", "BulkLoad username")
-	rootCmd.PersistentFlags().BoolVar(&BulkLoadOverWrite, "bulk-load-overwrite", false, "if overwrite the existed file")
+	rootCmd.PersistentFlags().BoolVar(&IsDebug, "debug", true, "if print debug info")
+	rootCmd.PersistentFlags().Int64Var(&MaxUploadSizeMB, "max-upload-size-mb", 16, "Max Upload Size(MB), default: 16")
+
+	wg = sync.WaitGroup{}
 }

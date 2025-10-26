@@ -44,13 +44,17 @@
 		}
 
 		/* === reset === */
+		@font-face{
+			font-family: SourceHanSansSC-Regular;
+			src: url('SourceHanSansSC-Regular.otf')
+		}
 
 		html,body{
 			margin: 0;
 			padding: 0;
 			background-color: #f5f7fd;
 			font-size: 16px;
-			font-family: Helvetica,'MiSans-Normal', 'PingFangSC-Regular', 'Microsoft YaHei';
+			font-family: 'SourceHanSansSC-Regular',Helvetica,'MiSans-Normal', 'PingFangSC-Regular', 'Microsoft YaHei';
 		}
 		body{
 			padding: 10px;

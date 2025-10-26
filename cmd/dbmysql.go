@@ -46,8 +46,8 @@ func mysqlPing(db *sql.DB) {
 	rows, err := db.Query("SELECT VERSION();")
 	defer rows.Close()
 	FatalError("mysqlPing", err)
+	var version string
 	for rows.Next() {
-		var version string
 		err = rows.Scan(&version)
 		FatalError("mysqlPing", err)
 		DebugInfo("mysqlPing", "MySQL version: ", version)

@@ -86,7 +86,7 @@
 </div>
 
 <hr/>
-<p>* tag will not show in the top list if count < 10, sentence with more than 10 words or less then 2 letters will be ignored</p>
+<p>* tag will not show in the top list if count < {{ .min_top_caption }}, sentence with more than 10 words or less then 2 letters will be ignored</p>
 
 
 {{ render "footer.html" . }}

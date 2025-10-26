@@ -185,6 +185,7 @@ func uploadFile(ctx iris.Context) {
 		ctx.View("message-upload.html", data)
 		return
 	}
+
 	if finfo.Size() > MaxUploadSizeMB<<20 {
 		//currentPostMaxSize := (ctx.Application().ConfigurationReadOnly().GetPostMaxMemory())
 		//DebugWarn("uploadFile:currentPostMaxSize", currentPostMaxSize)

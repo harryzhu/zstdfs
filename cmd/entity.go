@@ -27,11 +27,11 @@ func metaDefault() map[string]string {
 	meta["is_public"] = "1"
 	meta["is_ban"] = "0"
 	meta["dot_color"] = ""
-	meta["stats_digg_count"] = "0"
-	meta["stats_comment_count"] = "0"
-	meta["stats_collect_count"] = "0"
-	meta["stats_share_count"] = "0"
-	meta["stats_download_count"] = "0"
+	meta["stats.digg_count"] = "0"
+	meta["stats.comment_count"] = "0"
+	meta["stats.collect_count"] = "0"
+	meta["stats.share_count"] = "0"
+	meta["stats.download_count"] = "0"
 	meta["caption.en"] = ""
 	meta["caption.cn"] = ""
 
@@ -102,7 +102,7 @@ func (ett Entity) WithFile(fpath string) Entity {
 	ett.Data = data
 
 	if data == nil {
-		ett.Data = []byte("")
+		return Entity{}
 	}
 
 	return ett
@@ -144,12 +144,16 @@ func (ett Entity) Save() bool {
 	}
 
 	if SHA256Bytes(ett.Data) != ett.Meta["fsha256"] {
-		DebugWarn("ERROR: entity.Save:", "data sha256 != meta[fsha256], will SKIP save")
+		DebugWarn("ERROR: entity.Save", "data sha256 != meta[fsha256], will SKIP save")
+		DebugWarn("ERROR: entity.Save:SHA256Bytes(ett.Data)", SHA256Bytes(ett.Data))
+		DebugWarn("ERROR: entity.Save:ett.Meta.fsha256", ett.Meta["fsha256"])
 		return false
 	}
 
-	bkey := badgerSave(ett.Data)
-	DebugInfo("Entity Save", string(bkey))
+	//bkey := badgerSave(ett.Data)
+	bkey, err := gcSet(ett.Data)
+	PrintError("Entity.Save", err)
+	DebugInfo("Entity.Save", string(bkey))
 	if bkey == nil {
 		return false
 	}
@@ -157,6 +161,10 @@ func (ett Entity) Save() bool {
 	ett.Meta["_fsum"] = string(bkey)
 	ett.Meta["fsha256"] = SHA256Bytes(ett.Data)
 	ett.Meta["uri"] = GetURI(ett.ID)
+
+	t1 := Int64ToString(GetNowUnix())
+	ett.Meta["create_at"] = t1
+	ett.Meta["update_at"] = t1
 
 	for k, v := range ett.Meta {
 		mongoSave(ett.User, ett.ID, k, v)
@@ -170,17 +178,23 @@ func (ett Entity) SaveWithoutData() bool {
 		return false
 	}
 
-	if badgerExists([]byte(ett.Meta["_fsum"])) == false {
+	if gcExists([]byte(ett.Meta["_fsum"])) == false {
 		DebugWarn("badgerExists", "_fsum does not exist, cannot SaveWithoutData", ", _fsum=", ett.Meta["_fsum"])
 		return false
 	}
 
 	ett.Meta["author"] = strings.ToLower(ett.User)
 	ett.Meta["uri"] = GetURI(ett.ID)
-	dataInBadger := badgerGet([]byte(ett.Meta["_fsum"]))
+	//dataInBadger := badgerGet([]byte(ett.Meta["_fsum"]))
+	dataInBadger, err := gcGet([]byte(ett.Meta["_fsum"]))
+	PrintError("Entity.SaveWithoutData", err)
 	if dataInBadger != nil {
 		ett.Meta["fsha256"] = SHA256Bytes(dataInBadger)
 	}
+
+	t1 := Int64ToString(GetNowUnix())
+	ett.Meta["create_at"] = t1
+	ett.Meta["update_at"] = t1
 
 	for k, v := range ett.Meta {
 		mongoSave(ett.User, ett.ID, k, v)
@@ -205,7 +219,13 @@ func (ett Entity) Get() Entity {
 
 	fsum, ok := ett.Meta["_fsum"]
 	if ok && fsum != "" {
-		ett.Data = badgerGet([]byte(fsum))
+		var err error
+		ett.Data, err = gcGet([]byte(fsum))
+		PrintError("Entity.Get", err)
+		if err != nil {
+			ett.Data = nil
+		}
+
 	} else {
 		return Entity{}
 	}

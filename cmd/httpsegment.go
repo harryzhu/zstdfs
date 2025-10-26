@@ -9,23 +9,23 @@ import (
 func genMetaStatistics(ss map[string]string) (map[string]string, error) {
 	counterSet := make(map[string]string)
 
-	diggCount, ok := ss["stats_digg_count"]
+	diggCount, ok := ss["stats.digg_count"]
 	if ok && Str2Int(diggCount) > minDiggCount {
 		counterSet["点赞"] = ToKWM(Str2Int(diggCount))
 	}
-	commentCount, ok := ss["stats_comment_count"]
+	commentCount, ok := ss["stats.comment_count"]
 	if ok && Str2Int(commentCount) > minCommentCount {
 		counterSet["评论"] = ToKWM(Str2Int(commentCount))
 	}
-	collectCount, ok := ss["stats_collect_count"]
+	collectCount, ok := ss["stats.collect_count"]
 	if ok && Str2Int(collectCount) > minCollectCount {
 		counterSet["收藏"] = ToKWM(Str2Int(collectCount))
 	}
-	shareCount, ok := ss["stats_share_count"]
+	shareCount, ok := ss["stats.share_count"]
 	if ok && Str2Int(shareCount) > minShareCount {
 		counterSet["转发"] = ToKWM(Str2Int(shareCount))
 	}
-	downloadCount, ok := ss["stats_download_count"]
+	downloadCount, ok := ss["stats.download_count"]
 	if ok && Str2Int(downloadCount) > minDownloadCount {
 		counterSet["下载"] = ToKWM(Str2Int(downloadCount))
 	}
@@ -81,20 +81,20 @@ func genNavFileList(files []string, fkey, uname string) []map[string]map[string]
 			}
 
 			ss := make(map[string]string)
-			if lineMeta["stats_digg_count"] != "" {
-				ss["stats_digg_count"] = lineMeta["stats_digg_count"]
+			if lineMeta["stats.digg_count"] != "" {
+				ss["stats.digg_count"] = lineMeta["stats.digg_count"]
 			}
-			if lineMeta["stats_comment_count"] != "" {
-				ss["stats_comment_count"] = lineMeta["stats_comment_count"]
+			if lineMeta["stats.comment_count"] != "" {
+				ss["stats.comment_count"] = lineMeta["stats.comment_count"]
 			}
-			if lineMeta["stats_collect_count"] != "" {
-				ss["stats_collect_count"] = lineMeta["stats_collect_count"]
+			if lineMeta["stats.collect_count"] != "" {
+				ss["stats.collect_count"] = lineMeta["stats.collect_count"]
 			}
-			if lineMeta["stats_share_count"] != "" {
-				ss["stats_share_count"] = lineMeta["stats_share_count"]
+			if lineMeta["stats.share_count"] != "" {
+				ss["stats.share_count"] = lineMeta["stats.share_count"]
 			}
-			if lineMeta["stats_download_count"] != "" {
-				ss["stats_download_count"] = lineMeta["stats_download_count"]
+			if lineMeta["stats.download_count"] != "" {
+				ss["stats.download_count"] = lineMeta["stats.download_count"]
 			}
 
 			counterSet, err := genMetaStatistics(ss)

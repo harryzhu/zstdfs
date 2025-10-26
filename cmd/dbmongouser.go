@@ -43,7 +43,7 @@ func mongoGuessValueTypeByKey(key string) (t string) {
 		return t
 	}
 
-	if strings.HasPrefix(key, "stats_") || strings.HasPrefix(key, "num_") {
+	if strings.HasPrefix(key, "stats") || strings.HasPrefix(key, "num_") {
 		t = "int"
 		return t
 	}
@@ -584,11 +584,11 @@ func mongoUserCollectionInit(user string) bool {
 	meta["caption.en"] = "file, caption, sample"
 	meta["caption.cn"] = "文件描述, 文字内容, 样例演示"
 	//
-	meta["stats_digg_count"] = "100"
-	meta["stats_comment_count"] = "200"
-	meta["stats_collect_count"] = "300"
-	meta["stats_share_count"] = "400"
-	meta["stats_download_count"] = "500"
+	meta["stats.digg_count"] = "100"
+	meta["stats.comment_count"] = "200"
+	meta["stats.collect_count"] = "300"
+	meta["stats.share_count"] = "400"
+	meta["stats.download_count"] = "500"
 	meta["is_public"] = "1"
 	meta["is_ban"] = "0"
 	meta["num_prefix"] = "1000"
@@ -634,7 +634,8 @@ func mongoBatchWriteFiles(files []string) bool {
 		}
 		//DebugInfo("mongoBatchWriteFiles", file, " <= ", ID)
 		ett.Meta["_fsum"] = string(SumBlake3(val))
-		ett.SaveWithoutData()
+		ett.Meta["fsha256"] = SHA256File(file)
+		ett.Save()
 		//DebugInfo("mongoBatchWriteFiles", ID, "<= ", file)
 	}
 	DebugInfo("mongoBatchWriteFiles: files: ", len(files))

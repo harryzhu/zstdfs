@@ -4,7 +4,7 @@
 		<ul class="thumbnails">
 			{{ range $idx, $nfl := .nav_file_list }}
 			{{ range $k, $kv := $nfl }}
-			<li><a href="/f/{{ $kv.uid }}"><img src="/thumb/{{ $kv.uid }}" alt="{{ $kv.uid }}"></a></li>
+			<li><a href="/f/{{ $kv.uid }}"><img src="/thumb/{{ $kv.uid }}?v={{ NowToDate }}" alt="{{ $kv.uid }}"></a></li>
 			{{ end }}
 			{{ end }}
 		</ul>

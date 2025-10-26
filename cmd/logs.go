@@ -9,6 +9,7 @@ import (
 func FatalError(prefix string, err error) {
 	if err != nil {
 		log.Println(Red("ERROR:"), Red(prefix), err)
+		log.Fatal(err)
 	}
 }
 
@@ -86,4 +87,8 @@ func White(str string) string {
 
 func textColor(color int, str string) string {
 	return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, str)
+}
+
+func PrintSpinner(s string) {
+	fmt.Printf("... %5.30s\r", s)
 }

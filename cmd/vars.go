@@ -27,13 +27,13 @@ const (
 )
 
 var (
-	sqldb    *sql.DB
-	mgodb    *mongo.Database
-	bgrdb    *badger.DB
 	DataDir  string
 	TempDir  string
 	CacheDir string
 	AssetDir string
+	sqldb    *sql.DB
+	mgodb    *mongo.Database
+	bgrdb    *badger.DB
 	//
 	FunctionCacheExpires int64 = 600
 	// Statistics

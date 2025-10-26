@@ -3,11 +3,13 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
-	"time"
 )
 
-func BeforeStart() error {
+func BeforeHTTPStart() error {
 	DataDir = GetEnv("zstdfs_data", "data/zstdfs")
+	DebugInfo("BeforeStart: DataDir", DataDir)
+
+	//
 	TempDir = ToUnixSlash(filepath.Join(DataDir, "www/temp"))
 	AssetDir = ToUnixSlash(filepath.Join(DataDir, "www/assets"))
 	CacheDir = ToUnixSlash(filepath.Join(DataDir, "www/cache"))
@@ -29,6 +31,12 @@ func BeforeStart() error {
 	MakeDirs(AssetDir)
 	MakeDirs(StaticDir)
 	MakeDirs(ThumbDir)
+	//
+	ChModDir(UploadDir, 0777)
+	ChModDir(TempDir, 0777)
+	ChModDir(CacheDir, 0777)
+	ChModDir(StaticDir, 0777)
+	ChModDir(ThumbDir, 0777)
 	//
 	if IsDebug {
 		FunctionCacheExpires = 0
@@ -65,27 +73,27 @@ func BeforeStart() error {
 	binBannedLogo = LoadFileBytes(AssetDir + "/banned-logo.png")
 	binEmptyLogo = LoadFileBytes(AssetDir + "/thumb_logo_empty.png")
 	//
+	if MinTopCaption < 1 {
+		MinTopCaption = 1
+	}
+	//
 	DebugInfo("BeforeStart:Debug", IsDebug)
 	DebugInfo("BeforeStart:DataDir", DataDir)
 	DebugInfo("BeforeStart:FunctionCacheExpires", FunctionCacheExpires)
 	//
 	bigcacheInit()
+	SetGrpcClient()
+
 	sqldb = mysqlConnect()
 	mgodb = mongoConnect()
-	bgrdb = badgerConnect()
 
-	//
 	mysqlPing(sqldb)
-	ts := time.Now().Unix()
+	ts := GetNowUnix()
 
 	mongoAdminSetIfEmpty("system_info", "init_boot", Int64ToString(ts))
 	mongoAdminUpsert("system_info", "last_boot", Int64ToString(ts))
 	//
 	EntitySaveSmoke()
-
-	if BulkLoadDir != "" && BulkLoadExt != "" && BulkLoadUser != "" {
-		badgerBulkLoad(BulkLoadDir, BulkLoadExt)
-	}
 	return nil
 }
 

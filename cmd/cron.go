@@ -9,7 +9,7 @@ import (
 func StartCron() {
 	c := cron.New()
 
-	c.AddFunc("@every 15m", func() {
+	c.AddFunc("@every 10m", func() {
 		DebugInfo("StartCron", "CleanExpires")
 		DebugInfo("StartCron", "DiskCacheExpires: ", DiskCacheExpires)
 		DebugInfo("StartCron", "TempDir: ", TempDir)

@@ -1,6 +1,6 @@
 rm -f cmd/template/.DS_Store
 
-go build -o dist/macos_arm/zstdfs -ldflags "-w -s" main.go
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o dist/macos_arm/zstdfs -ldflags "-w -s" main.go
 zip dist/macos_arm/zstdfs_macos_arm.zip dist/macos_arm/zstdfs
 
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macos_intel/zstdfs -ldflags "-w -s" main.go

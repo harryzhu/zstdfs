@@ -1,4 +1,4 @@
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(45) NOT NULL,
   `userpass` char(72) NOT NULL,
@@ -8,4 +8,4 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uquname` (`username`),
   KEY `gadmin` (`isadmin`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
