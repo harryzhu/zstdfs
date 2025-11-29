@@ -10,7 +10,8 @@
 						<a href="/user/caption">Caption</a> > 
 						{{ range $idx, $kv := .nav_breadcrumb }}
 						{{ range $k, $v := $kv }}
-						<a href="/user/caption/{{ $.current_caplang }}/{{ $v }}">{{ $v }}</a>
+						<a href="/user/caption/{{ $.current_caplang }}/{{ $v }}">{{ $v }}</a> |
+            <a href="/user/caption/{{ $.current_caplang }}/{{ $v }}?is_shuffle=0">降序</a>
 						{{ end}}
 						{{ end}}
 
@@ -21,15 +22,29 @@
 				<td class="tag-filter-text">
 					<label class="tag-filter-lable"><span title="ID prefix :: keyword_1 & keyword_2 & keyword_3">Search:</span>
 						{{ if .current_caplang_en }}
-						<input type="radio" name="frmcaplang" id="frmcaplang" value="en" checked> En
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="en" checked>En
 						{{ else }}
-						<input type="radio" name="frmcaplang" id="frmcaplang" value="en"> En
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="en">En
 						{{ end }}
+
 						{{ if .current_caplang_cn }}
-						<input type="radio" name="frmcaplang" id="frmcaplang" value="cn" checked> 中文
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="cn" checked>中文
 						{{ else }}
-						<input type="radio" name="frmcaplang" id="frmcaplang" value="cn"> 中文
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="cn">中文
 						{{ end }}
+
+						{{ if .current_caplang_subtitle_en }}
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="subtitle_en" checked>Subtitle_En
+						{{ else }}
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="subtitle_en">Subtitle_En
+						{{ end }}
+
+						{{ if .current_caplang_subtitle_cn }}
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="subtitle_cn" checked>中文字幕
+						{{ else }}
+						<input type="radio" name="frmcaplang" id="frmcaplang" value="subtitle_cn">中文字幕
+						{{ end }}
+
 						{{ if .current_prefix}}
 						<input type="text" name="frmtaglike" id="frmtaglike" value="{{ .current_prefix }}" />
 						{{ else }}

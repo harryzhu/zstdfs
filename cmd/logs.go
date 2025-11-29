@@ -1,10 +1,19 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 )
+
+func NewError(args ...any) error {
+	var s []string
+	for _, arg := range args {
+		s = append(s, fmt.Sprintf("%v", arg))
+	}
+	return errors.New(strings.Join(s, ""))
+}
 
 func FatalError(prefix string, err error) {
 	if err != nil {

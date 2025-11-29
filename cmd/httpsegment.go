@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
 	"strings"
+	"time"
 )
 
 func genMetaStatistics(ss map[string]string) (map[string]string, error) {
@@ -137,4 +139,12 @@ func genNavDirList(dirs []string, fkey, uname string) []map[string]map[string]st
 	}
 
 	return navDirKVS
+}
+
+func shuffleNavFileList(nfl []map[string]map[string]any) []map[string]map[string]any {
+	rand.Seed(time.Now().Unix())
+	rand.Shuffle(len(nfl), func(i, j int) {
+		nfl[i], nfl[j] = nfl[j], nfl[i]
+	})
+	return nfl
 }

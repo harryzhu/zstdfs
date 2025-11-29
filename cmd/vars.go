@@ -23,6 +23,7 @@ const (
 
 const (
 	AdminBucket      string  = "_admin"
+	MetaBucket       string  = "_meta"
 	DiskCacheExpires float64 = 3600
 )
 

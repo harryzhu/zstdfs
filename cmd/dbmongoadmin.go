@@ -28,8 +28,11 @@ func NewObjectIDFromTimestamp(ts time.Time) bson.ObjectID {
 	return oid
 }
 
-func mongoAdminSetIfEmpty(id, k, v string) bool {
-	collAdmin := mgodb.Collection(AdminBucket)
+func mongoAdminSetIfEmpty(bkt, id, k, v string) bool {
+	if bkt[0:1] != "_" {
+		PrintError("mongoAdminSetIfEmpty", NewError("invalid admin db"))
+	}
+	collAdmin := mgodb.Collection(bkt)
 
 	var result bson.M
 	filter := bson.D{{"_id", id}}
@@ -46,12 +49,18 @@ func mongoAdminSetIfEmpty(id, k, v string) bool {
 	return true
 }
 
-func mongoAdminUpsert(id, k, v string) bool {
-	collAdmin := mgodb.Collection(AdminBucket)
+func mongoAdminUpsert(bkt, id, k string, v any, upsert bool) bool {
+	if bkt[0:1] != "_" {
+		PrintError("mongoAdminUpsert", NewError("invalid admin db"))
+	}
+	collAdmin := mgodb.Collection(bkt)
 
 	filter := bson.D{{"_id", id}}
 	update := bson.D{{"$set", bson.D{{k, v}}}}
 	opt := options.UpdateOne().SetUpsert(true)
+	if upsert != true {
+		opt = options.UpdateOne().SetUpsert(false)
+	}
 
 	collAdmin.UpdateOne(context.TODO(), filter, update, opt)
 	return true
@@ -87,6 +96,8 @@ func mongoAdminCreateIndex(user string) bool {
 	indexes["tags"] = -1
 	indexes["caption.en"] = -1
 	indexes["caption.cn"] = -1
+	indexes["caption.subtitle_en"] = -1
+	indexes["caption.subtitle_cn"] = -1
 	//
 	indexes["uri"] = 11
 	//

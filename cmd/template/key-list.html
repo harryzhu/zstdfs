@@ -5,7 +5,8 @@
 		<a href="/user/buckets/{{ .current_user }}">{{ .current_user }}</a> > 
 		{{ range $idx, $kv := .nav_breadcrumb }}
 		{{ range $k, $v := $kv }}
-		<a href="/user/buckets/{{ $v }}">{{ $k }}</a> > 
+		<a href="/user/buckets/{{ $v }}">{{ $k }}</a> > |
+    <a href="/user/buckets/{{ $v }}?is_shuffle=0">降序</a>
 		{{ end}}
 		{{ end}}
 

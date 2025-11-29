@@ -50,16 +50,16 @@ table {
 }
 
 /* === reset === */
-/*@font-face {
+@font-face {
   font-family: SourceHanSansSC-Regular;
   src: url("SourceHanSansSC-Regular.otf");
-}*/
+}
 html, body {
   margin: 0;
   padding: 0;
   background-color: #f5f7fd;
   font-size: 16px;
-  font-family:  Helvetica, "PingFangSC-Regular", "Microsoft YaHei","SourceHanSansSC-Regular";
+  font-family: "SourceHanSansSC-Regular", Helvetica, "MiSans-Normal", "PingFangSC-Regular", "Microsoft YaHei";
 }
 
 body {
@@ -320,7 +320,7 @@ td.tag-filter-nav h2 {
 
 td.tag-filter-text {
   border: none;
-  width: 400px;
+  width: 350px;
 }
 
 label.tag-filter-lable {
@@ -328,7 +328,7 @@ label.tag-filter-lable {
 }
 
 #frmtaglike {
-  width: 250px;
+  width: 270px;
 }
 
 #frmtagsubmit {

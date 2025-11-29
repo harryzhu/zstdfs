@@ -48,7 +48,7 @@ func mongoGuessValueTypeByKey(key string) (t string) {
 		return t
 	}
 
-	if strings.HasPrefix(key, "is_") || strings.HasSuffix(key, "_count") {
+	if strings.HasPrefix(key, "is_") || strings.HasSuffix(key, "_count") || strings.HasSuffix(key, "_weight") {
 		t = "int"
 		return t
 	}
@@ -59,6 +59,11 @@ func mongoGuessValueTypeByKey(key string) (t string) {
 	}
 
 	if strings.HasPrefix(key, "int64_") {
+		t = "int64"
+		return t
+	}
+
+	if strings.HasSuffix(key, "_at") {
 		t = "int64"
 		return t
 	}
@@ -79,6 +84,11 @@ func mongoGuessValueTypeByKey(key string) (t string) {
 	}
 
 	return t
+}
+
+func mongoGetOptionSort() bson.D {
+	defaultSort := bson.D{{"_id", 1}, {"mtime", -1}, {"stats.weight", -1}, {"stats.digg_count", -1}}
+	return defaultSort
 }
 
 func mongoSave(user string, id string, k, v string) bool {
@@ -281,7 +291,7 @@ func mongoTagFiles(user, tagname string) (files []string) {
 	if user == "" || tagname == "" {
 		return lines
 	}
-	filesCacheFile := fmt.Sprintf("%s/mongoTagFiles/files_%s.dat", user, GetXxhash([]byte(tagname)))
+	filesCacheFile := fmt.Sprintf("%s/mongoTagFiles/files_%s.dat", user, GetXxhashString([]byte(tagname)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
 		idPrefix := ""
@@ -341,7 +351,7 @@ func mongoTagList(user string, idPrefix string) (tagCount map[string]int) {
 	tagCountCacheFile := fmt.Sprintf("%s/mongoTagList/tags_count.dat", user)
 
 	if len(idPrefix) > 0 {
-		tagCountCacheFile = fmt.Sprintf("%s/mongoTagList/tags_count_%s.dat", user, GetXxhash([]byte(idPrefix)))
+		tagCountCacheFile = fmt.Sprintf("%s/mongoTagList/tags_count_%s.dat", user, GetXxhashString([]byte(idPrefix)))
 	}
 
 	if GobLoad(tagCountCacheFile, &tagCount, FunctionCacheExpires) == false {
@@ -464,7 +474,7 @@ func mongoCaptionFiles(user, captionLanguage, captionWord string) (files []strin
 	if user == "" || captionLanguage == "" || captionWord == "" {
 		return lines
 	}
-	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, captionLanguage, GetXxhash([]byte(captionWord)))
+	filesCacheFile := fmt.Sprintf("%s/mongoCaptionFiles/files_%s.dat", user, captionLanguage, GetXxhashString([]byte(captionWord)))
 
 	if GobLoad(filesCacheFile, &files, FunctionCacheExpires) == false {
 		captionWord = strings.ReplaceAll(captionWord, "+", "\\+")
@@ -495,7 +505,16 @@ func mongoCaptionFiles(user, captionLanguage, captionWord string) (files []strin
 			}
 		}
 
-		optSort := bson.D{{"_id", 1}, {"mtime", -1}}
+		optSort := bson.D{{"_id", 1}, {"mtime", -1}, {"stats.weight", -1}, {"stats.digg_count", -1}}
+
+		altSort := GetEnv("zstdfs_http_search_caption_sort", "stats.list_weight")
+		if altSort != "" {
+			optSort = bson.D{{altSort, -1}, {"mtime", -1}, {"_id", 1}}
+		}
+
+		// if isShuffleResult {
+		// 	optSort = mongoGetOptionSort()
+		// }
 
 		opts := options.Find().SetSort(optSort)
 		opts.SetProjection(bson.D{{"_id", 1}})
@@ -568,6 +587,40 @@ func mongoUserCollectionInit(user string) bool {
 	FatalError("EntitySaveSmoke", err)
 	mtime := finfo.ModTime().UTC().Unix()
 
+	//
+	metaKey := testKey
+	//
+	metaStats := make(map[string]int)
+	metaStats["stats.digg_count"] = 100
+	metaStats["stats.comment_count"] = 200
+	metaStats["stats.collect_count"] = 300
+	metaStats["stats.share_count"] = 400
+	metaStats["stats.download_count"] = 500
+	metaStats["stats.list_weight"] = -1
+	//
+	for k, v := range metaStats {
+		mongoAdminUpsert(MetaBucket, metaKey, k, v, true)
+	}
+	//
+	metaCaption := make(map[string]string)
+	metaCaption["caption.en"] = "file, caption, sample"
+	metaCaption["caption.cn"] = "文件描述, 文字内容, 样例演示"
+	metaCaption["caption.subtitle_en"] = "An apple a day keeps the doctor away"
+	metaCaption["caption.subtitle_cn"] = "一天一苹果，医生远离我"
+	//
+	for k, v := range metaCaption {
+		mongoAdminUpsert(MetaBucket, metaKey, k, v, true)
+	}
+	//
+	metaTags := make(map[string]any)
+	mtags := TagLineFormat("壁纸，自然;杭州；游湖#泛舟/休闲")
+	metaTags["tags"] = strings.Split(mtags, ",")
+	//
+	for k, v := range metaTags {
+		mongoAdminUpsert(MetaBucket, metaKey, k, v, true)
+	}
+
+	//
 	entity := NewEntity(user, testKey).WithFile(testFile)
 
 	meta := make(map[string]string)
@@ -576,23 +629,13 @@ func mongoUserCollectionInit(user string) bool {
 	meta["mtime"] = Int64ToString(mtime)
 	meta["fsha256"] = SHA256File(testFile)
 	//
-	meta["tags"] = TagLineFormat("壁纸，自然;杭州；游湖#泛舟/休闲")
-	meta["strs_tags"] = meta["tags"]
 	meta["ints_days"] = "3,  7  , 21"
 	meta["dot_color"] = "dot-purple"
 	meta["mime"] = "image/jpeg"
-	meta["caption.en"] = "file, caption, sample"
-	meta["caption.cn"] = "文件描述, 文字内容, 样例演示"
 	//
-	meta["stats.digg_count"] = "100"
-	meta["stats.comment_count"] = "200"
-	meta["stats.collect_count"] = "300"
-	meta["stats.share_count"] = "400"
-	meta["stats.download_count"] = "500"
 	meta["is_public"] = "1"
 	meta["is_ban"] = "0"
 	meta["num_prefix"] = "1000"
-	meta["stats_prefix"] = "2000"
 
 	for k, v := range meta {
 		entity.WithMeta(k, v)

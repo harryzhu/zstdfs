@@ -5,7 +5,8 @@
 		<a href="/user/tags">Tags</a> > 
 		{{ range $idx, $kv := .nav_breadcrumb }}
 		{{ range $k, $v := $kv }}
-		<a href="/user/tags/{{ $v }}">{{ $v }}</a>
+		<a href="/user/tags/{{ $v }}">{{ $v }}</a> | 
+    <a href="/user/tags/{{ $v }}?is_shuffle=0">降序</a>
 		{{ end}}
 		{{ end}}
 

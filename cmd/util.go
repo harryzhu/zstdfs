@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -102,10 +103,6 @@ func SumBlake3(b []byte) []byte {
 	h := blake3.New()
 	h.Write(b)
 	return []byte(fmt.Sprintf("%x", h.Sum(nil)))
-}
-
-func NewError(s string) error {
-	return errors.New(s)
 }
 
 func Str2Float64(n string) float64 {
@@ -635,4 +632,16 @@ func ChModDir(dpath string, perm fs.FileMode) error {
 		return err
 	}
 	return nil
+}
+
+func Map2JSON(m map[string]string) []byte {
+	bf := bytes.NewBuffer([]byte{})
+	enc := json.NewEncoder(bf)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(m)
+	if err != nil {
+		PrintError("Map2JSON", err)
+		return nil
+	}
+	return []byte(bf.String())
 }

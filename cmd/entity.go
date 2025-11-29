@@ -32,8 +32,11 @@ func metaDefault() map[string]string {
 	meta["stats.collect_count"] = "0"
 	meta["stats.share_count"] = "0"
 	meta["stats.download_count"] = "0"
+	meta["stats.list_weight"] = "0"
 	meta["caption.en"] = ""
 	meta["caption.cn"] = ""
+	meta["caption.subtitle_en"] = ""
+	meta["caption.subtitle_cn"] = ""
 
 	return meta
 }

@@ -90,8 +90,8 @@ func BeforeHTTPStart() error {
 	mysqlPing(sqldb)
 	ts := GetNowUnix()
 
-	mongoAdminSetIfEmpty("system_info", "init_boot", Int64ToString(ts))
-	mongoAdminUpsert("system_info", "last_boot", Int64ToString(ts))
+	mongoAdminSetIfEmpty(AdminBucket, "system_info", "init_boot", Int64ToString(ts))
+	mongoAdminUpsert(AdminBucket, "system_info", "last_boot", Int64ToString(ts), true)
 	//
 	EntitySaveSmoke()
 	return nil

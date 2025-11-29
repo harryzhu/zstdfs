@@ -189,6 +189,8 @@ func topCountFiles(ctx iris.Context) {
 	min := ctx.Params().Get("min")
 	max := ctx.Params().Get("max")
 	countname := ctx.Params().Get("countname")
+	isShuffle := ctx.URLParamIntDefault("is_shuffle", 1)
+
 	if IsAnyEmpty(countname, min, max) {
 		return
 	}
@@ -201,6 +203,9 @@ func topCountFiles(ctx iris.Context) {
 	files := mongoAggCountByKey(uname, countname, Str2Int(min), Str2Int(max))
 
 	navFileList := genNavFileList(files, "", uname)
+	if isShuffle == 1 {
+		navFileList = shuffleNavFileList(navFileList)
+	}
 
 	var navBreadcrumb []map[string]string
 	bc := make(map[string]string)
@@ -737,6 +742,7 @@ func tagList(ctx iris.Context) {
 func tagFiles(ctx iris.Context) {
 	tagname := ctx.Params().Get("tagname")
 	tagname = strings.Replace(tagname, "：：", "::", 1)
+	isShuffle := ctx.URLParamIntDefault("is_shuffle", 1)
 	DebugInfo("tagFiles:tagname=", tagname)
 	//
 	currentUser := getCurrentUser(ctx)
@@ -755,6 +761,10 @@ func tagFiles(ctx iris.Context) {
 
 	fileCount := len(files)
 	navFileList := genNavFileList(files, "", uname)
+
+	if isShuffle == 1 {
+		navFileList = shuffleNavFileList(navFileList)
+	}
 
 	bc := make(map[string]string)
 	bc["tag"] = fmt.Sprintf("%s", tagname)
@@ -1046,6 +1056,7 @@ func captionFiles(ctx iris.Context) {
 	captionlang := ctx.Params().Get("lang")
 	captionword := ctx.Params().Get("captionword")
 	captionword = strings.Replace(captionword, "：：", "::", 1)
+	isShuffle := ctx.URLParamIntDefault("is_shuffle", 1)
 	DebugInfo("captionFiles:captionlang:", captionlang, ": ", captionword)
 	//
 	currentUser := getCurrentUser(ctx)
@@ -1064,6 +1075,10 @@ func captionFiles(ctx iris.Context) {
 
 	fileCount := len(files)
 	navFileList := genNavFileList(files, "", uname)
+
+	if isShuffle == 1 {
+		navFileList = shuffleNavFileList(navFileList)
+	}
 
 	bc := make(map[string]string)
 	bc["tag"] = fmt.Sprintf("%s", captionword)
@@ -1085,6 +1100,12 @@ func captionFiles(ctx iris.Context) {
 	}
 	if captionlang == "cn" {
 		data["current_caplang_cn"] = captionlang
+	}
+	if captionlang == "subtitle_en" {
+		data["current_caplang_subtitle_en"] = captionlang
+	}
+	if captionlang == "subtitle_cn" {
+		data["current_caplang_subtitle_cn"] = captionlang
 	}
 
 	if len(files) < 2001 && len(files) > 0 {
@@ -1180,6 +1201,8 @@ func adminListGroup(ctx iris.Context) {
 func adminListKeys(ctx iris.Context) {
 	uname := ctx.Params().Get("uname")
 	fkey := strings.Trim(ctx.Params().Get("fkey"), "/")
+	isShuffle := ctx.URLParamIntDefault("is_shuffle", 1)
+
 	if uname == "" || fkey == "" {
 		return
 	}
@@ -1198,6 +1221,10 @@ func adminListKeys(ctx iris.Context) {
 
 	navDirList := genNavDirList(dirs, fkey, uname)
 	navFileList := genNavFileList(files, fkey, uname)
+
+	if isShuffle == 1 {
+		navFileList = shuffleNavFileList(navFileList)
+	}
 
 	breads := strings.Split(fkey, "/")
 	for idx, bread := range breads {
@@ -1271,6 +1298,7 @@ func adminSameFiles(ctx iris.Context) {
 
 func likeFiles(ctx iris.Context) {
 	dotcolor := ctx.Params().Get("dotcolor")
+	isShuffle := ctx.URLParamIntDefault("is_shuffle", 1)
 
 	currentUser := getCurrentUser(ctx)
 	uname := currentUser.Name
@@ -1283,6 +1311,10 @@ func likeFiles(ctx iris.Context) {
 
 	files := mongoAggFilesByKey(uname, "dot_color", dotcolor)
 	navFileList := genNavFileList(files, "", uname)
+
+	if isShuffle == 1 {
+		navFileList = shuffleNavFileList(navFileList)
+	}
 	//DebugInfo("likeFiles", navFileList)
 
 	data := iris.Map{
@@ -1311,6 +1343,7 @@ func likeFiles(ctx iris.Context) {
 func byKeyFiles(ctx iris.Context) {
 	key := ctx.Params().Get("key")
 	val := ctx.Params().Get("val")
+	isShuffle := ctx.URLParamIntDefault("is_shuffle", 1)
 
 	currentUser := getCurrentUser(ctx)
 	uname := currentUser.Name
@@ -1321,6 +1354,11 @@ func byKeyFiles(ctx iris.Context) {
 
 	files := mongoAggFilesByKey(uname, key, val)
 	navFileList := genNavFileList(files, "", uname)
+
+	if isShuffle == 1 {
+		navFileList = shuffleNavFileList(navFileList)
+	}
+
 	DebugInfo("ByKeyFiles:navFileList", navFileList)
 
 	data := iris.Map{
